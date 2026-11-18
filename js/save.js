@@ -37,7 +37,7 @@ const fresh = () => ({
   coins: 300,
   owned: { paints: ['petroleo'], acc: ['none'], horns: ['classica'] },
   sel: { char: 'tatu', impl: 'broto', paint: 'petroleo', acc: 'none', horn: 'classica', track: 'milharal' },
-  builds: {},
+  builds: {}, implementBuilds: {}, creations: [],
   best: {},
   opts: { music: 0.6, sfx: 0.8, assist: null, autoGas: null, quality: 'alta' },
   seenIntro: false,
@@ -65,9 +65,44 @@ if (profile.sel.impl === 'absoluta') profile.sel.impl = 'broto';
 if (profile.sel.paint === 'laranja') profile.sel.paint = 'petroleo';
 profile.owned.paints = [...new Set(['petroleo', ...profile.owned.paints.map(p => p === 'laranja' ? 'petroleo' : p)])];
 profile.builds ??= {};
+profile.implementBuilds ??= {};
+if (!Array.isArray(profile.creations)) profile.creations = [];
+profile.creations = profile.creations.filter(c => c && typeof c.id === 'string' && typeof c.name === 'string' && c.sel && ['tatu','pingo'].includes(c.sel.char));
 
 export function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(profile)); } catch { /* storage blocked: keep in memory */ }
+  try { localStorage.setItem(KEY, JSON.stringify(profile)); return true; } catch { return false; /* keep in memory */ }
+}
+
+export function saveCreation(name) {
+  const trimmed = String(name ?? '').trim().slice(0, 40);
+  if (!trimmed) return null;
+  const { char, impl, paint, acc, horn } = profile.sel;
+  const creation = {
+    id: globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + Math.random().toString(36).slice(2),
+    name: trimmed, sel: { char, impl, paint, acc, horn },
+    build: JSON.parse(JSON.stringify(profile.builds[char] ?? {})),
+    implBuild: JSON.parse(JSON.stringify(profile.implementBuilds.broto ?? {})),
+  };
+  profile.creations.push(creation);
+  return { creation, persisted: save() };
+}
+export function loadCreation(id) {
+  const c = profile.creations.find(item => item.id === id);
+  if (!c) return false;
+  const { char, impl, paint, acc, horn } = c.sel;
+  // A saved design equips only owned catalog items; it never changes coins or unlocks.
+  Object.assign(profile.sel, {
+    char, impl: impl === 'broto' ? 'broto' : 'none',
+    paint: owns('paints', paint) ? paint : CATALOG.paints[0].id,
+    acc: owns('acc', acc) ? acc : 'none', horn: owns('horns', horn) ? horn : 'classica',
+  });
+  profile.builds[char] = JSON.parse(JSON.stringify(c.build ?? {}));
+  profile.implementBuilds.broto = JSON.parse(JSON.stringify(c.implBuild ?? {}));
+  save(); return true;
+}
+export function removeCreation(id) {
+  profile.creations = profile.creations.filter(c => c.id !== id);
+  save();
 }
 export function resetProfile() {
   const f = fresh();

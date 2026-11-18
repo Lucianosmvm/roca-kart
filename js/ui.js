@@ -1,8 +1,8 @@
 // DOM screens for Roça Kart: splash, menu, track select, garage/shop (over the 3D showroom),
 // options, credits, pause, cutscene dialogue and results. The game engine talks to it via `api`.
 import { audio } from './audio.js';
-import { profile, save, CATALOG, buy, owns, resetProfile, paintColor } from './save.js';
-import { BUILD_DEFAULTS, BUILD_RANGES, cleanBuild } from './customize.js';
+import { profile, save, CATALOG, buy, owns, resetProfile, paintColor, saveCreation, loadCreation, removeCreation } from './save.js';
+import { BUILD_DEFAULTS, BUILD_RANGES, cleanBuild, IMPLEMENT_DEFAULTS, cleanImplementBuild } from './customize.js';
 import { TRACKS } from './tracks.js';
 
 const $ = id => document.getElementById(id);
@@ -161,8 +161,8 @@ function buildTracks() {
 function goGarageForRace() { profile.sel.track = pickedTrack; save(); api.openGarage('race'); ui.show('garage'); buildGarage('race'); }
 
 // ---------------------------------------------------------------- garage + shop (shared)
-let gTab = 'machine', preview = null;
-const TAB_NAMES = { machine: 'Máquina', build: '🛠 Montar', impl: 'Implemento', paint: 'Pintura', acc: 'Acessório', horn: 'Buzina' };
+let gTab = 'machine', preview = null, buildTarget = 'machine', creationNotice = '';
+const TAB_NAMES = { machine: 'Máquina', build: '🛠 Montar', creations: 'Minhas criações', impl: 'Implemento', paint: 'Pintura', acc: 'Acessório', horn: 'Buzina' };
 const CAT = { paint: 'paints', acc: 'acc', horn: 'horns' };
 function itemsFor(tab) {
   const { CHARACTERS, IMPLEMENTS, ABILITIES } = api;
@@ -173,11 +173,13 @@ function itemsFor(tab) {
 const selKey = tab => ({ machine: 'char', impl: 'impl', paint: 'paint', acc: 'acc', horn: 'horn' }[tab]);
 function buildGarage(mode) {
   const shop = mode === 'shop', root = $(shop ? 'shop' : 'garage');
-  const tabs = shop ? ['paint', 'acc', 'horn'] : ['machine', 'build', 'impl', 'paint', 'acc', 'horn'];
+  const tabs = shop ? ['paint', 'acc', 'horn'] : ['machine', 'build', 'creations', 'impl', 'paint', 'acc', 'horn'];
   if (!tabs.includes(gTab)) gTab = tabs[0];
   const { CHARACTERS, IMPLEMENTS, ABILITIES } = api;
   const sel = { ...profile.sel, ...(preview ?? {}) };
   const ch = CHARACTERS[sel.char], tows = ch.tows;
+  const canBuildBroto = tows && sel.impl === 'broto';
+  if (!canBuildBroto) buildTarget = 'machine';
   const im = tows ? IMPLEMENTS[sel.impl] : null;
   const ab = ABILITIES[tows ? im.ability : ch.ability];
   const pv = preview && Object.entries(preview)[0];
@@ -192,7 +194,11 @@ function buildGarage(mode) {
     <div class="gTop"><button class="btn small cream" id="gBack">◀</button><h2>${shop ? 'Loja' : 'Oficina da Roça'}</h2></div>
     <div class="panel gPanel">
       <div class="tabs">${tabs.map(t => `<button class="tab ${gTab === t ? 'on' : ''}" data-t="${t}" ${t === 'impl' && !tows ? 'disabled' : ''}>${TAB_NAMES[t]}</button>`).join('')}</div>
-      ${gTab === 'build' ? buildEditor(sel.char) : `<div class="items">${itemsFor(gTab).map(i => `
+      ${gTab === 'build' ? `<div class="buildTargets" role="group" aria-label="Escolher o que montar">
+        <button class="tab ${buildTarget === 'machine' ? 'on' : ''}" data-target="machine" aria-pressed="${buildTarget === 'machine'}">${ch.name}</button>
+        <button class="tab ${buildTarget === 'broto' ? 'on' : ''}" data-target="broto" aria-pressed="${buildTarget === 'broto'}" ${canBuildBroto ? '' : 'disabled'}>Broto</button>
+        ${canBuildBroto ? '' : '<small>Escolha Tatu e engate o Broto na aba Implemento para montar a plantadeira.</small>'}
+      </div>${buildTarget === 'broto' ? buildImplementEditor() : buildEditor(sel.char)}` : gTab === 'creations' ? buildCreations() : `<div class="items">${itemsFor(gTab).map(i => `
         <div class="it ${sel[selKey(gTab)] === i.id ? 'sel' : ''} ${i.owned ? '' : 'locked'}" data-id="${i.id}">
           ${i.img ? `<img src="${i.img}" alt="">` : i.sw ? `<div class="sw" style="background:${i.sw}"></div>` : `<div class="ic">${i.ic}</div>`}
           <div>${i.name}</div>${i.sub ? `<small>${i.sub}</small>` : ''}
@@ -207,7 +213,7 @@ function buildGarage(mode) {
       </div>
     </div>`;
   click($('gBack'), () => { preview = null; api.leaveGarage(mode === 'race' ? 'tracks' : 'menu'); }, 'back');
-  root.querySelectorAll('.tab').forEach(b => click(b, () => { if (b.disabled) return; gTab = b.dataset.t; preview = null; api.refreshShowroom(); buildGarage(mode); }));
+  root.querySelectorAll('.tabs [data-t]').forEach(b => click(b, () => { if (b.disabled) return; gTab = b.dataset.t; preview = null; api.refreshShowroom(); buildGarage(mode); }));
   root.querySelectorAll('.it').forEach(el => click(el, () => {
     const id = el.dataset.id, k = selKey(gTab);
     if (gTab === 'horn') audio.horn(id);
@@ -233,12 +239,35 @@ function buildGarage(mode) {
   }, 'click');
   const go = $('gGo');
   if (go) click(go, () => { preview = null; api.startRace(profile.sel.track); });
-  if (gTab === 'build') bindEditor(root, sel.char, mode);
+  if (gTab === 'build') {
+    root.querySelectorAll('[data-target]').forEach(button => click(button, () => {
+      if (button.disabled) return;
+      buildTarget = button.dataset.target; buildGarage(mode);
+    }));
+    if (buildTarget === 'broto') bindImplementEditor(root, mode);
+    else bindEditor(root, sel.char, mode);
+  }
+  if (gTab === 'creations') bindCreations(root, mode);
 }
 
 // Small vector drawings show each part's silhouette before it is fitted to the machine.
 function partDrawing(key, value) {
   const drawings = {
+    'hopper:seed': `<path fill="#E9C46A" d="M36 65C13 40 42 17 65 8c4 12 35 29 29 46-4 14-40 23-58 11Z"/>
+      <path d="M64 14 49 63m17-47 11 46" stroke="#C39A42" stroke-width="3" fill="none"/><path d="m29 47 64-5v10l-62 6Z" fill="#FFF0CF"/>`,
+    'hopper:barrel': `<path fill="#E9C46A" d="M34 22h60v39c0 16-60 16-60 0Z"/><ellipse cx="64" cy="22" rx="30" ry="12" fill="#E87578"/>
+      <path d="M34 33q30 14 60 0m-60 22q30 14 60 0" fill="none" stroke="#FFF0CF" stroke-width="6"/>`,
+    'hopper:crate': `<path d="m23 24 58-10 25 15-57 13Z" fill="#FFF0CF"/><path d="m23 24 26 18v28L23 52Z" fill="#D5AA54"/>
+      <path d="m49 42 57-13v28L49 70Z" fill="#E9C46A"/><path d="m55 48 45-10m-45 21 45-10" stroke="#FFF0CF" stroke-width="5"/>
+      <path d="M29 28v25m25-11v24m46-34v24" stroke="#E87578" stroke-width="6"/>`,
+    'wheels:small': `<ellipse cx="65" cy="48" rx="20" ry="22" fill="#29353D"/><ellipse cx="62" cy="48" rx="13" ry="16" fill="#FFF0CF"/>
+      <ellipse cx="61" cy="48" rx="6" ry="8" fill="#E87578"/><path d="m42 34 6-5m-9 19 7-1m-3 18 6-5m24-30 7 5m-3 14 8 1" stroke="#56656B" stroke-width="4"/>`,
+    'wheels:wide': `<path d="M48 18h31c34 0 34 52 0 52H48Z" fill="#29353D"/><ellipse cx="48" cy="44" rx="25" ry="26" fill="#3D4B54"/>
+      <ellipse cx="47" cy="44" rx="17" ry="19" fill="#FFF0CF"/><ellipse cx="47" cy="44" rx="8" ry="10" fill="#E87578"/>
+      <path d="m73 22 13 5m-9 8 17 5m-16 8 17 5m-21 9 12 4" stroke="#56656B" stroke-width="5"/>`,
+    'wheels:double': `<ellipse cx="82" cy="39" rx="23" ry="25" fill="#29353D"/><ellipse cx="80" cy="39" rx="13" ry="16" fill="#FFF0CF"/>
+      <ellipse cx="48" cy="48" rx="25" ry="26" fill="#3D4B54"/><ellipse cx="46" cy="48" rx="16" ry="19" fill="#FFF0CF"/>
+      <ellipse cx="46" cy="48" rx="7" ry="9" fill="#E87578"/><path d="m26 32 8-5m-12 20 9-1m-4 19 8-5" stroke="#56656B" stroke-width="4"/>`,
     'hood:shell': `<path fill="#216C79" d="M18 58C16 26 39 14 69 18c25 3 41 17 43 40L95 68H35Z"/>
       <path d="M38 57c-2-19 6-29 18-36m3 41c0-20 5-32 13-40m10 40c0-14 1-23 2-33" fill="none" stroke="#75C5D4" stroke-width="5"/>`,
     'hood:box': `<path fill="#75C5D4" d="m19 28 63-9 28 16-64 10Z"/><path fill="#216C79" d="m19 28 27 17v24L19 53Z"/>
@@ -296,6 +325,75 @@ function bindEditor(root, char, mode) {
     save(); api.refreshShowroom();
   }));
   click($('buildReset'), () => { profile.builds[char] = { ...BUILD_DEFAULTS }; save(); api.refreshShowroom(); buildGarage(mode); });
+}
+
+function buildImplementEditor() {
+  const b = cleanImplementBuild(profile.implementBuilds.broto);
+  const choices = [
+    ['hopper', 'Reservatórios', [['seed','Sementes'],['barrel','Barris'],['crate','Caixotes']]],
+    ['wheels', 'Rodas', [['small','Pequenas'],['wide','Largas'],['double','Duplas']]],
+  ];
+  return `<div class="buildIntro"><b>Monte o seu Broto!</b> Cores independentes do trator · salvo automaticamente</div>
+    <div class="partGroups brotoParts">${choices.map(([key,label,options]) => `<fieldset class="partGroup"><legend>${label}</legend><div class="partOptions">${options.map(([v,text]) => `
+      <label class="partOption"><input type="radio" name="broto-${key}" data-impl-build="${key}" value="${v}" ${b[key] === v ? 'checked' : ''}>
+      <span class="partCard">${partDrawing(key,v)}<span class="partLabel">${text}</span><span class="partSelected">✓ Selecionado</span></span></label>`).join('')}</div></fieldset>`).join('')}</div>
+    <div class="buildGrid">${[['bodyColor','Chassi'],['hopperColor','Reservatórios'],['accent','Detalhes'],['trim','Acabamento']].map(([key,label]) => `
+      <label class="buildColor">${label}<input aria-label="Cor do ${label}" data-impl-build="${key}" type="color" value="${b[key]}"></label>`).join('')}</div>
+    <div class="buildActions"><small>Peças visuais: a habilidade de plantio continua a mesma.</small><button class="btn small cream" id="implBuildReset">Restaurar Broto</button></div>`;
+}
+function bindImplementEditor(root, mode) {
+  root.querySelectorAll('[data-impl-build]').forEach(input => input.addEventListener('input', () => {
+    const b = cleanImplementBuild(profile.implementBuilds.broto);
+    b[input.dataset.implBuild] = input.value;
+    profile.implementBuilds.broto = cleanImplementBuild(b);
+    save(); api.refreshShowroom();
+  }));
+  click($('implBuildReset'), () => {
+    profile.implementBuilds.broto = { ...IMPLEMENT_DEFAULTS };
+    save(); api.refreshShowroom(); buildGarage(mode);
+  });
+}
+
+const escapeHTML = value => String(value).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+function buildCreations() {
+  return `<form id="creationForm" class="creationForm">
+      <label for="creationName">Salvar a montagem atual<input id="creationName" name="name" type="text" maxlength="40" required placeholder="Ex.: Tatu da Colheita" autocomplete="off"></label>
+      <button class="btn small" type="submit">＋ Salvar criação</button>
+    </form><p class="creationNotice" role="status">${escapeHTML(creationNotice || 'Guarde a máquina, as peças, as cores e o Broto em uma combinação com nome.')}</p>
+    <div class="creationList">${profile.creations.length ? profile.creations.map(c => {
+      const ch = api.CHARACTERS[c.sel.char];
+      const hasBroto = ch.tows && c.sel.impl === 'broto';
+      const b = cleanImplementBuild(c.implBuild);
+      return `<article class="creationCard"><img src="${ch.img}" alt="${ch.name}"><div class="creationDetails">
+        <b>${escapeHTML(c.name)}</b><small>${ch.name}${hasBroto ? ' + Broto' : ''}</small>
+        ${hasBroto ? `<div class="creationParts">${partDrawing('hopper',b.hopper)}${partDrawing('wheels',b.wheels)}</div>` : ''}
+        <div class="creationButtons"><button class="btn small" data-load-creation="${escapeHTML(c.id)}">Usar</button>
+        <button class="btn small cream" data-remove-creation="${escapeHTML(c.id)}" aria-label="Excluir ${escapeHTML(c.name)}">Excluir</button></div>
+      </div></article>`;
+    }).join('') : '<p class="creationEmpty">Sua primeira criação começa na aba Montar. Depois, dê um nome e salve aqui!</p>'}</div>`;
+}
+function bindCreations(root, mode) {
+  $('creationForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const result = saveCreation($('creationName').value);
+    if (!result) {
+      root.querySelector('.creationNotice').textContent = 'Digite um nome para sua criação.';
+      $('creationName').focus(); return;
+    }
+    creationNotice = result.persisted ? `“${result.creation.name}” salva! Use quando quiser.` : 'Criação guardada nesta sessão. O navegador não permitiu salvar no armazenamento.';
+    audio.sfx('click'); buildGarage(mode);
+  });
+  root.querySelectorAll('[data-load-creation]').forEach(button => click(button, () => {
+    if (!loadCreation(button.dataset.loadCreation)) return;
+    preview = null; buildTarget = 'machine';
+    creationNotice = 'Criação aplicada! Você pode correr ou continuar montando.';
+    api.refreshShowroom(); buildGarage(mode);
+  }));
+  root.querySelectorAll('[data-remove-creation]').forEach(button => click(button, () => {
+    removeCreation(button.dataset.removeCreation);
+    creationNotice = 'Criação excluída da coleção. A montagem equipada foi mantida.';
+    buildGarage(mode);
+  }));
 }
 
 // ---------------------------------------------------------------- options / credits / pause

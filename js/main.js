@@ -8,7 +8,7 @@ import { audio } from './audio.js';
 import { profile, save, CATALOG, PRIZES, COIN_VALUE, paintColor } from './save.js';
 import { TRACKS, trackById } from './tracks.js';
 import { ui } from './ui.js';
-import { applyBuild } from './customize.js';
+import { applyBuild, applyImplementBuild } from './customize.js';
 
 // ================================================================== config & game data
 const CFG = {
@@ -148,7 +148,9 @@ const toonColor = (hex, extra = {}) => new THREE.MeshToonMaterial({ color: hex, 
 // ================================================================== assets
 const ASSETS = ['tatu', 'corn', 'wheat', 'sunflower', 'hay', 'haysq', 'barn', 'silo', 'fence', 'tree', 'pine', 'bush',
   'rock', 'cow', 'scarecrow', 'windmill', 'gate', 'cloud', 'itembox', 'pingo', 'broto', 'ramp', 'coin', 'podium',
-  'garage', 'soy', 'cerrado_tree', 'acc_straw', 'acc_cap', 'acc_crown', 'acc_flower', 'acc_flag', 'acc_glasses'];
+  'garage', 'soy', 'cerrado_tree', 'acc_straw', 'acc_cap', 'acc_crown', 'acc_flower', 'acc_flag', 'acc_glasses',
+  'broto_hoppers_seed', 'broto_hoppers_barrel', 'broto_hoppers_crate',
+  'broto_wheels_small', 'broto_wheels_wide', 'broto_wheels_double'];
 const A = {};
 async function loadAssets(onProgress) {
   const loader = new GLTFLoader();
@@ -651,10 +653,11 @@ function makeKartModel(def, parent = scene) {
   const booms = { L: model.getObjectByName('BoomL'), R: model.getObjectByName('BoomR') };
   const accessory = addAccessory(model, ch, def.acc);
   if (accessory) accessory.position.y += custom.lift;
-  let trailer = null;
+  let trailer = null, customTrailer = null;
   const im = ch.tows ? IMPLEMENTS[def.impl] : null;
   if (im?.asset) {
     const tModel = A[im.asset].clone(true);
+    if (im.asset === 'broto') customTrailer = applyImplementBuild(tModel, def.implBuild, A);
     tModel.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     tModel.rotation.y = Math.PI;
     const tRoot = new THREE.Group(); tRoot.add(tModel); parent.add(tRoot);
@@ -663,7 +666,7 @@ function makeKartModel(def, parent = scene) {
   }
   const visualCh = { ...ch, hitch: ch.hitch ? { ...ch.hitch, y: ch.hitch.y + custom.lift } : undefined };
   return { root, tilt, model, wheels, wheelR: { F: radiusOf(wheels.FL), R: radiusOf(wheels.RL) }, beaconMat, ch: visualCh, booms, trailer,
-    dispose: () => { custom.dispose(); paint.dispose(); } };
+    dispose: () => { custom.dispose(); customTrailer?.dispose(); paint.dispose(); } };
 }
 
 function createKart(def, gridPos, isPlayer) {
@@ -1298,7 +1301,7 @@ function clearRace() {
 }
 function playerDef() {
   const sel = profile.sel;
-  return { name: 'Você', char: sel.char, impl: CHARACTERS[sel.char].tows ? sel.impl : 'none', paint: paintColor(sel.paint), acc: sel.acc, build: profile.builds[sel.char] };
+  return { name: 'Você', char: sel.char, impl: CHARACTERS[sel.char].tows ? sel.impl : 'none', paint: paintColor(sel.paint), acc: sel.acc, build: profile.builds[sel.char], implBuild: profile.implementBuilds[sel.impl] };
 }
 function setupGrid() {
   clearRace();
@@ -1451,7 +1454,7 @@ function refreshShowroom(previewSel) {
   const sel = { ...profile.sel, ...previewSel };
   const ch = CHARACTERS[sel.char];
   const build = previewSel?.paint ? { ...profile.builds[sel.char], bodyColor: null } : profile.builds[sel.char];
-  const def = { char: sel.char, impl: ch.tows ? sel.impl : 'none', paint: paintColor(sel.paint), acc: sel.acc, build };
+  const def = { char: sel.char, impl: ch.tows ? sel.impl : 'none', paint: paintColor(sel.paint), acc: sel.acc, build, implBuild: profile.implementBuilds[sel.impl] };
   showModel = makeKartModel(def, showSpin);
   showModel.root.position.set(0, 0.25, ch.tows && def.impl !== 'none' ? 1.8 : 0);
   if (showModel.trailer) {

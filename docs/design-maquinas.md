@@ -28,6 +28,20 @@ O jogador escolheu encaixes definidos e ajustes de tamanho para a primeira vers�
 - Não há arraste livre de peças nem deformação de malha nesta versão.
 - Escolher uma pintura na loja ou garagem substitui a cor livre da carroceria.
 
+## Broto modular e coleção
+
+Com Tatu e Broto selecionados, **Montar → Broto** oferece cartões ilustrados para reservatórios de sementes, barris ou caixotes e rodas pequenas, largas ou duplas.
+Chassi, reservatórios, detalhes e acabamento têm cores próprias, independentes da pintura do Tatu.
+O motor usa as mesmas peças GLB salvas em disco. Não há mudança de habilidade ou atributos.
+
+**Minhas criações** guarda montagens nomeadas no perfil local. A criação captura a máquina atual, sua montagem, o Broto, as cores, pintura, acessório e buzina.
+Carregar uma criação substitui a montagem atual e respeita a propriedade de itens da loja. Não altera moedas, recordes ou pista selecionada.
+Excluir uma criação remove apenas sua entrada da coleção, preservando o visual equipado.
+As miniaturas da coleção usam o retrato da máquina-base e desenhos das peças do Broto, sem capturas da montagem 3D.
+
+O script `blender/broto_parts.py` gera os arquivos `broto_hoppers_seed`, `broto_hoppers_barrel`, `broto_hoppers_crate`, `broto_wheels_small`, `broto_wheels_wide` e `broto_wheels_double`, cada um em `.blend` e `.glb`.
+As coordenadas são relativas ao engate do Broto, com eixos de rodas independentes para animação.
+
 ## Arquivos e reprodução
 
 `blender/oficina.py` gera os GLBs, arquivos Blender editáveis e retratos com fundo transparente.
@@ -39,7 +53,7 @@ Rodas têm origem no eixo e rotação neutra para animação. O Broto tem origem
 O jogo carrega exclusivamente tatu.glb, pingo.glb e broto.glb para as máquinas.
 Os arquivos anteriores permanecem como histórico e não são utilizados pelo jogo atual.
 
-## Validação
+## Validação anterior à personalização do Broto
 
 - Carregamento dos três GLBs com GLTFLoader do Three.js 0.160.
 - 54 combinações: dimensões válidas, rodas no chão, pintura e isolamento do modelo-base.
@@ -50,3 +64,9 @@ Os arquivos anteriores permanecem como histórico e não são utilizados pelo jo
 O teste `tests/oficina.cjs` usa as bibliotecas Three.js 0.160 em um diretório passado como argumento.
 O diretório deve conter roca-three-0160.mjs, roca-GLTFLoader.mjs e roca-BufferGeometryUtils.mjs,
 com imports locais entre os três arquivos. Não é necessário mudar as dependências do jogo.
+
+## Etapa atual: sem testes locais
+
+Por instrução expressa do usuário, não foram executados testes, verificações de sintaxe ou validação no navegador para a personalização do Broto e Minhas criações.
+O teste existente foi atualizado para as peças e a coleção, mas não foi executado.
+O Blender foi usado apenas em segundo plano para produzir e salvar os arquivos 3D.

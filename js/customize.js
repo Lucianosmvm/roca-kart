@@ -12,6 +12,36 @@ export const BUILD_RANGES = {
   frontSize: [.8, 1.25], rearSize: [.85, 1.2], tireWidth: [.7, 1.5], stance: [.95, 1.3],
   hoodWidth: [.85, 1.15], hoodHeight: [.8, 1.2], tankSize: [.8, 1.2], armSize: [.75, 1.25],
 };
+export const IMPLEMENT_DEFAULTS = Object.freeze({
+  hopper: 'seed', wheels: 'small', bodyColor: '#216C79',
+  hopperColor: '#E9C46A', accent: '#E87578', trim: '#FFF0CF',
+});
+export function cleanImplementBuild(raw = {}) {
+  const b = { ...IMPLEMENT_DEFAULTS };
+  if (['seed', 'barrel', 'crate'].includes(raw.hopper)) b.hopper = raw.hopper;
+  if (['small', 'wide', 'double'].includes(raw.wheels)) b.wheels = raw.wheels;
+  for (const k of ['bodyColor', 'hopperColor', 'accent', 'trim']) {
+    if (/^#[\da-f]{6}$/i.test(raw[k] ?? '')) b[k] = raw[k];
+  }
+  return b;
+}
+
+// Reuse exported Blender assemblies, so every selectable Broto part is also a file on disk.
+export function applyImplementBuild(model, raw, assets) {
+  const b = cleanImplementBuild(raw), resources = [];
+  for (const name of ['Hoppers', 'WheelL', 'WheelR', 'WheelEndL', 'WheelEndR']) {
+    model.getObjectByName(name)?.removeFromParent();
+  }
+  model.add(assets['broto_hoppers_' + b.hopper].clone(true));
+  model.add(assets['broto_wheels_' + b.wheels].clone(true));
+  const colors = { Teal: b.bodyColor, Straw: b.hopperColor, Coral: b.accent, Cream: b.trim };
+  model.traverse(o => {
+    if (!o.isMesh || !colors[o.material.name]) return;
+    o.material = o.material.clone(); o.material.color.set(colors[o.material.name]);
+    resources.push(o.material);
+  });
+  return { dispose: () => resources.forEach(r => r.dispose()) };
+}
 export function cleanBuild(raw = {}) {
   const b = { ...BUILD_DEFAULTS };
   for (const [k, [lo, hi]] of Object.entries(BUILD_RANGES)) {

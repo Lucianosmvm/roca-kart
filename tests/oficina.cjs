@@ -9,13 +9,13 @@ process.chdir(path.resolve(__dirname, '..'));
   const T = await import(threeURL);
   const { GLTFLoader } = await import(pathToFileURL(path.join(libs, 'roca-GLTFLoader.mjs')).href);
   const source = fs.readFileSync('js/customize.js', 'utf8').replace("from 'three'", 'from ' + JSON.stringify(threeURL));
-  const { applyBuild, cleanBuild } = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
+  const { applyBuild, cleanBuild, applyImplementBuild, cleanImplementBuild } = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
   const scenes = {};
-  for (const name of ['tatu', 'pingo', 'broto']) {
+  for (const name of ['tatu', 'pingo', 'broto', 'broto_hoppers_seed', 'broto_hoppers_barrel', 'broto_hoppers_crate', 'broto_wheels_small', 'broto_wheels_wide', 'broto_wheels_double']) {
     const b = fs.readFileSync('assets/' + name + '.glb');
     scenes[name] = (await new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength), '')).scene;
     assert(!new T.Box3().setFromObject(scenes[name]).isEmpty());
-    if (name !== 'broto') for (const w of ['FL', 'FR', 'RL', 'RR']) {
+    if (['tatu', 'pingo'].includes(name)) for (const w of ['FL', 'FR', 'RL', 'RR']) {
       const wheel = scenes[name].getObjectByName('Wheel' + w);
       assert(wheel, name + w);
       assert(wheel.rotation.toArray().slice(0, 3).every(a => Math.abs(a) < 1e-6), 'neutral wheel rotation');
@@ -46,8 +46,8 @@ process.chdir(path.resolve(__dirname, '..'));
   const characters = Function('return ' + runtime.match(/export const CHARACTERS = ([\s\S]*?);\r?\nexport const IMPLEMENTS/)[1])();
   const implementsData = Function('return ' + runtime.match(/export const IMPLEMENTS = ([\s\S]*?);\r?\nexport const ABILITIES/)[1])();
   const seam = runtime.slice(runtime.indexOf('const radiusOf ='), runtime.indexOf('function createKart('));
-  const make = Function('THREE', 'CHARACTERS', 'IMPLEMENTS', 'A', 'applyBuild', 'toonColor', 'scene', 'CATALOG',
-    seam + '; return makeKartModel;')(T, characters, implementsData, scenes, applyBuild,
+  const make = Function('THREE', 'CHARACTERS', 'IMPLEMENTS', 'A', 'applyBuild', 'applyImplementBuild', 'toonColor', 'scene', 'CATALOG',
+    seam + '; return makeKartModel;')(T, characters, implementsData, scenes, applyBuild, applyImplementBuild,
       hex => new T.MeshToonMaterial({ color: hex }), new T.Scene(), { acc: [] });
   for (const char of ['tatu', 'pingo']) for (const impl of ['none', 'broto']) {
     const v = make({ char, impl, paint: '#216C79', acc: 'none', build: { hood: 'box', rearSize: 1.2 } });
@@ -59,6 +59,14 @@ process.chdir(path.resolve(__dirname, '..'));
     v.dispose();
   }
   console.log('Runtime racer assembly: both machines, wheels, booms and tow attachment OK');
+  for (const hopper of ['seed', 'barrel', 'crate']) for (const wheels of ['small', 'wide', 'double']) {
+    const v = make({ char: 'tatu', impl: 'broto', paint: '#216C79', acc: 'none', implBuild: { hopper, wheels, bodyColor: '#123456' } });
+    assert.equal(v.trailer.wheels.length, wheels === 'double' ? 4 : 2);
+    assert.equal(v.trailer.root.getObjectsByProperty('name', 'Hoppers').length, 1);
+    v.dispose();
+  }
+  assert.equal(cleanImplementBuild({ hopper: 'invalid', wheels: 'invalid' }).hopper, 'seed');
+  assert.equal(cleanImplementBuild({ bodyColor: 'invalid' }).bodyColor, '#216C79');
   assert.equal(cleanBuild({ frontSize: 999 }).frontSize, 1.25);
   assert.equal(cleanBuild({ roof: 'bad' }).roof, 'canopy');
   assert.equal(cleanBuild({ tankSize: 'NaN' }).tankSize, 1);
@@ -72,6 +80,20 @@ process.chdir(path.resolve(__dirname, '..'));
   assert(mod.profile.owned.paints.includes('roxo')); assert.equal(mod.profile.best.milharal, 99);
   mod.save(); assert.equal(JSON.parse(saved).builds.tatu.hood, 'box');
   console.log('Save migration and design persistence OK');
+  Object.assign(mod.profile.sel, { char: 'tatu', impl: 'broto', acc: 'cap', horn: 'classica' });
+  mod.profile.builds.tatu = { hood: 'round' };
+  mod.profile.implementBuilds.broto = { hopper: 'crate', wheels: 'double', bodyColor: '#123456' };
+  const result = mod.saveCreation('Minha montagem');
+  assert(result.persisted);
+  mod.profile.builds.tatu.hood = 'box';
+  mod.profile.implementBuilds.broto.wheels = 'small';
+  assert(mod.loadCreation(result.creation.id));
+  assert.equal(mod.profile.builds.tatu.hood, 'round');
+  assert.equal(mod.profile.implementBuilds.broto.wheels, 'double');
+  assert.equal(mod.profile.coins, 777);
+  mod.removeCreation(result.creation.id);
+  assert.equal(mod.profile.creations.length, 0);
+  assert.equal(mod.profile.implementBuilds.broto.wheels, 'double');
   const main = fs.readFileSync('js/main.js', 'utf8');
   const assets = main.match(/const ASSETS = (\[[\s\S]*?\]);/)[1];
   for (const asset of Function('return ' + assets)()) assert(fs.existsSync('assets/' + asset + '.glb'), asset);

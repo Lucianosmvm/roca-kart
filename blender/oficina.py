@@ -72,7 +72,8 @@ def seat(parts, y, z, m):
 def finish(parts, extra, name, target, dist):
     # Export editable assemblies independently, retaining their transforms.
     categories = {'Hood': ['ShellHood','ShellRib'], 'Roof': ['SunCanopy','CanopyPost'],
-                  'Bumper': ['CoralBumper','BumperBolt'], 'Tank': ['WaterDrop','TankStrap']}
+                  'Bumper': ['CoralBumper','BumperBolt'], 'Tank': ['WaterDrop','TankStrap'],
+                  'Hoppers': ['SeedHopper','SeedTip','HopperBand','BandBolt']}
     assemblies=[]
     for label,prefixes in categories.items():
         selected=[o for o in parts if any(o.name.startswith(s) for s in prefixes)]
@@ -87,6 +88,8 @@ def finish(parts, extra, name, target, dist):
         bpy.ops.object.transform_apply(location=False,rotation=True,scale=True)
     export(objects,name+'.glb')
     save_blend(name)
+    if os.environ.get('SKIP_PORTRAITS') == '1':
+        return
     # Portraits come from the actual mesh, not the concept illustration.
     sc=bpy.context.scene
     sc.render.engine='CYCLES'; sc.cycles.samples=24
@@ -192,4 +195,5 @@ def broto():
         o.location.y-=2.2; o.location.z-=.64
     finish(p,wheels,'broto',(0,-1.85,.56),6.8)
 
-for build in (tatu,pingo,broto): build()
+if __name__ == '__main__':
+    for build in (tatu,pingo,broto): build()
