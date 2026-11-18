@@ -112,7 +112,7 @@ def podium():
         o.append(cyl("bale", 0.8, 1.2, (x, 1, 0.8), hay, 12, rot=(0, math.pi / 2, 0), bevel=0.06, seg=1))
     for x in (-9.5, 9.5):  # bunting poles
         o.append(box("pole", (0.2, 0.2, 6), (x, 2.8, 3), woodDk, 0.02))
-    flags = [mat(f"Flag{i}", c) for i, c in enumerate(("#F27A1C", "#1F8A4C", "#FFC83D", "#2F6FD6", "#C8372D"))]
+    flags = [mat(f"Flag{i}", c) for i, c in enumerate(("#216C79", "#FFF0CF", "#E9C46A", "#75C5D4", "#E87578"))]
     for k in range(14):
         x = -9.5 + k * 19 / 13
         z = 5.6 - 0.9 * math.sin(math.pi * k / 13)
@@ -125,7 +125,7 @@ def podium():
 def garage():
     floor = mat("Floor", "#C9A06A", 0.8); plank = mat("PlankLine", "#A87F4E"); wall = mat("Wall", "#C8372D")
     trim = mat("Trim", "#FAF7EE"); beamM = mat("Beam", "#7A5230"); turn = mat("Turntable", "#3D3F46", 0.4)
-    turnRing = mat("TurnRing", "#F5821F", 0.35, emission=0.4); hay = mat("Hay", "#F2C94C"); tool = mat("Tool", "#8E9399", 0.3)
+    turnRing = mat("TurnRing", "#216C79", 0.35, emission=0.4); hay = mat("Hay", "#F2C94C"); tool = mat("Tool", "#8E9399", 0.3)
     lamp = mat("Lamp", "#FFF1C1", 0.2, emission=3.0); sign = mat("Sign", "#1F8A4C"); green = mat("Green", "#1F8A4C")
     o = [box("floor", (22, 18, 0.2), (0, 0, -0.1), floor, 0.0)]
     for k in range(-10, 11, 2):
@@ -175,7 +175,7 @@ def acc_straw():
 
 
 def acc_cap():
-    cap = mat("Cap", "#F5821F"); visor = mat("Visor", "#1F8A4C"); white = mat("White", "#FFFFFF")
+    cap = mat("Cap", "#E87578"); visor = mat("Visor", "#216C79"); white = mat("White", "#FFF0CF")
     o = [uvs("dome", 0.4, (0, 0, 0.02), cap, 20, 10, scale=(1, 1.05, 0.7)),
          cyl("visor", 0.36, 0.04, (0, 0.36, 0.06), visor, 20, rot=(0.1, 0, 0)),
          uvs("button", 0.06, (0, 0, 0.3), visor, 8, 5)]
@@ -212,7 +212,7 @@ def acc_flower():
 
 
 def acc_flag():
-    pole = mat("Pole", "#D9DDE3", 0.3); orange = mat("FlagOrange", "#F5821F"); green = mat("FlagGreen", "#1F8A4C"); white = mat("White", "#FFFFFF")
+    pole = mat("Pole", "#D9DDE3", 0.3); orange = mat("FlagCoral", "#E87578"); green = mat("FlagTeal", "#216C79"); white = mat("White", "#FFF0CF")
     o = [cyl("pole", 0.03, 1.6, (0, 0, 0.8), pole, 8), ico("tip", 0.06, (0, 0, 1.62), mat("Gold", "#FFC83D"), 1)]
     for k in range(3):  # wavy checkered flag
         for j in range(2):

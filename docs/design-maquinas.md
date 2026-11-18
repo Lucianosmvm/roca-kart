@@ -1,40 +1,52 @@
-# Design: máquinas, implementos e habilidades
+# Oficina da Roça — identidade e montagem
 
-Princípio: **o trator é o "kart", o implemento vai engatado atrás** (como no campo).
-Implementos sem motor (plantadeira, distribuidor, cultivador...) são puxados por um trator.
-Máquinas com motor próprio (ex.: Imperador, autopropelido) correm sozinhas com a habilidade embutida.
+Máquinas inventadas numa oficina rural brasileira para disputar o campeonato Roça Kart.
+Geometria original construída com primitivas, sem importar modelos de engenharia.
 
-## Escolha do jogador
-1. **Trator** (motor): ST MAX 105 / 150 / 180 — velocidade, arrancada, curva.
-2. **Implemento** (habilidade): muda peso e dá um poder especial.
-3. Ou **máquina autopropelida** (Imperador) sem implemento.
+## Elenco e paleta
 
-## Habilidade = aplicação real da máquina
+| Máquina | Silhueta | Papel |
+|---|---|---|
+| Tatu | Capô em casco, cabine aberta, toldo creme e rodas traseiras enormes | Trator que puxa o Broto; sozinho tem Arrancada Turbo |
+| Pingo | Buggy com tanque em gota, quatro rodas iguais e braços curtos | Chuva de Pingo, jatos laterais |
+| Broto | Plantadeira rebocada com três reservatórios em forma de sementes | Plantio Relâmpago, fileira de girassóis |
 
-| Máquina | Aplicação | Habilidade especial (botão HAB) | Passiva |
-|---|---|---|---|
-| Plantadeira **Absoluta** | Planta sementes em linha | **Plantio Relâmpago**: fileira de girassóis gigantes atrás | Mudinhas atrapalham quem vem colado |
-| Distribuidor **Hércules** | Espalha adubo/calcário em leque | **Lanço de Calcário**: nuvem em leque (Atchim!) | Rastro de pó atrás |
-| Pulverizador **Fênix** (arrasto) | Pulveriza com barras laterais | **Barras Abertas**: empurra quem está do lado | Imune à lama |
-| **Corisco** (tanque frontal) | Tanque de líquido na frente | **Canhão d'Água**: jato longo para frente | Peso na frente, curva melhor |
-| **Cultivador** | Revolve/prepara o solo | **Sulco Turbo**: turbo + sulco que acelera | Sem penalidade fora da estrada |
-| **Imperador** (autopropelido) | Pulverizador com motor | Barras gigantes laterais | Rápido em reta, curva ruim |
+Azul Oficina `#216C79`, creme `#FFF0CF`, coral `#E87578`, palha `#E9C46A`.
+Contornos em azul escuro. Vegetação mantém suas cores naturais.
 
-**Caixas de item** (universais, qualquer um pega): Turbo de Biodiesel, Piloto **Guia** (tecnologia), Trovoada (raio no 1º).
+## Editor com encaixes
 
-## Regra visual
-Olhos e rosto **sempre na frente** da máquina/implemento (podem subir acima das tampas para aparecer atrás do trator). A marca/nome fica na traseira.
+A inspiração é a liberdade de montagem de jogos como SPORE, com peças próprias.
+O jogador escolheu encaixes definidos e ajustes de tamanho para a primeira versão.
 
-## Sensação
-- Implemento balança atrás nas curvas/drift ("rabeada").
-- Implemento pesado: empurra menos nas batidas, arranca mais devagar.
-- Barra de habilidade enche com drift, ultrapassagem e moedinhas de milho.
+- **Tatu:** capôs casco, caixote ou cápsula; toldo, cabine aberta ou santo-antônio; para-choque simples, duplo ou sem barra.
+- **Pingo:** tamanho do tanque em gota e comprimento dos braços de irrigação.
+- **Ambos:** tamanho independente dos pneus dianteiros e traseiros, largura dos pneus, distância lateral entre rodas e cores livres de carroceria, detalhes e acabamento.
+- A prévia 3D atualiza imediatamente. Cada máquina tem uma montagem própria salva no navegador e usada na corrida.
+- Restaurar montagem repõe apenas o visual da máquina selecionada.
+- Montagens são cosméticas. Colisões, velocidade, aceleração e habilidades continuam ligadas à máquina-base.
+- Não há arraste livre de peças nem deformação de malha nesta versão.
+- Escolher uma pintura na loja ou garagem substitui a cor livre da carroceria.
 
-## A confirmar com produto
-Quais máquinas são autopropelidas vs. arrasto (Fênix, Hércules, Bruttus). Autopropelida vira personagem próprio.
+## Arquivos e reprodução
 
-## Ordem de implementação
-1. ✅ Absoluta engatada no trator + barra de habilidade (Plantio Relâmpago).
-2. ✅ Seleção em 2 etapas (trator → implemento).
-3. ✅ Caixas só com itens universais; habilidades por máquina.
-4. Demais implementos (Hércules, Fênix, Corisco, Cultivador) e tratores 150/180.
+`blender/oficina.py` gera os GLBs, arquivos Blender editáveis e retratos com fundo transparente.
+`js/customize.js` contém peças alternativas, encaixes e limites de proporção.
+`docs/art/oficina-conceito.png` é a prancha gerada com a ferramenta integrada de imagens;
+o prompt está em `docs/art/oficina-prompt.txt`. Os retratos no jogo vêm das malhas reais.
+
+Rodas têm origem no eixo e rotação neutra para animação. O Broto tem origem no engate.
+O jogo carrega exclusivamente tatu.glb, pingo.glb e broto.glb para as máquinas.
+Os arquivos anteriores permanecem como histórico e não são utilizados pelo jogo atual.
+
+## Validação
+
+- Carregamento dos três GLBs com GLTFLoader do Three.js 0.160.
+- 54 combinações: dimensões válidas, rodas no chão, pintura e isolamento do modelo-base.
+- Migração das seleções preservando moedas, compras, recordes e montagens salvas.
+- Sintaxe JavaScript e presença de todos os modelos carregados pelo jogo.
+- Teste visual jogável pendente: ferramenta de controle do navegador interrompida por não conseguir confirmar a URL no Windows.
+
+O teste `tests/oficina.cjs` usa as bibliotecas Three.js 0.160 em um diretório passado como argumento.
+O diretório deve conter roca-three-0160.mjs, roca-GLTFLoader.mjs e roca-BufferGeometryUtils.mjs,
+com imports locais entre os três arquivos. Não é necessário mudar as dependências do jogo.

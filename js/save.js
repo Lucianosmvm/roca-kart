@@ -3,7 +3,7 @@
 
 export const CATALOG = {
   paints: [
-    { id: 'laranja', name: 'Laranja Stara', color: '#F27A1C', price: 0 },
+    { id: 'petroleo', name: 'Azul Oficina', color: '#216C79', price: 0 },
     { id: 'vermelho', name: 'Vermelho Trator', color: '#D62F2F', price: 80 },
     { id: 'azul', name: 'Azul Céu', color: '#2F6FD6', price: 80 },
     { id: 'verde', name: 'Verde Lavoura', color: '#2E9E4F', price: 80 },
@@ -35,8 +35,9 @@ export const COIN_VALUE = 5;                      // each corn coin collected on
 const KEY = 'rocaKart.save.v1';
 const fresh = () => ({
   coins: 300,
-  owned: { paints: ['laranja'], acc: ['none'], horns: ['classica'] },
-  sel: { char: 'maxi', impl: 'absoluta', paint: 'laranja', acc: 'none', horn: 'classica', track: 'milharal' },
+  owned: { paints: ['petroleo'], acc: ['none'], horns: ['classica'] },
+  sel: { char: 'tatu', impl: 'broto', paint: 'petroleo', acc: 'none', horn: 'classica', track: 'milharal' },
+  builds: {},
   best: {},
   opts: { music: 0.6, sfx: 0.8, assist: null, autoGas: null, quality: 'alta' },
   seenIntro: false,
@@ -57,6 +58,13 @@ function read() {
 
 export const profile = read();
 for (const k of ['paints', 'acc', 'horns']) profile.owned[k] ??= [CATALOG[k][0].id];
+// Keep currency, purchases and records from the earlier cast.
+const oldChars = { maxi: 'tatu', imperador: 'pingo' };
+profile.sel.char = oldChars[profile.sel.char] ?? profile.sel.char;
+if (profile.sel.impl === 'absoluta') profile.sel.impl = 'broto';
+if (profile.sel.paint === 'laranja') profile.sel.paint = 'petroleo';
+profile.owned.paints = [...new Set(['petroleo', ...profile.owned.paints.map(p => p === 'laranja' ? 'petroleo' : p)])];
+profile.builds ??= {};
 
 export function save() {
   try { localStorage.setItem(KEY, JSON.stringify(profile)); } catch { /* storage blocked: keep in memory */ }

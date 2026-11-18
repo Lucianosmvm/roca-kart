@@ -1,7 +1,8 @@
 // DOM screens for Roça Kart: splash, menu, track select, garage/shop (over the 3D showroom),
 // options, credits, pause, cutscene dialogue and results. The game engine talks to it via `api`.
 import { audio } from './audio.js';
-import { profile, save, CATALOG, buy, owns, resetProfile } from './save.js';
+import { profile, save, CATALOG, buy, owns, resetProfile, paintColor } from './save.js';
+import { BUILD_DEFAULTS, BUILD_RANGES, cleanBuild } from './customize.js';
 import { TRACKS } from './tracks.js';
 
 const $ = id => document.getElementById(id);
@@ -51,7 +52,7 @@ export const ui = {
     addEventListener('keydown', key);
   },
   cutsceneLine(who, text, title) {
-    const img = { Maxi: 'assets/ui/maxi.png', Absoluta: 'assets/ui/absoluta.png', Imperador: 'assets/ui/imperador.png' }[who];
+    const img = { Tatu: 'assets/ui/tatu.png', Broto: 'assets/ui/broto.png', Pingo: 'assets/ui/pingo.png' }[who];
     $('cutscene').innerHTML = `
       <div class="letterbox top"></div><div class="letterbox bot"></div>
       <button class="btn small cream skip" id="skipBtn">Pular ▶▶</button>
@@ -90,10 +91,10 @@ function updateWallet() { $('wallet').textContent = `🌽 ${profile.coins}`; }
 function buildSplash() {
   $('splash').innerHTML = `${logo()}
     <div class="tag">Pista de terra, máquinas da roça e muita diversão!</div>
-    <div class="splashMachines"><img src="assets/ui/maxi.png" alt="Maxi"><img src="assets/ui/absoluta.png" alt="Absoluta"><img src="assets/ui/imperador.png" alt="Imperador"></div>
+    <div class="splashMachines"><img src="assets/ui/tatu.png" alt="Tatu"><img src="assets/ui/broto.png" alt="Broto"><img src="assets/ui/pingo.png" alt="Pingo"></div>
     <div class="bar"><i id="splashBar"></i></div>
     <div class="tap hidden" id="splashTap"></div>
-    <div class="credit">Demo jogável · protótipo para apresentação · personagens inspirados nas máquinas Stara</div>`;
+    <div class="credit">Demo jogável · protótipo para apresentação · Oficina da Roça · máquinas inventadas para correr</div>`;
 }
 
 // ---------------------------------------------------------------- menu
@@ -161,7 +162,7 @@ function goGarageForRace() { profile.sel.track = pickedTrack; save(); api.openGa
 
 // ---------------------------------------------------------------- garage + shop (shared)
 let gTab = 'machine', preview = null;
-const TAB_NAMES = { machine: 'Máquina', impl: 'Implemento', paint: 'Pintura', acc: 'Acessório', horn: 'Buzina' };
+const TAB_NAMES = { machine: 'Máquina', build: '🛠 Montar', impl: 'Implemento', paint: 'Pintura', acc: 'Acessório', horn: 'Buzina' };
 const CAT = { paint: 'paints', acc: 'acc', horn: 'horns' };
 function itemsFor(tab) {
   const { CHARACTERS, IMPLEMENTS, ABILITIES } = api;
@@ -172,7 +173,7 @@ function itemsFor(tab) {
 const selKey = tab => ({ machine: 'char', impl: 'impl', paint: 'paint', acc: 'acc', horn: 'horn' }[tab]);
 function buildGarage(mode) {
   const shop = mode === 'shop', root = $(shop ? 'shop' : 'garage');
-  const tabs = shop ? ['paint', 'acc', 'horn'] : ['machine', 'impl', 'paint', 'acc', 'horn'];
+  const tabs = shop ? ['paint', 'acc', 'horn'] : ['machine', 'build', 'impl', 'paint', 'acc', 'horn'];
   if (!tabs.includes(gTab)) gTab = tabs[0];
   const { CHARACTERS, IMPLEMENTS, ABILITIES } = api;
   const sel = { ...profile.sel, ...(preview ?? {}) };
@@ -188,15 +189,15 @@ function buildGarage(mode) {
       ${profile.coins < item.price ? '<small> Faltam ' + (item.price - profile.coins) + ' 🌽 — corra para ganhar!</small>' : ''}</div>`;
   }
   root.innerHTML = `
-    <div class="gTop"><button class="btn small cream" id="gBack">◀</button><h2>${shop ? 'Loja' : 'Garagem'}</h2></div>
+    <div class="gTop"><button class="btn small cream" id="gBack">◀</button><h2>${shop ? 'Loja' : 'Oficina da Roça'}</h2></div>
     <div class="panel gPanel">
       <div class="tabs">${tabs.map(t => `<button class="tab ${gTab === t ? 'on' : ''}" data-t="${t}" ${t === 'impl' && !tows ? 'disabled' : ''}>${TAB_NAMES[t]}</button>`).join('')}</div>
-      <div class="items">${itemsFor(gTab).map(i => `
+      ${gTab === 'build' ? buildEditor(sel.char) : `<div class="items">${itemsFor(gTab).map(i => `
         <div class="it ${sel[selKey(gTab)] === i.id ? 'sel' : ''} ${i.owned ? '' : 'locked'}" data-id="${i.id}">
           ${i.img ? `<img src="${i.img}" alt="">` : i.sw ? `<div class="sw" style="background:${i.sw}"></div>` : `<div class="ic">${i.ic}</div>`}
           <div>${i.name}</div>${i.sub ? `<small>${i.sub}</small>` : ''}
           ${i.owned ? (sel[selKey(gTab)] === i.id ? '<small>✔ equipado</small>' : '<small>tenho</small>') : `<div class="price">🌽 ${i.price}</div>`}
-        </div>`).join('')}</div>
+        </div>`).join('')}</div>`}
       <div class="gInfo">
         <div><b style="font-family:'Lilita One';font-size:22px">${ch.name}${im && sel.impl !== 'none' ? ' + ' + im.name : ''}</b><br>
           <span class="abilTag">${ab.icon} ${ab.name}</span> ${im ? `<small>${im.perk}</small>` : ''}</div>
@@ -211,7 +212,11 @@ function buildGarage(mode) {
     const id = el.dataset.id, k = selKey(gTab);
     if (gTab === 'horn') audio.horn(id);
     const cat = CAT[gTab];
-    if (!cat || owns(cat, id)) { profile.sel[k] = id; save(); preview = null; }
+    if (!cat || owns(cat, id)) {
+      profile.sel[k] = id;
+      if (gTab === 'paint' && profile.builds[sel.char]) profile.builds[sel.char].bodyColor = null;
+      save(); preview = null;
+    }
     else preview = { [k]: id };
     api.refreshShowroom(preview ?? undefined);
     buildGarage(mode);
@@ -219,11 +224,46 @@ function buildGarage(mode) {
   const b = $('gBuy');
   if (b) click(b, () => {
     const [k, id] = Object.entries(preview)[0], tab = Object.keys(TAB_NAMES).find(t => selKey(t) === k);
-    if (buy(CAT[tab], id)) { audio.sfx('buy'); profile.sel[k] = id; save(); preview = null; api.refreshShowroom(); updateWallet(); buildGarage(mode); }
+    if (buy(CAT[tab], id)) {
+      audio.sfx('buy'); profile.sel[k] = id;
+      if (k === 'paint' && profile.builds[sel.char]) profile.builds[sel.char].bodyColor = null;
+      save(); preview = null; api.refreshShowroom(); updateWallet(); buildGarage(mode);
+    }
     else audio.sfx('deny');
   }, 'click');
   const go = $('gGo');
   if (go) click(go, () => { preview = null; api.startRace(profile.sel.track); });
+  if (gTab === 'build') bindEditor(root, sel.char, mode);
+}
+
+function buildEditor(char) {
+  const b = cleanBuild(profile.builds[char]);
+  const choices = char === 'tatu' ? [
+    ['hood', 'Capô', [['shell','Casco do Tatu'],['box','Caixote de oficina'],['round','Cápsula']]],
+    ['roof', 'Cabine', [['canopy','Toldo de palha'],['open','Sem teto'],['cage','Santo-antônio']]],
+    ['bumper', 'Para-choque', [['bar','Barra simples'],['double','Barra dupla'],['none','Sem barra']]],
+  ] : [];
+  const sliders = [
+    ['frontSize','Rodas dianteiras'], ['rearSize','Rodas traseiras'], ['tireWidth','Largura dos pneus'], ['stance','Distância entre rodas'],
+    ...(char === 'tatu' ? [['hoodWidth','Largura do capô'],['hoodHeight','Altura do capô']] : [['tankSize','Tamanho do tanque'],['armSize','Braços de irrigação']]),
+  ];
+  return `<div class="buildIntro"><b>Crie sua máquina!</b> Peças encaixadas · arraste o modelo para girar · salvo automaticamente</div>
+    <div class="buildGrid">
+    ${choices.map(([key,label,options]) => `<label>${label}<select data-build="${key}" aria-label="${label}">${options.map(([v,text]) => `<option value="${v}" ${b[key] === v ? 'selected' : ''}>${text}</option>`).join('')}</select></label>`).join('')}
+    ${sliders.map(([key,label]) => `<label>${label} <output data-value="${key}">${Math.round(b[key]*100)}%</output><input aria-label="${label}" data-build="${key}" type="range" min="${BUILD_RANGES[key][0]}" max="${BUILD_RANGES[key][1]}" step=".01" value="${b[key]}"></label>`).join('')}
+    ${[['bodyColor','Carroceria',b.bodyColor ?? paintColor(profile.sel.paint)],['accent','Detalhes',b.accent],['trim','Acabamento',b.trim]].map(([key,label,value]) => `<label class="buildColor">${label}<input aria-label="${label}" data-build="${key}" type="color" value="${value}"></label>`).join('')}
+    </div><div class="buildActions"><small>A montagem é visual; os atributos da máquina-base continuam valendo.</small><button class="btn small cream" id="buildReset">Restaurar montagem</button></div>`;
+}
+function bindEditor(root, char, mode) {
+  root.querySelectorAll('[data-build]').forEach(input => input.addEventListener('input', () => {
+    const b = cleanBuild(profile.builds[char]);
+    b[input.dataset.build] = input.type === 'range' ? Number(input.value) : input.value;
+    profile.builds[char] = cleanBuild(b);
+    const out = root.querySelector(`[data-value="${input.dataset.build}"]`);
+    if (out) out.value = Math.round(Number(input.value)*100) + '%';
+    save(); api.refreshShowroom();
+  }));
+  click($('buildReset'), () => { profile.builds[char] = { ...BUILD_DEFAULTS }; save(); api.refreshShowroom(); buildGarage(mode); });
 }
 
 // ---------------------------------------------------------------- options / credits / pause
@@ -256,10 +296,10 @@ function buildOptions() {
 function buildCredits() {
   $('credits').innerHTML = `<h2 class="title">Créditos</h2><div class="panel credits" style="width:min(560px,94vw)">
     <p style="font-family:'Lilita One';font-size:28px;color:var(--orange)">Roça Kart · demo jogável</p>
-    <p>Personagens inspirados nas máquinas Stara: trator ST MAX 105, plantadeira Absoluta e pulverizador Imperador.</p>
-    <p>Modelos 3D cartoon feitos no Blender a partir dos modelos de engenharia.</p>
+    <p>Tatu, Pingo e Broto: máquinas inventadas na Oficina da Roça.</p>
+    <p>Modelos 3D originais construídos com formas geométricas no Blender.</p>
     <p>Jogo em Three.js · música e efeitos sonoros sintetizados ao vivo (baião com zabumba, triângulo e sanfona).</p>
-    <p>Protótipo para apresentação ao Marketing — conteúdo e nomes sujeitos a aprovação.</p>
+    <p>Monte sua máquina, escolha suas cores e dispute o campeonato da roça!</p>
     <div class="backRow"><button class="btn small cream" id="cBack">◀ Voltar</button></div></div>`;
   click($('cBack'), () => ui.show('menu'), 'back');
 }

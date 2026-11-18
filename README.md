@@ -1,45 +1,51 @@
-# Roça Kart — demo jogável
+# Roça Kart — Oficina da Roça
 
-Kart arcade 3D cartoon com máquinas agrícolas inspiradas na Stara (Three.js no navegador, sem instalar nada).
+Corrida arcade 3D cartoon com máquinas inventadas numa oficina rural brasileira.
+Feito com Three.js para PC e celular.
 
 ## Jogar
-**Online (celular/tablet/PC):** https://lucianosmvm.github.io/roca-kart/ — publicado pelo GitHub Pages a cada push na `main`.
-Local: dê dois cliques em `Jogar.bat` (servidor na porta 8765) ou `python -m http.server 8765` e abra http://localhost:8765
 
-## O que tem na demo
-- **Abertura** (tela inicial) + **cutscene** no motor do jogo apresentando Maxi, Absoluta e Imperador (pulável).
-- **Menu** com corrida ao vivo no fundo (modo vitrine).
-- **3 pistas** com temas: Fazenda Milharal (dia), Vale dos Girassóis (pôr do sol, mais saltos), Cerrado da Soja (terra vermelha, curvas fechadas).
-- **Garagem 3D** (galpão com plataforma giratória, arraste para girar): máquina, implemento, pintura, acessório, buzina.
-- **Loja** com moedas de milho 🌽: pinturas, acessórios (chapéu de palha, boné, girassol, bandeira, óculos, coroa) e buzinas (Muuu!, Cocoricó...).
-  Moedas: prêmio por colocação + moedinhas coletadas na pista. Progresso salvo no navegador.
-- **Física**: drift com mini-turbo, rampas com salto e **manobra no ar** (ESPAÇO no ar = turbo ao pousar), engate do implemento balançando, lama, grama, colisões.
-- **Habilidades por máquina** (Q / HAB): 🌻 Plantio Relâmpago (Absoluta), 💦 Barras Abertas (Imperador), 💨 Arrancada Turbo (trator solo).
-- **Caixas de item**: ⛽ Biodiesel · 🛰️ Piloto Guia · ⚡ Trovoada.
-- **Áudio** 100% sintetizado: trilha de baião (zabumba, triângulo, sanfona) no menu/corrida/garagem/pódio, efeitos e buzinas.
-- **Efeitos**: partículas (poeira, lama, faíscas, água, confete), tremor de câmera, linhas de velocidade, pódio 3D com confete.
-- **Pausa** (ESC / ⏸), **opções** (volume, acelerar sozinho, direção assistida para crianças, qualidade gráfica), créditos.
-- Celular: botões na tela, acelera sozinho, câmera adaptada para tela em pé.
+Dê dois cliques em `Jogar.bat`, ou execute `python -m http.server 8765` e abra http://localhost:8765.
+As mudanças desta etapa são locais; ainda não foram publicadas no GitHub Pages.
 
-Controles (teclado): W/↑ acelera · S/↓ freia · A/D vira · ESPAÇO drift/manobra · E item · Q habilidade · H buzina · C câmera · R volta pra pista · ESC pausa.
+## Monte sua máquina
 
-## Estrutura
-- `js/main.js` — motor: pistas, física, IA, itens, câmeras, cutscene, garagem 3D, pódio.
-- `js/ui.js` — telas (splash, menu, pistas, garagem/loja, opções, créditos, pausa, resultado).
-- `js/audio.js` — música procedural e efeitos sonoros (WebAudio).
-- `js/save.js` — perfil do jogador, catálogo da loja e prêmios.
-- `js/tracks.js` — traçado e tema de cada pista.
-- `blender/models/*.blend` — **todos os modelos editáveis** (texturas embutidas). Edite e exporte (File → Export → glTF .glb) para `assets/` com o mesmo nome. Rodar os scripts abaixo regera e **sobrescreve** esses .blend.
-- `blender/tractor_char.py` — trator Maxi (ST MAX 105) · `blender/imperador_char.py` — Imperador · `blender/absoluta_char.py` — Absoluta.
-- `blender/props.py` — props da fazenda · `blender/props_demo.py` — rampa, moeda, pódio, garagem, acessórios, soja, árvore do cerrado.
-- `blender/mcp_exec.py` — envia código ao Blender aberto via add-on Blender MCP (porta 9876).
-- `docs/design-maquinas.md` — design de máquinas, implementos e habilidades.
+Entre em **Garagem → 🛠 Montar**. Escolha Tatu ou Pingo na aba Máquina.
 
-Regerar modelos (Blender 5.3):
+- **Tatu:** troque capô, cabine e para-choque; ajuste altura e largura do capô.
+- **Pingo:** ajuste tanque em gota e braços de irrigação.
+- **Ambos:** ajuste rodas dianteiras/traseiras, largura dos pneus, distância lateral entre rodas e três cores livres.
+- Gire a prévia arrastando o modelo. Alterações são salvas automaticamente por máquina e aparecem na corrida.
+- **Restaurar montagem** repõe o visual da máquina selecionada sem apagar o progresso.
+
+As peças têm encaixes definidos e limites de proporção. A montagem é visual e preserva os atributos da máquina-base.
+
+## Conteúdo
+
+Tatu (trator), Pingo (buggy de irrigação) e Broto (plantadeira rebocada); três pistas rurais;
+drift com mini-turbo, saltos e manobras; habilidades especiais; itens de corrida; garagem e loja;
+moedas de milho; acessórios e buzinas; trilha de baião sintetizada; controles por toque;
+progresso e recordes salvos no navegador.
+
+**Teclado:** W/↑ acelera · S/↓ freia · A/D vira · ESPAÇO drift/manobra · E item · Q habilidade · H buzina · C câmera · R volta à pista · ESC pausa.
+
+## Arquivos principais
+
+- `blender/oficina.py`: gera os três modelos originais e retratos, sem geometria importada.
+- `blender/models/tatu.blend`, `pingo.blend`, `broto.blend`: modelos editáveis.
+- `assets/tatu.glb`, `pingo.glb`, `broto.glb`: modelos utilizados no jogo.
+- `js/main.js`: corrida, física, IA, cenas, câmeras e garagem 3D.
+- `js/customize.js`: montagem visual e encaixes.
+- `js/ui.js`: menus, editor e loja.
+- `js/save.js`: catálogo, montagens e migração do progresso anterior.
+- `js/tracks.js`, `js/audio.js`: pistas e áudio procedural.
+- `docs/design-maquinas.md`: direção de arte, limites e validação.
+- `docs/art/oficina-conceito.png`: prancha conceitual do elenco.
+
+Regerar os modelos e retratos (sobrescreve os arquivos do novo elenco):
+
+```powershell
+& 'C:\Program Files\Blender Foundation\Blender 5.3\blender.exe' -b --factory-startup --python blender/oficina.py
 ```
-"C:\Program Files\Blender Foundation\Blender 5.3\blender.exe" -b --factory-startup --python blender/tractor_char.py
-"C:\Program Files\Blender Foundation\Blender 5.3\blender.exe" -b --factory-startup --python blender/imperador_char.py
-"C:\Program Files\Blender Foundation\Blender 5.3\blender.exe" -b --factory-startup --python blender/absoluta_char.py
-"C:\Program Files\Blender Foundation\Blender 5.3\blender.exe" -b --factory-startup --python blender/props.py
-"C:\Program Files\Blender Foundation\Blender 5.3\blender.exe" -b --factory-startup --python blender/props_demo.py
-```
+
+Os antigos modelos e geradores estão preservados como histórico e não são carregados pelo jogo.

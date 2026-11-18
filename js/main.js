@@ -1,4 +1,4 @@
-// Roça Kart — demo jogável: kart arcade com máquinas agrícolas Stara (cartoon).
+// Roça Kart — demo jogável: kart arcade com máquinas inventadas da Oficina da Roça (cartoon).
 // Models are built by the scripts in /blender and loaded as GLB. Screens live in ui.js,
 // music/SFX in audio.js, player progress in save.js, track layouts in tracks.js.
 import * as THREE from 'three';
@@ -8,6 +8,7 @@ import { audio } from './audio.js';
 import { profile, save, CATALOG, PRIZES, COIN_VALUE, paintColor } from './save.js';
 import { TRACKS, trackById } from './tracks.js';
 import { ui } from './ui.js';
+import { applyBuild } from './customize.js';
 
 // ================================================================== config & game data
 const CFG = {
@@ -17,41 +18,41 @@ const CFG = {
 const WALL = CFG.halfW + CFG.margin;
 
 export const CHARACTERS = {
-  maxi: {
-    name: 'Maxi', machine: 'Trator ST MAX 105', asset: 'tractor', img: 'assets/ui/maxi.png',
+  tatu: {
+    name: 'Tatu', machine: 'Trator de oficina', asset: 'tatu', img: 'assets/ui/tatu.png',
     stats: { Velocidade: 3, Arrancada: 4, Curva: 4, Peso: 3 },
-    speedMul: 1, accelMul: 1, turnMul: 1, camH: 4.3, camD: 9.5, exhaust: { side: -0.64, back: -0.5, y: 3.3 },
+    speedMul: 1, accelMul: 1, turnMul: 1, camH: 4.3, camD: 9.5, exhaust: { side: -0.64, back: 0.15, y: 2.56 },
     tows: true, hitch: { back: 2.05, y: 0.64 },
-    mount: { roof: [0, 3.31, 0.61], eyes: [0, 2.43, -0.56], eyeScale: 1 },
-    line: 'Eu sou o Maxi, trator ST MAX 105! Bora correr, pessoal!',
+    mount: { roof: [0, 2.93, 0.8], eyes: [0, 1.39, -2.1], eyeScale: 1 },
+    line: 'Eu sou o Tatu, trator da oficina! Bora correr, pessoal!',
   },
-  imperador: {
-    name: 'Imperador', machine: 'Pulverizador Imperador', asset: 'imperador', img: 'assets/ui/imperador.png',
+  pingo: {
+    name: 'Pingo', machine: 'Buggy de irrigação', asset: 'pingo', img: 'assets/ui/pingo.png',
     stats: { Velocidade: 5, Arrancada: 2, Curva: 2, Peso: 5 },
     speedMul: 1.06, accelMul: 0.85, turnMul: 0.86, camH: 5.6, camD: 11.5, exhaust: { side: 0, back: 2.3, y: 2.6 },
     tows: false, ability: 'barras',
-    mount: { roof: [0, 3.87, -0.62], eyes: [0, 3.0, -2.26], eyeScale: 1.15 },
-    line: 'Abram alas para o Imperador! Minhas barras não perdoam!',
+    mount: { roof: [0.15, 3.32, 0.85], eyes: [0, 1.25, -1.72], eyeScale: 1 },
+    line: 'Sou o Pingo! Uma chuvinha para refrescar essa corrida!',
   },
 };
 export const IMPLEMENTS = {
-  none: { name: 'Sem implemento', machine: 'Trator leve e solto', img: 'assets/ui/maxi.png', ability: 'arrancada',
+  none: { name: 'Sem implemento', machine: 'Trator leve e solto', img: 'assets/ui/tatu.png', ability: 'arrancada',
           accelMul: 1, turnMul: 1, perk: 'Leve: arranca e curva melhor' },
-  absoluta: { name: 'Absoluta', machine: 'Plantadeira', asset: 'absoluta', img: 'assets/ui/absoluta.png', ability: 'plantio',
+  broto: { name: 'Broto', machine: 'Plantadeira', asset: 'broto', img: 'assets/ui/broto.png', ability: 'plantio',
               accelMul: 0.92, turnMul: 0.95, len: 2.2, perk: 'Mudinhas atrapalham quem vem colado',
-              line: 'E eu sou a Absoluta! Planto girassol no caminho de quem vem atrás!' },
+              line: 'E eu sou o Broto! Planto girassol no caminho de quem vem atrás!' },
 };
 export const ABILITIES = {
   arrancada: { icon: '💨', name: 'Arrancada Turbo' },
   plantio: { icon: '🌻', name: 'Plantio Relâmpago' },
-  barras: { icon: '💦', name: 'Barras Abertas' },
+  barras: { icon: '💦', name: 'Chuva de Pingo' },
 };
 const RIVALS = [
-  { name: 'Zé do Milho', paint: '#D62F2F', char: 'maxi', impl: 'absoluta', acc: 'straw' },
-  { name: 'Dona Cida', paint: '#2E9E4F', char: 'maxi', acc: 'flower' },
-  { name: 'Tonhão', paint: '#2F6FD6', char: 'maxi', acc: 'cap' },
-  { name: 'Bia Colheita', paint: '#F2C21C', char: 'maxi', impl: 'absoluta', acc: 'glasses' },
-  { name: 'Imperador', paint: '#8E44AD', char: 'imperador', keepPaint: true },
+  { name: 'Zé do Milho', paint: '#D62F2F', char: 'tatu', impl: 'broto', acc: 'straw' },
+  { name: 'Dona Cida', paint: '#2E9E4F', char: 'tatu', acc: 'flower' },
+  { name: 'Tonhão', paint: '#2F6FD6', char: 'tatu', acc: 'cap' },
+  { name: 'Bia Colheita', paint: '#F2C21C', char: 'tatu', impl: 'broto', acc: 'glasses' },
+  { name: 'Pingo', paint: '#8E44AD', char: 'pingo', keepPaint: true },
 ];
 
 // ================================================================== helpers
@@ -145,8 +146,8 @@ const toonify = root => { root.traverse(o => { if (o.isMesh) o.material = toonOf
 const toonColor = (hex, extra = {}) => new THREE.MeshToonMaterial({ color: hex, gradientMap: gradMap, ...extra });
 
 // ================================================================== assets
-const ASSETS = ['tractor', 'corn', 'wheat', 'sunflower', 'hay', 'haysq', 'barn', 'silo', 'fence', 'tree', 'pine', 'bush',
-  'rock', 'cow', 'scarecrow', 'windmill', 'gate', 'cloud', 'itembox', 'imperador', 'absoluta', 'ramp', 'coin', 'podium',
+const ASSETS = ['tatu', 'corn', 'wheat', 'sunflower', 'hay', 'haysq', 'barn', 'silo', 'fence', 'tree', 'pine', 'bush',
+  'rock', 'cow', 'scarecrow', 'windmill', 'gate', 'cloud', 'itembox', 'pingo', 'broto', 'ramp', 'coin', 'podium',
   'garage', 'soy', 'cerrado_tree', 'acc_straw', 'acc_cap', 'acc_crown', 'acc_flower', 'acc_flag', 'acc_glasses'];
 const A = {};
 async function loadAssets(onProgress) {
@@ -440,10 +441,10 @@ function buildScenery() {
     const s = S[0], gate = place('gate', s.p.x, s.p.z, headingOf(s.t), 1.15);
     const bannerTex = canvasTex(1024, 128, (g, w, h) => {
       g.fillStyle = '#FFF6DC'; g.fillRect(0, 0, w, h);
-      g.fillStyle = '#1D8F45'; g.fillRect(0, 0, w, 14); g.fillRect(0, h - 14, w, 14);
+      g.fillStyle = '#E87578'; g.fillRect(0, 0, w, 14); g.fillRect(0, h - 14, w, 14);
       g.font = '78px "Lilita One", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.lineWidth = 10; g.strokeStyle = '#2b1a0e'; g.strokeText(THEME.banner, w / 2, h / 2 + 4);
-      g.fillStyle = '#F27A1C'; g.fillText(THEME.banner, w / 2, h / 2 + 4);
+      g.fillStyle = '#216C79'; g.fillText(THEME.banner, w / 2, h / 2 + 4);
     });
     const banner = gate.getObjectByName('Banner');
     if (banner) {
@@ -594,7 +595,7 @@ const particles = (() => {
     },
   };
 })();
-const CONFETTI = ['#F27A1C', '#1F8A4C', '#FFC83D', '#2F6FD6', '#E23D3D', '#FFFFFF'];
+const CONFETTI = ['#216C79', '#1F8A4C', '#FFC83D', '#2F6FD6', '#E23D3D', '#FFFFFF'];
 function confetti(at, n = 40) {
   for (let i = 0; i < n; i++) particles.emit(at.x + rr(-4, 4), at.y + rr(4, 8), at.z + rr(-4, 4), rr(-4, 4), rr(2, 9), rr(-4, 4), CONFETTI[i % CONFETTI.length], 0.35, 2.5, 0.1, 6);
 }
@@ -605,7 +606,7 @@ const ITEMS = {
   trovoada: { icon: '⚡', name: 'Trovoada', src: 'Raio no 1º' },
   calcario: { icon: '🌫️', name: 'Calcário', src: 'Hércules' },
   jato: { icon: '💦', name: 'Jato d’água', src: 'Corisco' },
-  girassol: { icon: '🌻', name: 'Girassóis', src: 'Absoluta' },
+  girassol: { icon: '🌻', name: 'Girassóis', src: 'Broto' },
   sulco: { icon: '🚜', name: 'Sulco Turbo', src: 'Cultivador' },
   guia: { icon: '🛰️', name: 'Piloto Guia', src: 'Guia' },
 };
@@ -640,6 +641,7 @@ function makeKartModel(def, parent = scene) {
     if (o.material.name.startsWith('Paint') && !def.keepPaint) o.material = paint;
     else if (o.material.name.startsWith('Headlight')) o.material = o.material.clone();
   });
+  const custom = applyBuild(model, def.build, def.char, paint);
   model.rotation.y = Math.PI;
   const tilt = new THREE.Group(); tilt.add(model);
   const root = new THREE.Group(); root.add(tilt); parent.add(root);
@@ -647,7 +649,8 @@ function makeKartModel(def, parent = scene) {
   const wheels = { FL: W('WheelFL'), FR: W('WheelFR'), RL: W('WheelRL'), RR: W('WheelRR') };
   let beaconMat = null; model.getObjectByName('Beacon')?.traverse(o => { if (o.isMesh) beaconMat = o.material; });
   const booms = { L: model.getObjectByName('BoomL'), R: model.getObjectByName('BoomR') };
-  addAccessory(model, ch, def.acc);
+  const accessory = addAccessory(model, ch, def.acc);
+  if (accessory) accessory.position.y += custom.lift;
   let trailer = null;
   const im = ch.tows ? IMPLEMENTS[def.impl] : null;
   if (im?.asset) {
@@ -658,7 +661,9 @@ function makeKartModel(def, parent = scene) {
     const tw = ['WheelL', 'WheelR', 'WheelEndL', 'WheelEndR'].map(n => tModel.getObjectByName(n)).filter(Boolean).map(o => ({ o, r: radiusOf(o) }));
     trailer = { root: tRoot, wheels: tw, len: im.len };
   }
-  return { root, tilt, model, wheels, wheelR: { F: radiusOf(wheels.FL), R: radiusOf(wheels.RL) }, beaconMat, ch, booms, trailer };
+  const visualCh = { ...ch, hitch: ch.hitch ? { ...ch.hitch, y: ch.hitch.y + custom.lift } : undefined };
+  return { root, tilt, model, wheels, wheelR: { F: radiusOf(wheels.FL), R: radiusOf(wheels.RL) }, beaconMat, ch: visualCh, booms, trailer,
+    dispose: () => { custom.dispose(); paint.dispose(); } };
 }
 
 function createKart(def, gridPos, isPlayer) {
@@ -1283,7 +1288,7 @@ function updateHUD() {
 
 // ================================================================== race lifecycle
 function clearRace() {
-  for (const k of karts) { scene.remove(k.v.root); if (k.v.trailer) scene.remove(k.v.trailer.root); }
+  for (const k of karts) { k.v.dispose(); scene.remove(k.v.root); if (k.v.trailer) scene.remove(k.v.trailer.root); }
   karts.length = 0; state.finishOrder = []; state.raceTime = 0;
   for (const h of hazards) if (h.o) scene.remove(h.o); hazards.length = 0;
   for (const e of effects) scene.remove(e.o); effects.length = 0;
@@ -1293,13 +1298,13 @@ function clearRace() {
 }
 function playerDef() {
   const sel = profile.sel;
-  return { name: 'Você', char: sel.char, impl: CHARACTERS[sel.char].tows ? sel.impl : 'none', paint: paintColor(sel.paint), acc: sel.acc };
+  return { name: 'Você', char: sel.char, impl: CHARACTERS[sel.char].tows ? sel.impl : 'none', paint: paintColor(sel.paint), acc: sel.acc, build: profile.builds[sel.char] };
 }
 function setupGrid() {
   clearRace();
   const mine = playerDef();
   const rivals = RIVALS.map(r => ({ ...r }));
-  if (mine.char === 'imperador') Object.assign(rivals[4], { name: 'Maxi', char: 'maxi', paint: '#F27A1C', keepPaint: false, impl: 'absoluta', acc: 'cap' });
+  if (mine.char === 'pingo') Object.assign(rivals[4], { name: 'Tatu', char: 'tatu', paint: '#216C79', keepPaint: false, impl: 'broto', acc: 'cap' });
   rivals.forEach((d, i) => createKart(d, i, false));
   player = createKart(mine, 5, true);
   karts.sort((a, b) => (b.isPlayer ? 1 : 0) - (a.isPlayer ? 1 : 0));
@@ -1348,9 +1353,9 @@ function finishRace() {
 // ================================================================== cutscene (in-engine intro)
 const SHOTS = [
   { dur: 4.5, text: 'Bem-vindos à roça! Hoje tem corrida de máquinas!', who: 'Narrador', cam: 'aerial' },
-  { dur: 4.5, text: CHARACTERS.maxi.line, who: 'Maxi', cam: 'side', target: 'maxi' },
-  { dur: 4.5, text: IMPLEMENTS.absoluta.line, who: 'Absoluta', cam: 'implement', target: 'absoluta' },
-  { dur: 4.5, text: CHARACTERS.imperador.line, who: 'Imperador', cam: 'front', target: 'imperador', action: 'barras' },
+  { dur: 4.5, text: CHARACTERS.tatu.line, who: 'Tatu', cam: 'side', target: 'tatu' },
+  { dur: 4.5, text: IMPLEMENTS.broto.line, who: 'Broto', cam: 'implement', target: 'broto' },
+  { dur: 4.5, text: CHARACTERS.pingo.line, who: 'Pingo', cam: 'front', target: 'pingo', action: 'barras' },
   { dur: 4, text: 'Que comece a corrida mais divertida do campo!', who: 'Narrador', cam: 'pack', title: true },
 ];
 function playIntro() {
@@ -1369,9 +1374,9 @@ function playIntro() {
   });
 }
 function cutTarget(kind) {
-  if (kind === 'maxi') return karts.find(k => k.v.ch.asset === 'tractor' && k.isPlayer) ?? karts[0];
-  if (kind === 'absoluta') return karts.find(k => k.v.trailer && !k.isPlayer) ?? karts[0];
-  if (kind === 'imperador') return karts.find(k => k.v.ch.asset === 'imperador') ?? karts[0];
+  if (kind === 'tatu') return karts.find(k => k.v.ch.asset === 'tatu' && k.isPlayer) ?? karts[0];
+  if (kind === 'broto') return karts.find(k => k.v.trailer && !k.isPlayer) ?? karts[0];
+  if (kind === 'pingo') return karts.find(k => k.v.ch.asset === 'pingo') ?? karts[0];
   return karts[0];
 }
 function startShot(i) {
@@ -1441,22 +1446,24 @@ function openGarage(mode) {
   refreshShowroom();
 }
 function refreshShowroom(previewSel) {
+  showModel?.dispose();
   showSpin.clear();
   const sel = { ...profile.sel, ...previewSel };
   const ch = CHARACTERS[sel.char];
-  const def = { char: sel.char, impl: ch.tows ? sel.impl : 'none', paint: paintColor(sel.paint), acc: sel.acc };
+  const build = previewSel?.paint ? { ...profile.builds[sel.char], bodyColor: null } : profile.builds[sel.char];
+  const def = { char: sel.char, impl: ch.tows ? sel.impl : 'none', paint: paintColor(sel.paint), acc: sel.acc, build };
   showModel = makeKartModel(def, showSpin);
   showModel.root.position.set(0, 0.25, ch.tows && def.impl !== 'none' ? 1.8 : 0);
   if (showModel.trailer) {
     const H = showModel.root.position.clone().add(new THREE.Vector3(0, 0, -ch.hitch.back));
-    showModel.trailer.root.position.set(H.x, 0.25 + ch.hitch.y, H.z);
+    showModel.trailer.root.position.set(H.x, 0.25 + showModel.ch.hitch.y, H.z);
   }
   showModel.root.traverse(o => { if (o.isMesh) o.castShadow = true; });
 }
 function garageCamera(dt) {
   if (!showDrag?.active) showSpin.rotation.y += dt * 0.35;
   const portrait = showCam.aspect < 1;
-  const big = CHARACTERS[profile.sel.char].asset === 'imperador';
+  const big = CHARACTERS[profile.sel.char].asset === 'pingo';
   const tow = CHARACTERS[profile.sel.char].tows && profile.sel.impl !== 'none';
   const d = (portrait ? 24 : 17) + (big ? 2 : 0) + (tow ? 2 : 0);
   showCam.position.set(-d * 0.45, 5.2 + (big ? 0.8 : 0), -d * 0.9);
