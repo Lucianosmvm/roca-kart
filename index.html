@@ -48,6 +48,35 @@
   table.res td { padding:6px 18px; border-bottom:2px dashed rgba(43,26,14,.25); }
   table.res tr.me { background:#ffe08a; }
   .dot { display:inline-block; width:16px; height:16px; border-radius:50%; border:2px solid var(--ink); vertical-align:middle; }
+  .opts { display:flex; gap:12px; margin:16px 0 0; flex-wrap:wrap; justify-content:center; }
+  .opt { pointer-events:auto; display:flex; align-items:center; gap:8px; background:rgba(255,246,220,.92); border:4px solid var(--ink);
+         border-radius:14px; padding:8px 14px; font-weight:900; color:var(--ink); box-shadow:4px 4px 0 var(--ink); cursor:pointer; }
+  .opt input { width:22px; height:22px; accent-color: var(--green); }
+  /* touch controls */
+  html, body { touch-action:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  #touch { position:fixed; inset:auto 0 0 0; height:0; z-index:5; display:none; }
+  body.is-touch #touch { display:block; }
+  body.is-touch #help, body.is-touch .keys, body.is-touch #optGasLbl { display:none; }
+  .tbtn { position:fixed; width:92px; height:92px; border-radius:50%; border:5px solid var(--ink); background:rgba(255,246,220,.82);
+          box-shadow:4px 4px 0 var(--ink); font-family:'Lilita One'; font-size:34px; color:var(--ink); display:flex;
+          align-items:center; justify-content:center; pointer-events:auto; touch-action:none; }
+  .tbtn.on { background:#ffe08a; transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
+  .tbtn small { font-size:15px; }
+  #tLeft  { left:18px;  bottom:110px; }  #tRight { left:124px; bottom:110px; }
+  #tBrake { right:18px; bottom:110px; width:74px; height:74px; font-size:16px; }
+  #tDrift { right:104px; bottom:96px; background:rgba(79,195,247,.85); font-size:18px; }
+  #tItem  { right:60px; bottom:200px; background:rgba(255,159,28,.9); font-size:18px; }
+  body.is-touch #pos { bottom:auto; top:120px; left:18px; font-size:64px; }
+  body.is-touch #speed { bottom:auto; top:100px; font-size:30px; }
+  @media (max-width: 720px) {
+    #item { width:70px; height:70px; font-size:40px; left:12px; top:10px; }
+    #itemName { left:12px; top:86px; font-size:15px; }
+    #minimap { left:92px; top:10px; width:110px; height:110px; }
+    #lap { font-size:28px; right:12px; top:8px; } #time { font-size:20px; right:12px; top:42px; }
+    #msg { font-size:80px; } .keys { font-size:13px; }
+    .tbtn { width:76px; height:76px; font-size:28px; }
+    #tRight { left:104px; } #tDrift { right:92px; }
+  }
   .hidden { display:none !important; }
 </style>
 </head>
@@ -65,11 +94,23 @@
 <div class="hud" id="sub"></div>
 <div class="hud" id="help">W/↑ acelera · S/↓ freia · A/D vira · ESPAÇO drift · E/SHIFT usa item · R volta pra pista · C câmera</div>
 
+<div id="touch">
+  <div class="tbtn" id="tLeft" data-k="ArrowLeft">◀</div>
+  <div class="tbtn" id="tRight" data-k="ArrowRight">▶</div>
+  <div class="tbtn" id="tItem" data-k="KeyE">ITEM</div>
+  <div class="tbtn" id="tDrift" data-k="Space">DRIFT</div>
+  <div class="tbtn" id="tBrake" data-k="ArrowDown">FREIO</div>
+</div>
+
 <div class="overlay" id="menu">
   <h1>Roça Kart</h1>
   <h2>Pista 1 · Fazenda Milharal</h2>
   <div id="loading">Carregando a roça...</div>
   <button class="btn hidden" id="startBtn">CORRER!</button>
+  <div class="opts">
+    <label class="opt" id="optGasLbl"><input type="checkbox" id="optGas"> 🚜 Acelerar sozinho</label>
+    <label class="opt"><input type="checkbox" id="optAssist"> 🧭 Direção assistida</label>
+  </div>
   <div class="keys">
     <kbd>W</kbd>/<kbd>↑</kbd> acelerar &nbsp; <kbd>S</kbd>/<kbd>↓</kbd> freio/ré &nbsp; <kbd>A</kbd><kbd>D</kbd> virar<br>
     <kbd>ESPAÇO</kbd> drift (segure na curva e solte = turbo!)<br>

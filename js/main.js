@@ -704,12 +704,58 @@ addEventListener('keydown', e => {
   if (e.code === 'Enter' && !$('menu').classList.contains('hidden') && !$('startBtn').classList.contains('hidden')) startRace();
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
-const playerInput = () => ({
-  throttle: keys.KeyW || keys.ArrowUp ? 1 : 0,
-  brake: keys.KeyS || keys.ArrowDown ? 1 : 0,
-  steer: (keys.KeyA || keys.ArrowLeft ? 1 : 0) - (keys.KeyD || keys.ArrowRight ? 1 : 0),
-  drift: !!keys.Space,
-});
+// options (kid-friendly assists), remembered per browser
+const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+const OPTS = (() => {
+  let o = {};
+  try { o = JSON.parse(localStorage.getItem('rocaKartOpts') || '{}'); } catch { /* storage blocked */ }
+  return { autoGas: o.autoGas ?? IS_TOUCH, assist: o.assist ?? IS_TOUCH };
+})();
+const saveOpts = () => { try { localStorage.setItem('rocaKartOpts', JSON.stringify(OPTS)); } catch { /* ignore */ } };
+
+// on-screen touch buttons: each [data-k] button holds a key code while pressed
+function setupTouch() {
+  const root = $('touch');
+  if (IS_TOUCH) document.body.classList.add('is-touch');
+  root.querySelectorAll('[data-k]').forEach(btn => {
+    const code = btn.dataset.k;
+    const down = e => {
+      e.preventDefault(); btn.setPointerCapture?.(e.pointerId); btn.classList.add('on'); keys[code] = true;
+      if (code === 'KeyE' && state.mode === 'race') useItem(player);
+    };
+    const up = e => { e.preventDefault(); btn.classList.remove('on'); keys[code] = false; };
+    btn.addEventListener('pointerdown', down);
+    btn.addEventListener('pointerup', up);
+    btn.addEventListener('pointercancel', up);
+    btn.addEventListener('lostpointercapture', up);
+  });
+  for (const [id, key] of [['optGas', 'autoGas'], ['optAssist', 'assist']]) {
+    const cb = $(id); cb.checked = OPTS[key];
+    cb.addEventListener('change', () => { OPTS[key] = cb.checked; saveOpts(); });
+  }
+}
+
+// lane-keeping helper: steer toward a point ahead on the track at the current lateral offset
+function assistSteer(k) {
+  const look = Math.round((8 + Math.max(0, k.speed) * 0.5) / SPACING);
+  const lat = clamp(k.lat, -CFG.halfW + 2.5, CFG.halfW - 2.5);
+  const target = trackPoint(k.idx + look, lat);
+  const diff = wrapAngle(Math.atan2(target.x - k.pos.x, target.z - k.pos.z) - k.heading);
+  return clamp(diff * 2.2, -1, 1);
+}
+
+const playerInput = () => {
+  const brake = keys.KeyS || keys.ArrowDown ? 1 : 0;
+  let steer = (keys.KeyA || keys.ArrowLeft ? 1 : 0) - (keys.KeyD || keys.ArrowRight ? 1 : 0);
+  if (OPTS.assist && player && player.speed > 2 && player.spin <= 0) {
+    const a = assistSteer(player);
+    steer = steer !== 0 ? clamp(steer + (player.offroad ? a * 0.6 : 0), -1, 1) : a * 0.85;
+  }
+  return {
+    throttle: keys.KeyW || keys.ArrowUp || ((OPTS.autoGas || IS_TOUCH) && state.mode === 'race' && !brake) ? 1 : 0,
+    brake, steer, drift: !!keys.Space,
+  };
+};
 
 function respawn(k) {
   const i = nearestLocal(k.pos, k.idx);
@@ -1102,7 +1148,8 @@ function update(dt) {
     camera.lookAt(c.x, 2, c.z);
   } else {
     camHeading = lerpAngle(camHeading, P.heading - P.driftVis * 0.4, damp(P.spin > 0 ? 1 : 5, dt));
-    const dist = state.camMode ? 14 : 9.5, height = state.camMode ? 7 : 4.3;
+    const portrait = camera.aspect < 1 ? 1.45 : 1; // phones held upright need a wider view
+    const dist = (state.camMode ? 14 : 9.5) * portrait, height = (state.camMode ? 7 : 4.3) * (portrait > 1 ? 1.3 : 1);
     const desired = new THREE.Vector3(P.pos.x - Math.sin(camHeading) * dist, height, P.pos.z - Math.cos(camHeading) * dist);
     if (state.mode === 'countdown') {
       const k = clamp((state.countdown - 1.2) / 3, 0, 1); // fly-in from the front
@@ -1111,7 +1158,7 @@ function update(dt) {
       camera.position.lerp(desired, damp(4, dt));
     } else camera.position.lerp(desired, damp(9, dt));
     camera.lookAt(P.pos.x + Math.sin(camHeading) * 4, 1.8, P.pos.z + Math.cos(camHeading) * 4);
-    const fov = 62 + clamp(P.speed / CFG.maxSpeed, 0, 1.5) * 8 + (P.boost > 0 ? 8 : 0);
+    const fov = (camera.aspect < 1 ? 74 : 62) + clamp(P.speed / CFG.maxSpeed, 0, 1.5) * 8 + (P.boost > 0 ? 8 : 0);
     camera.fov = lerp(camera.fov, fov, damp(4, dt)); camera.updateProjectionMatrix();
   }
   scene.userData.sky.position.copy(camera.position);
@@ -1137,8 +1184,10 @@ function update(dt) {
   $('startBtn').classList.remove('hidden');
   $('startBtn').onclick = startRace;
   $('againBtn').onclick = () => { $('results').classList.add('hidden'); resetRace(); startRace(); };
-  for (const id of ['pos', 'lap', 'time', 'speed', 'item', 'itemName', 'minimap', 'help']) $(id).classList.add('hidden');
-  const showHud = () => { for (const id of ['pos', 'lap', 'time', 'speed', 'item', 'itemName', 'minimap', 'help']) $(id).classList.remove('hidden'); };
+  setupTouch();
+  const HUD_IDS = ['pos', 'lap', 'time', 'speed', 'item', 'itemName', 'minimap', 'help', 'touch'];
+  for (const id of HUD_IDS) $(id).classList.add('hidden');
+  const showHud = () => { for (const id of HUD_IDS) $(id).classList.remove('hidden'); };
   $('startBtn').addEventListener('click', showHud);
   addEventListener('keydown', e => { if (e.code === 'Enter') showHud(); });
   window.__game = { sim: (sec) => { for (let i = 0; i < sec * 60; i++) update(1 / 60); effect.render(scene, camera); }, state, karts, get player() { return player; }, S, CFG, keys }; // debug hook
