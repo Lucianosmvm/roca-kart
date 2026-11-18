@@ -120,7 +120,7 @@ const toonColor = (hex, extra = {}) => new THREE.MeshToonMaterial({ color: hex, 
 
 // ------------------------------------------------------------------ assets
 const ASSETS = ['tractor', 'corn', 'wheat', 'sunflower', 'hay', 'haysq', 'barn', 'silo', 'fence', 'tree', 'pine', 'bush',
-  'rock', 'cow', 'scarecrow', 'windmill', 'gate', 'cloud', 'itembox', 'tomato', 'imperador'];
+  'rock', 'cow', 'scarecrow', 'windmill', 'gate', 'cloud', 'itembox', 'imperador'];
 const A = {};
 async function loadAssets() {
   const loader = new GLTFLoader();
@@ -613,7 +613,27 @@ const audio = {
 };
 
 // ------------------------------------------------------------------ karts
-const ITEMS = { turbo: { icon: '🔥', name: 'Turbo' }, bale: { icon: '🌾', name: 'Fardo' }, tomato: { icon: '🍅', name: 'Tomate' } };
+// items are the Stara implements: each one does what the real machine does, cartoon-style
+const ITEMS = {
+  calcario: { icon: '🌫️', name: 'Calcário', src: 'Hércules' },
+  jato: { icon: '💦', name: 'Jato d’água', src: 'Imperador' },
+  girassol: { icon: '🌻', name: 'Girassóis', src: 'Absoluta' },
+  sulco: { icon: '🚜', name: 'Sulco Turbo', src: 'Cultivador' },
+  guia: { icon: '🛰️', name: 'Piloto Guia', src: 'Guia' },
+  corisco: { icon: '⚡', name: 'Corisco', src: 'Corisco' },
+};
+// odds by race position: leaders get defensive items, the last ones get catch-up items
+const ITEM_ODDS = [
+  { calcario: 40, girassol: 40, jato: 20 },                                  // 1st
+  { jato: 30, calcario: 20, girassol: 20, sulco: 25, corisco: 5 },          // 2nd-3rd
+  { sulco: 30, guia: 25, corisco: 15, jato: 20, girassol: 10 },             // 4th+
+];
+function rollItem(place) {
+  const odds = ITEM_ODDS[place === 1 ? 0 : place <= 3 ? 1 : 2];
+  let r = Math.random() * Object.values(odds).reduce((a, b) => a + b, 0);
+  for (const [k, w] of Object.entries(odds)) { if ((r -= w) < 0) return k; }
+  return 'jato';
+}
 const karts = [];
 function makeKartModel(def) {
   const ch = CHARACTERS[def.char];
@@ -634,7 +654,8 @@ function makeKartModel(def) {
   const wheels = { FL: W('WheelFL'), FR: W('WheelFR'), RL: W('WheelRL'), RR: W('WheelRR') };
   const beacon = model.getObjectByName('Beacon');
   let beaconMat = null; beacon?.traverse(o => { if (o.isMesh) beaconMat = o.material; });
-  return { root, tilt, model, wheels, wheelR: { F: radius(wheels.FL), R: radius(wheels.RL) }, beaconMat, ch };
+  const booms = { L: model.getObjectByName('BoomL'), R: model.getObjectByName('BoomR') };
+  return { root, tilt, model, wheels, wheelR: { F: radius(wheels.FL), R: radius(wheels.RL) }, beaconMat, ch, booms };
 }
 
 function createKart(def, i, isPlayer) {
@@ -648,6 +669,7 @@ function createKart(def, i, isPlayer) {
     lap: 0, maxIdx: 0, finished: false, finishTime: 0, place: i + 1,
     drifting: false, driftDir: 0, driftCharge: 0, driftVis: 0, hop: 0, boost: 0, spin: 0, spinAng: 0,
     item: null, rolling: 0, wheelRot: 0, wrongWay: 0, offroad: false, inMud: false, bumpCd: 0,
+    slow: 0, guide: 0, spraying: 0, plow: 0, plowT: 0, clean: 0, boomAng: 0,
     ai: { skill: 0.9 + i * 0.012 + rr(-0.01, 0.015), lane: rr(-4, 4), laneT: rr(0, 9), itemDelay: rr(1, 4), driftT: 0 },
     startBoostArmed: false,
   };
@@ -655,57 +677,187 @@ function createKart(def, i, isPlayer) {
   return k;
 }
 
-// projectiles & dropped bales
-const hazards = []; // {type, o, pos, vel, life, owner}
+// item hazards & effects
+const hazards = []; // {type, o?, pos, r, life, owner, arm, hit:Set}
+const effects = []; // short-lived visuals {o, life}
+const furrowGeo = new THREE.PlaneGeometry(2.6, 2.6);
+let furrowMat = null;
+const fwdOf = k => new THREE.Vector3(Math.sin(k.heading), 0, Math.cos(k.heading));
+const progOf = k => k.lap * CFG.N + k.idx;
+
 function useItem(k) {
   if (!k.item || k.rolling > 0) return;
   const it = k.item; k.item = null;
-  const fwd = new THREE.Vector3(Math.sin(k.heading), 0, Math.cos(k.heading));
-  if (it === 'turbo') { k.boost = Math.max(k.boost, 1.6); if (k.isPlayer) audio.sweep(200, 900, 0.5); }
-  else if (it === 'bale') {
-    const o = A.hay.clone(true); o.scale.setScalar(0.8);
-    o.traverse(c => { if (c.isMesh) c.castShadow = true; });
-    const pos = k.pos.clone().addScaledVector(fwd, -4.5); o.position.copy(pos); o.rotation.y = k.heading + Math.PI / 2;
-    scene.add(o); hazards.push({ type: 'bale', o, pos, vel: new THREE.Vector3(), life: 30, owner: k, arm: 0.4 });
-    if (k.isPlayer) audio.beep(180, 0.15, 'triangle');
-  } else if (it === 'tomato') {
-    const o = A.tomato.clone(true); o.scale.setScalar(1.1);
-    const pos = k.pos.clone().addScaledVector(fwd, 3.5); pos.y = 1.2; o.position.copy(pos);
-    scene.add(o); hazards.push({ type: 'tomato', o, pos, vel: fwd.multiplyScalar(Math.max(50, k.speed + 25)), life: 3, owner: k, arm: 0.15, idx: k.idx });
-    if (k.isPlayer) audio.sweep(700, 300, 0.2);
+  const fwd = fwdOf(k), left = new THREE.Vector3(fwd.z, 0, -fwd.x);
+  if (it === 'calcario') {
+    const pos = k.pos.clone().addScaledVector(fwd, -6);
+    hazards.push({ type: 'cloud', pos, r: 5.5, life: 7, owner: k, arm: 1, hit: new Set() });
+    for (let n = 0; n < 40; n++) particles.emit(pos.x + rr(-4, 4), rr(0.5, 2.5), pos.z + rr(-4, 4), rr(-1, 1), rr(0.3, 1.2), rr(-1, 1), '#F4F1E6', 1.6, 1.4, 1.2);
+    if (k.isPlayer) audio.sweep(300, 120, 0.5, 0.15);
+  } else if (it === 'jato') {
+    k.spraying = 1.4; k.clean = 4;
+    if (k.isPlayer) audio.sweep(1400, 500, 0.6, 0.1);
+  } else if (it === 'girassol') {
+    const behind = k.pos.clone().addScaledVector(fwd, -7);
+    for (const off of [-3.2, 0, 3.2]) {
+      const pos = behind.clone().addScaledVector(left, off);
+      const o = A.sunflower.clone(true); o.position.copy(pos); o.rotation.y = k.heading + Math.PI; o.scale.setScalar(0.05);
+      o.traverse(c => { if (c.isMesh) c.castShadow = true; });
+      scene.add(o);
+      hazards.push({ type: 'flower', o, pos, r: 1.5, life: 18, owner: k, arm: 0.6, grow: 0 });
+    }
+    if (k.isPlayer) audio.sweep(500, 1000, 0.3, 0.12);
+  } else if (it === 'sulco') {
+    k.boost = Math.max(k.boost, 1.4); k.plow = 2.4; k.plowT = 0;
+    if (k.isPlayer) audio.sweep(200, 900, 0.5);
+  } else if (it === 'guia') {
+    k.guide = 4; k.spin = 0; k.slow = 0;
+    if (k.isPlayer) { audio.sweep(600, 1600, 0.4, 0.12); flash('🛰️ Piloto Guia!', 1200); }
+  } else if (it === 'corisco') {
+    const target = karts.filter(o => o !== k && !o.finished).sort((a, b) => a.place - b.place)[0];
+    if (target) {
+      lightning(target.pos);
+      hitKart(target, 'corisco');
+    }
+    audio.sweep(2000, 80, 0.6, 0.18);
   }
 }
-function hitKart(k, reason) {
-  if (k.spin > 0 || k.finished) return;
-  k.spin = 1.1; k.speed *= 0.3; k.drifting = false; k.boost = 0;
-  for (let n = 0; n < 18; n++)
-    particles.emit(k.pos.x, 1.5, k.pos.z, rr(-5, 5), rr(2, 6), rr(-5, 5), reason === 'tomato' ? '#E8322B' : '#F2C94C', 0.6, 0.8, 0.5, 9);
-  if (k.isPlayer) { audio.sweep(500, 90, 0.5, 0.18); flash(reason === 'tomato' ? 'Tomatada! 🍅' : 'Fardo! 🌾', 900); }
+
+function lightning(at) {
+  const g = new THREE.Group(), mat = new THREE.MeshBasicMaterial({ color: '#FFF59D', userData: NO_OUTLINE });
+  let prev = new THREE.Vector3(at.x + rr(-3, 3), 45, at.z + rr(-3, 3));
+  for (let i = 1; i <= 9; i++) {
+    const y = 45 - i * 5, next = i === 9 ? new THREE.Vector3(at.x, 1.5, at.z) : new THREE.Vector3(at.x + rr(-2.5, 2.5), y, at.z + rr(-2.5, 2.5));
+    const d = next.clone().sub(prev), seg = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, d.length(), 5), mat);
+    seg.position.copy(prev).addScaledVector(d, 0.5);
+    seg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize());
+    g.add(seg); prev = next;
+  }
+  scene.add(g); effects.push({ o: g, life: 0.35 });
+  for (let n = 0; n < 20; n++) particles.emit(at.x, 1, at.z, rr(-6, 6), rr(2, 8), rr(-6, 6), '#FFF59D', 0.5, 0.5, 0.2, 6);
 }
+
+const HIT_FX = {
+  flower: { col: '#FFC300', msg: 'Girassol! 🌻' },
+  corisco: { col: '#FFF59D', msg: 'Raio do Corisco! ⚡' },
+};
+function hitKart(k, reason) {
+  if (k.spin > 0 || k.finished || k.guide > 0) return;
+  k.spin = 1.1; k.speed *= 0.3; k.drifting = false; k.boost = 0;
+  const fx = HIT_FX[reason] ?? HIT_FX.flower;
+  for (let n = 0; n < 18; n++) particles.emit(k.pos.x, 1.5, k.pos.z, rr(-5, 5), rr(2, 6), rr(-5, 5), fx.col, 0.6, 0.8, 0.5, 9);
+  if (k.isPlayer) { audio.sweep(500, 90, 0.5, 0.18); flash(fx.msg, 900); }
+}
+function sneeze(k) {
+  if (k.guide > 0 || k.finished) return;
+  k.slow = 1.8;
+  if (k.isPlayer) { flash('Atchim! 🤧', 900); audio.sweep(900, 200, 0.25, 0.15); }
+}
+
 function updateHazards(dt) {
   for (let i = hazards.length - 1; i >= 0; i--) {
     const h = hazards[i];
     h.life -= dt; h.arm -= dt;
-    if (h.type === 'tomato') {
-      // home loosely toward the track direction so it follows curves
-      h.idx = nearestLocal(h.pos, h.idx, 20);
-      const ahead = trackPoint(h.idx + Math.round(12 / SPACING), 0);
-      const desired = ahead.sub(h.pos).setY(0).normalize().multiplyScalar(h.vel.length());
-      h.vel.lerp(desired, damp(1.5, dt));
-      h.pos.addScaledVector(h.vel, dt); h.o.position.copy(h.pos); h.o.rotation.x += dt * 12;
-      const lat = h.pos.clone().sub(S[h.idx].p).dot(S[h.idx].l);
-      if (Math.abs(lat) > WALL) h.life = 0;
-      if (Math.random() < 0.5) particles.emit(h.pos.x, h.pos.y, h.pos.z, 0, 0, 0, '#FF8A80', 0.35, 0.3, 0.2);
-    }
-    for (const k of karts) {
-      if (h.life <= 0) break;
-      if (h.arm > 0 && k === h.owner) continue;
-      if ((k.pos.x - h.pos.x) ** 2 + (k.pos.z - h.pos.z) ** 2 < (h.type === 'bale' ? 2.6 : 2.4) ** 2) { hitKart(k, h.type); h.life = 0; }
+    if (h.type === 'cloud') {
+      if (Math.random() < 0.7) particles.emit(h.pos.x + rr(-4.5, 4.5), rr(0.4, 2.2), h.pos.z + rr(-4.5, 4.5), rr(-0.5, 0.5), rr(0.2, 0.8), rr(-0.5, 0.5), '#F4F1E6', 1.5, 1.2, 1.0);
+      for (const k of karts) {
+        if ((k === h.owner && h.arm > 0) || h.hit.has(k)) continue;
+        if ((k.pos.x - h.pos.x) ** 2 + (k.pos.z - h.pos.z) ** 2 < h.r * h.r) { h.hit.add(k); sneeze(k); }
+      }
+    } else if (h.type === 'flower') {
+      h.grow = Math.min(1, h.grow + dt * 2.2);
+      const e = h.grow < 1 ? 1 + Math.sin(h.grow * Math.PI) * 0.25 : 1; // springy pop
+      h.o.scale.setScalar(2.6 * h.grow * e);
+      h.o.rotation.z = Math.sin(state.t * 3 + h.pos.x) * 0.05;
+      for (const k of karts) {
+        if (h.life <= 0) break;
+        if (h.arm > 0 && k === h.owner) continue;
+        if ((k.pos.x - h.pos.x) ** 2 + (k.pos.z - h.pos.z) ** 2 < (h.r + 1.2) ** 2) {
+          if (k.guide > 0) { h.life = 0; break; }
+          hitKart(k, 'flower'); h.life = 0;
+        }
+      }
+    } else if (h.type === 'furrow') {
+      h.o.material.opacity = Math.min(1, h.life / 1.5) * 0.95;
+      for (const k of karts) {
+        if (k === h.owner && h.arm > 0) continue;
+        if ((k.pos.x - h.pos.x) ** 2 + (k.pos.z - h.pos.z) ** 2 < h.r * h.r) {
+          if (k.boost < 0.35 && k.isPlayer) audio.beep(990, 0.05, 'triangle', 0.06);
+          k.boost = Math.max(k.boost, 0.45);
+        }
+      }
     }
     if (h.life <= 0) {
-      for (let n = 0; n < 10; n++) particles.emit(h.pos.x, 0.8, h.pos.z, rr(-4, 4), rr(1, 5), rr(-4, 4), h.type === 'bale' ? '#F2C94C' : '#E8322B', 0.5, 0.6, 0.5, 9);
-      scene.remove(h.o); hazards.splice(i, 1);
+      if (h.type === 'flower')
+        for (let n = 0; n < 12; n++) particles.emit(h.pos.x, 1.5, h.pos.z, rr(-4, 4), rr(1, 5), rr(-4, 4), n % 2 ? '#FFC300' : '#6CC23A', 0.5, 0.6, 0.5, 9);
+      if (h.o) scene.remove(h.o);
+      hazards.splice(i, 1);
     }
+  }
+  for (let i = effects.length - 1; i >= 0; i--) {
+    const e = effects[i]; e.life -= dt;
+    e.o.visible = Math.floor(e.life * 30) % 2 === 0; // flicker
+    if (e.life <= 0) { scene.remove(e.o); effects.splice(i, 1); }
+  }
+}
+
+// per-kart item effects, called from updateKart
+function updateItemEffects(k, dt, fwd, side) {
+  if (k.slow > 0) {
+    k.slow -= dt;
+    if (Math.random() < 0.3) particles.emit(k.pos.x + rr(-1, 1), 2.5, k.pos.z + rr(-1, 1), rr(-1, 1), 1, rr(-1, 1), '#F4F1E6', 0.6, 0.6, 1);
+  }
+  if (k.clean > 0) k.clean -= dt;
+  if (k.guide > 0) {
+    k.guide -= dt;
+    for (const sd of [-1, 1]) particles.emit(k.pos.x + side.x * sd * 1.3, 0.3, k.pos.z + side.z * sd * 1.3, 0, 0.5, 0, '#3CF07A', 0.4, 0.4, 0.3);
+  }
+  if (k.plow > 0) {
+    k.plow -= dt; k.plowT -= Math.abs(k.speed) * dt; // one segment every ~2.3 m driven
+    if (k.plowT <= 0) {
+      k.plowT = 2.3;
+      if (!furrowMat) furrowMat = toonColor('#fff', {
+        transparent: true, depthWrite: false, userData: NO_OUTLINE, emissive: '#5a2a00', emissiveIntensity: 0.5,
+        map: canvasTex(64, 64, (g, w, h) => {
+          g.fillStyle = '#6B3F1F'; g.fillRect(0, 0, w, h);
+          g.fillStyle = '#4A2A12'; for (let x = 4; x < w; x += 12) g.fillRect(x, 0, 5, h);
+          g.strokeStyle = '#FF9F1C'; g.lineWidth = 6; g.beginPath(); g.moveTo(10, 46); g.lineTo(32, 22); g.lineTo(54, 46); g.stroke();
+        }),
+      });
+      const pos = k.pos.clone().addScaledVector(fwd, -2.6);
+      const m = new THREE.Mesh(furrowGeo, furrowMat.clone());
+      m.rotation.set(-Math.PI / 2, k.heading + Math.PI, 0, 'YXZ'); m.position.copy(pos).setY(0.09);
+      scene.add(m);
+      hazards.push({ type: 'furrow', o: m, pos, r: 1.6, life: 9, owner: k, arm: 1.2 });
+    }
+  }
+  if (k.spraying > 0) {
+    k.spraying -= dt;
+    // water jet: droplets forward, pushes rivals in the cone aside
+    const nose = k.pos.clone().addScaledVector(fwd, 2.6);
+    for (let n = 0; n < 4; n++) {
+      const sp = rr(18, 26), spread = rr(-0.18, 0.18);
+      const dir = fwd.clone().addScaledVector(side, spread);
+      particles.emit(nose.x, 1.6, nose.z, dir.x * sp + Math.sin(k.heading) * k.speed * 0.5, rr(2, 4), dir.z * sp + Math.cos(k.heading) * k.speed * 0.5, n % 2 ? '#4FC3F7' : '#B3E5FC', 0.35, 0.6, 0.6, 9);
+    }
+    if (k.v.booms.L) for (const sd of [-1, 1]) { // Imperador also sprays from the open booms
+      const b = k.pos.clone().addScaledVector(side, sd * rr(2, 5)).addScaledVector(fwd, rr(-1, 1));
+      particles.emit(b.x, 2.2, b.z, 0, -2, 0, '#81D4FA', 0.3, 0.5, 0.4, 6);
+    }
+    for (const o of karts) {
+      if (o === k || o.guide > 0) continue;
+      const rel = o.pos.clone().sub(k.pos), along = rel.dot(fwd), lat = rel.dot(side);
+      if (along > 0 && along < 24 && Math.abs(lat) < 3 + along * 0.2) {
+        o.pos.addScaledVector(side, Math.sign(lat || 1) * 7 * dt);
+        o.speed *= 1 - 1.2 * dt;
+        if (o.isPlayer && !o.wetMsg) { flash('Molhado! 💦', 800); o.wetMsg = true; }
+      } else if (o.isPlayer) o.wetMsg = false;
+    }
+  }
+  // Imperador: booms swing open while spraying
+  if (k.v.booms.L) {
+    k.boomAng = lerp(k.boomAng, k.spraying > 0 ? 1.25 : 0, damp(6, dt));
+    k.v.booms.L.rotation.y = -k.boomAng; k.v.booms.R.rotation.y = k.boomAng;
   }
 }
 
@@ -768,6 +920,13 @@ function setupCharSelect() {
   render();
 }
 
+// Piloto Guia: follow the centre line precisely
+function guideSteer(k) {
+  const look = Math.round((10 + Math.max(0, k.speed) * 0.45) / SPACING);
+  const target = trackPoint(k.idx + look, 0);
+  return clamp(wrapAngle(Math.atan2(target.x - k.pos.x, target.z - k.pos.z) - k.heading) * 2.6, -1, 1);
+}
+
 // lane-keeping helper: steer toward a point ahead on the track at the current lateral offset
 function assistSteer(k) {
   const look = Math.round((8 + Math.max(0, k.speed) * 0.5) / SPACING);
@@ -805,7 +964,7 @@ function aiInput(k, dt) {
   // dodge visible hazards ahead
   for (const h of hazards) {
     const d = h.pos.distanceTo(k.pos);
-    if (h.type === 'bale' && d < 25) {
+    if ((h.type === 'flower' || h.type === 'cloud') && d < 28) {
       const toH = h.pos.clone().sub(k.pos), fwd = new THREE.Vector3(Math.sin(k.heading), 0, Math.cos(k.heading));
       if (toH.dot(fwd) > 0) { const side = toH.dot(S[k.idx].l) > 0 ? -1 : 1; target.addScaledVector(S[k.idx].l, side * 3.5); }
     }
@@ -838,12 +997,12 @@ function aiInput(k, dt) {
     ai.itemDelay -= dt;
     if (ai.itemDelay <= 0) {
       let use = false;
-      if (k.item === 'turbo') use = cornerSharp < 0.05;
-      else if (k.item === 'bale') use = karts.some(o => o !== k && o.pos.distanceTo(k.pos) < 18 && (o.lap * CFG.N + o.idx) < (k.lap * CFG.N + k.idx));
-      else if (k.item === 'tomato') use = karts.some(o => {
-        if (o === k) return false; const d = (o.lap * CFG.N + o.idx) - (k.lap * CFG.N + k.idx);
-        return d > 0 && d * SPACING < 45;
-      });
+      const behindClose = karts.some(o => o !== k && o.pos.distanceTo(k.pos) < 25 && progOf(o) < progOf(k));
+      const aheadClose = karts.some(o => { if (o === k) return false; const d = progOf(o) - progOf(k); return d > 0 && d * SPACING < 20; });
+      if (k.item === 'sulco') use = cornerSharp < 0.05;
+      else if (k.item === 'calcario' || k.item === 'girassol') use = behindClose;
+      else if (k.item === 'jato') use = aheadClose;
+      else use = true; // guia, corisco: fire right away
       if (use || ai.itemDelay < -8) { useItem(k); ai.itemDelay = rr(1, 4); }
     }
   }
@@ -855,6 +1014,7 @@ const tmpV = new THREE.Vector3();
 function updateKart(k, input, dt, frozen) {
   if ((k.finished || k.autopilot) && k.isPlayer) input = aiInput(k, dt); // autopilot after finishing (or debug)
   if (frozen) input = { ...input, throttle: 0, brake: 0, steer: 0, drift: false };
+  if (k.guide > 0 && !frozen) input = { throttle: 1, brake: 0, steer: guideSteer(k), drift: false }; // Piloto Guia
   if (k.spin > 0) { k.spin -= dt; k.spinAng += dt * 14; input = { throttle: 0, brake: 0, steer: 0, drift: false }; }
   else k.spinAng = lerp(k.spinAng, Math.round(k.spinAng / (Math.PI * 2)) * Math.PI * 2, damp(10, dt));
 
@@ -876,7 +1036,10 @@ function updateKart(k, input, dt, frozen) {
   const ch = k.v.ch;
   let max = CFG.maxSpeed * (input.skill ?? 1) * ch.speedMul;
   if (k.offroad) max *= CFG.offroadFactor;
+  if (k.clean > 0) k.inMud = false; // freshly washed: mud doesn't stick
   if (k.inMud) max *= CFG.mudFactor;
+  if (k.slow > 0) max *= 0.55;
+  if (k.guide > 0) { max = CFG.boostSpeed * 0.88; k.offroad = false; }
   if (k.boost > 0) { max = CFG.boostSpeed * (k.inMud ? 0.8 : 1); k.boost -= dt; }
 
   // longitudinal
@@ -945,12 +1108,13 @@ function updateKart(k, input, dt, frozen) {
     for (let n = 0; n < 14; n++) particles.emit(b.p.x, 1, b.p.z, rr(-5, 5), rr(2, 7), rr(-5, 5), ['#FFE066', '#FF9F1C', '#fff'][n % 3], 0.5, 0.7, 0.2, 10);
     if (!k.item && k.rolling <= 0) {
       k.rolling = k.isPlayer ? 1.1 : 0.6;
-      const r = Math.random(), behind = k.place > 3;
-      k.pendingItem = behind ? (r < 0.5 ? 'turbo' : r < 0.8 ? 'tomato' : 'bale') : (r < 0.25 ? 'turbo' : r < 0.6 ? 'tomato' : 'bale');
+      k.pendingItem = rollItem(k.place);
       if (k.isPlayer) audio.beep(880, 0.08);
     }
   }
   if (k.rolling > 0) { k.rolling -= dt; if (k.rolling <= 0) { k.item = k.pendingItem; if (k.isPlayer) audio.beep(1320, 0.12); } }
+
+  { const f = fwdOf(k); updateItemEffects(k, dt, f, new THREE.Vector3(f.z, 0, -f.x)); }
 
   // laps
   const prev = k.prevIdx ?? k.idx;
@@ -1090,8 +1254,8 @@ function updateHUD() {
   $('time').textContent = fmt(p.finished ? p.finishTime : state.raceTime);
   $('speed').innerHTML = `${Math.round(Math.abs(p.speed) * 3.6)}<small> km/h</small>`;
   const rollingIcons = Object.values(ITEMS).map(i => i.icon);
-  $('item').textContent = p.rolling > 0 ? rollingIcons[Math.floor(performance.now() / 80) % 3] : p.item ? ITEMS[p.item].icon : '';
-  $('itemName').textContent = p.item && p.rolling <= 0 ? `${ITEMS[p.item].name} [E]` : '';
+  $('item').textContent = p.rolling > 0 ? rollingIcons[Math.floor(performance.now() / 80) % rollingIcons.length] : p.item ? ITEMS[p.item].icon : '';
+  $('itemName').innerHTML = p.item && p.rolling <= 0 ? `${ITEMS[p.item].name}<br><small>${ITEMS[p.item].src}</small>` : p.guide > 0 ? '🛰️ Piloto Guia' : '';
   if (p.wrongWay > 1.2 && !p.finished) { $('sub').textContent = '⚠ CONTRAMÃO! ⚠'; p.wwShown = true; }
   else if (p.wwShown) { $('sub').textContent = ''; p.wwShown = false; }
   mini();
@@ -1115,7 +1279,8 @@ function startRace() {
 function resetRace() {
   for (const k of karts) scene.remove(k.v.root);
   karts.length = 0; state.finishOrder = []; state.raceTime = 0;
-  for (const h of hazards) scene.remove(h.o); hazards.length = 0;
+  for (const h of hazards) if (h.o) scene.remove(h.o); hazards.length = 0;
+  for (const e of effects) scene.remove(e.o); effects.length = 0;
   for (const b of itemBoxes) { b.active = true; b.g.visible = true; }
   const mine = CHARACTERS[OPTS.char] ? OPTS.char : 'maxi';
   const defs = RACERS.map(d => ({ ...d }));
@@ -1131,7 +1296,8 @@ function resetRace() {
 
 const clock = new THREE.Clock();
 function frame() {
-  update(Math.min(clock.getDelta(), 1 / 30));
+  const dt = Math.min(clock.getDelta(), 1 / 30);
+  if (!window.__game?.paused) update(dt);
   effect.render(scene, camera);
   requestAnimationFrame(frame);
 }
@@ -1231,6 +1397,6 @@ function update(dt) {
   const showHud = () => { for (const id of HUD_IDS) $(id).classList.remove('hidden'); };
   $('startBtn').addEventListener('click', showHud);
   addEventListener('keydown', e => { if (e.code === 'Enter') showHud(); });
-  window.__game = { sim: (sec) => { for (let i = 0; i < sec * 60; i++) update(1 / 60); effect.render(scene, camera); }, state, karts, get player() { return player; }, S, CFG, keys }; // debug hook
+  window.__game = { camera, hazards, sim: (sec) => { for (let i = 0; i < sec * 60; i++) update(1 / 60); effect.render(scene, camera); }, state, karts, get player() { return player; }, S, CFG, keys }; // debug hook
   frame();
 })();

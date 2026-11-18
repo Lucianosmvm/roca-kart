@@ -10,7 +10,14 @@ Personagens: **Maxi** (Trator ST MAX 105, equilibrado) e **Imperador** (Pulveriz
 No celular/tablet: botões na tela, acelera sozinho; opção de direção assistida para crianças.
 
 Controles: W/↑ acelera · S/↓ freio/ré · A/D vira · ESPAÇO drift (solte = turbo) · E/SHIFT item · R volta pra pista · C câmera.
-Itens: 🔥 Turbo · 🌾 Fardo (solta atrás) · 🍅 Tomate (arremessa pra frente). Segure acelerar no "1" da largada = turbo.
+Itens (implementos Stara):
+- 🌫️ **Calcário** (Hércules) — nuvem atrás; quem passa espirra e fica lento.
+- 💦 **Jato d'água** (Imperador) — empurra rivais à frente pro lado e limpa a lama; no Imperador as barras abrem.
+- 🌻 **Girassóis** (Absoluta) — planta 3 girassóis gigantes atrás; quem bate roda.
+- 🚜 **Sulco Turbo** (Cultivador) — turbo + sulco no chão que acelera quem passa.
+- 🛰️ **Piloto Guia** — 4 s no piloto automático, rápido e imune.
+- ⚡ **Corisco** — raio no 1º colocado.
+Itens fortes saem mais para quem está atrás. Segure acelerar no "1" da largada = turbo.
 
 ## Estrutura
 - `blender/tractor_char.py` — **trator personagem atual** (olhos no para-brisa, sorriso na grade, faixa ST MAX 105), baseado na arte de referência e nas medidas de `Assembly/Tractor/StMax105.blend`. Gera `assets/tractor.glb` + `blender/tractor_character.blend`.
