@@ -6,11 +6,16 @@ Feito com Three.js para PC e celular.
 ## Jogar
 
 Dê dois cliques em `Jogar.bat`, ou execute `python -m http.server 8765` e abra http://localhost:8765.
-As mudanças desta etapa são locais; ainda não foram publicadas no GitHub Pages.
+Jogo publicado em https://lucianosmvm.github.io/roca-kart/ — o GitHub Pages atualiza após os pushes na `main`.
 
 ## Monte sua máquina
 
 Entre em **Garagem → 🛠 Montar**. Escolha Tatu ou Pingo na aba Máquina.
+
+A oficina segue o layout aprovado: prévia 3D à esquerda e editor lateral no PC; no celular, a máquina fica acima de um painel inferior recolhível. **Salvar criação** e **Correr** ficam sempre visíveis.
+Use **Máquina e acessórios** para escolher máquina, implemento, pintura, acessórios e buzina.
+Dentro de **Montar**, os controles estão separados em **Peças**, **Proporções** e **Cores** (o Broto tem Peças e Cores).
+Os atributos e a habilidade ficam numa área recolhível. A câmera usa apenas o espaço livre da prévia, incluindo quando o painel é recolhido.
 
 - **Tatu:** troque capô, cabine e para-choque; ajuste altura e largura do capô.
 - **Pingo:** ajuste tanque em gota e braços de irrigação.
@@ -70,3 +75,17 @@ Para gerar e salvar os arquivos novamente:
 ```
 
 Esta etapa de personalização do Broto e Minhas criações não foi testada, a pedido do usuário. Não executar testes neste PC; as preferências estão em `AGENTS.md`.
+
+## Visual da oficina
+
+Paleta comum nos menus: azul-petróleo, creme, coral e amarelo-palha, com botões e cartões arredondados.
+O cenário de madeira atualizado foi salvo em `blender/models/garage.blend` e `assets/garage.glb`.
+A referência aprovada está em `docs/art/oficina-layout-aprovado.png`.
+
+Para gerar apenas o cenário, preservando os outros modelos:
+
+```powershell
+& 'C:\Program Files\Blender Foundation\Blender 5.3\blender.exe' -b --factory-startup --python blender/props_demo.py -- garage
+```
+
+O novo layout não foi testado neste PC, conforme instrução do usuário. O Blender foi usado somente para gerar e salvar o cenário.

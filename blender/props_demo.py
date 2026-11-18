@@ -123,10 +123,10 @@ def podium():
 
 # ---------------- garage showroom: barn interior with turntable ----------------
 def garage():
-    floor = mat("Floor", "#C9A06A", 0.8); plank = mat("PlankLine", "#A87F4E"); wall = mat("Wall", "#C8372D")
-    trim = mat("Trim", "#FAF7EE"); beamM = mat("Beam", "#7A5230"); turn = mat("Turntable", "#3D3F46", 0.4)
-    turnRing = mat("TurnRing", "#216C79", 0.35, emission=0.4); hay = mat("Hay", "#F2C94C"); tool = mat("Tool", "#8E9399", 0.3)
-    lamp = mat("Lamp", "#FFF1C1", 0.2, emission=3.0); sign = mat("Sign", "#1F8A4C"); green = mat("Green", "#1F8A4C")
+    floor = mat("Floor", "#C9A06A", 0.8); plank = mat("PlankLine", "#A87F4E"); wall = mat("Wall", "#B57E51")
+    trim = mat("Trim", "#FFF0CF"); beamM = mat("Beam", "#7A5230"); turn = mat("Turntable", "#D9AD76", 0.7)
+    turnRing = mat("TurnRing", "#216C79", 0.5); hay = mat("Hay", "#E9C46A"); tool = mat("Tool", "#8E9399", 0.3)
+    lamp = mat("Lamp", "#FFF1C1", 0.2, emission=3.0); sign = mat("Sign", "#216C79"); green = mat("LampShade", "#216C79")
     o = [box("floor", (22, 18, 0.2), (0, 0, -0.1), floor, 0.0)]
     for k in range(-10, 11, 2):
         o.append(box("floorLine", (0.05, 18, 0.02), (k, 0, 0.005), plank, 0.0))
@@ -136,12 +136,26 @@ def garage():
         for y in (-6, 0, 6):
             o.append(box("post", (0.5, 0.5, 9), (sx * 10.7, y, 4.5), beamM, 0.04))
     for k in range(-9, 10, 3):
-        o.append(box("wallBoard", (0.12, 0.3, 9), (k, 8.75, 4.5), trim, 0.0))
+        o.append(box("wallBoard", (0.07, 0.3, 9), (k, 8.75, 4.5), plank, 0.0))
     for y in (-6, 0, 6):
         o.append(box("roofBeam", (22, 0.4, 0.5), (0, y, 8.6), beamM, 0.04))
     # turntable
     o.append(cyl("turntable", 4.2, 0.25, (0, 0, 0.125), turn, 48, bevel=0.05, seg=2))
     o.append(cyl("turnRing", 4.3, 0.12, (0, 0, 0.06), turnRing, 48))
+    for x in range(-3, 4):
+        length = 2 * math.sqrt(4.1**2 - x*x)
+        o.append(box("turntablePlank", (0.035, length, 0.008), (x, 0, 0.254), plank, 0))
+    for k in range(16):
+        a = k * math.tau / 16
+        o.append(uvs("turntableBolt", .055, (4.15*math.cos(a), 4.15*math.sin(a), .26), trim, 8, 4, scale=(1,1,.4)))
+    # A simple painted window suggests daylight without textures or external assets.
+    sky = mat("WindowSky", "#9FD8E5"); hill = mat("WindowHill", "#91AC65")
+    o.append(box("window", (4.2, .09, 3.1), (-6.1, 8.53, 4.6), sky, .04))
+    o.append(uvs("hill", 1, (-6.1, 8.44, 3.3), hill, 16, 8, scale=(2.0,.05,.8)))
+    for x in (-8.2,-6.1,-4.0):
+        o.append(box("windowVertical", (.13,.14,3.3), (x,8.35,4.6), trim, .025))
+    for z in (3.05,4.6,6.15):
+        o.append(box("windowHorizontal", (4.35,.14,.13), (-6.1,8.35,z), trim, .025))
     # props: hay bales, tool wall, hanging lamps
     for x, y in ((-8, 6.5), (-6.4, 7), (8, 6.8), (7.5, 5.2)):
         o.append(cyl("bale", 0.8, 1.2, (x, y, 0.8), hay, 12, rot=(0, math.pi / 2, random.random()), bevel=0.06, seg=1))
@@ -156,7 +170,7 @@ def garage():
         o.append(uvs("bulb", 0.22, (x, 0, 6.35), lamp, 10, 6))
     o.append(box("sign", (5, 0.15, 1.2), (0, 8.7, 7.0), sign, 0.08, 2))
     bpy.ops.object.text_add(location=(0, 8.6, 6.75), rotation=(math.pi / 2, 0, 0))
-    t = bpy.context.active_object; t.data.body = "GARAGEM"; t.data.size = 0.7; t.data.extrude = 0.02; t.data.align_x = "CENTER"
+    t = bpy.context.active_object; t.data.body = "OFICINA DA ROÇA"; t.data.size = 0.43; t.data.extrude = 0.02; t.data.align_x = "CENTER"
     f = r"C:\Windows\Fonts\arialbd.ttf"
     if os.path.exists(f):
         t.data.font = bpy.data.fonts.load(f, check_existing=True)
@@ -252,7 +266,10 @@ def cerrado_tree():
     done([join(o, "CerradoTree")], "cerrado_tree", (0, 0, 1.8), 9)
 
 
-for fn in (ramp, coin, podium, garage, acc_straw, acc_cap, acc_crown, acc_flower, acc_flag, acc_glasses, soy, cerrado_tree):
-    reset()
-    fn()
-print("DEMO PROPS DONE")
+if __name__ == '__main__':
+    selected = set(sys.argv[sys.argv.index('--')+1:]) if '--' in sys.argv else set()
+    for fn in (ramp, coin, podium, garage, acc_straw, acc_cap, acc_crown, acc_flower, acc_flag, acc_glasses, soy, cerrado_tree):
+        if not selected or fn.__name__ in selected:
+            reset()
+            fn()
+    print("DEMO PROPS SAVED")

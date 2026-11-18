@@ -28,7 +28,7 @@ export const ui = {
   },
   show(name) {
     for (const s of SCREENS) $(s).classList.toggle('hidden', s !== name);
-    $('wallet').classList.toggle('hidden', !['menu', 'tracks', 'garage', 'shop'].includes(name));
+    $('wallet').classList.toggle('hidden', !['menu', 'tracks'].includes(name));
     updateWallet();
     if (name === 'menu') buildMenu();
     if (name === 'tracks') buildTracks();
@@ -85,7 +85,10 @@ export const ui = {
   },
 };
 const IS_TOUCH = () => document.body.classList.contains('is-touch') || matchMedia('(pointer: coarse)').matches;
-function updateWallet() { $('wallet').textContent = `🌽 ${profile.coins}`; }
+function updateWallet() {
+  $('wallet').textContent = `🌽 ${profile.coins}`;
+  document.querySelectorAll('.gWallet').forEach(el => { el.textContent = `🌽 ${profile.coins}`; });
+}
 
 // ---------------------------------------------------------------- splash
 function buildSplash() {
@@ -161,7 +164,8 @@ function buildTracks() {
 function goGarageForRace() { profile.sel.track = pickedTrack; save(); api.openGarage('race'); ui.show('garage'); buildGarage('race'); }
 
 // ---------------------------------------------------------------- garage + shop (shared)
-let gTab = 'machine', preview = null, buildTarget = 'machine', creationNotice = '';
+let gTab = 'build', preview = null, buildTarget = 'machine', buildSection = 'parts', creationNotice = '';
+let sheetCollapsed = false, garageSaved = true;
 const TAB_NAMES = { machine: 'Máquina', build: '🛠 Montar', creations: 'Minhas criações', impl: 'Implemento', paint: 'Pintura', acc: 'Acessório', horn: 'Buzina' };
 const CAT = { paint: 'paints', acc: 'acc', horn: 'horns' };
 function itemsFor(tab) {
@@ -173,6 +177,8 @@ function itemsFor(tab) {
 const selKey = tab => ({ machine: 'char', impl: 'impl', paint: 'paint', acc: 'acc', horn: 'horn' }[tab]);
 function buildGarage(mode) {
   const shop = mode === 'shop', root = $(shop ? 'shop' : 'garage');
+  $(shop ? 'garage' : 'shop').replaceChildren();
+  root.classList.toggle('sheetCollapsed', sheetCollapsed);
   const tabs = shop ? ['paint', 'acc', 'horn'] : ['machine', 'build', 'creations', 'impl', 'paint', 'acc', 'horn'];
   if (!tabs.includes(gTab)) gTab = tabs[0];
   const { CHARACTERS, IMPLEMENTS, ABILITIES } = api;
@@ -180,6 +186,7 @@ function buildGarage(mode) {
   const ch = CHARACTERS[sel.char], tows = ch.tows;
   const canBuildBroto = tows && sel.impl === 'broto';
   if (!canBuildBroto) buildTarget = 'machine';
+  if (buildTarget === 'broto' && buildSection === 'proportions') buildSection = 'parts';
   const im = tows ? IMPLEMENTS[sel.impl] : null;
   const ab = ABILITIES[tows ? im.ability : ch.ability];
   const pv = preview && Object.entries(preview)[0];
@@ -190,30 +197,66 @@ function buildGarage(mode) {
       <button class="btn small orange" id="gBuy" ${profile.coins < item.price ? 'disabled style="opacity:.5"' : ''}>Comprar</button>
       ${profile.coins < item.price ? '<small> Faltam ' + (item.price - profile.coins) + ' 🌽 — corra para ganhar!</small>' : ''}</div>`;
   }
+  const catalogTabs = tabs.filter(t => !['build','creations'].includes(t));
+  const catalog = `<div class="tabs">${catalogTabs.map(t => `<button class="tab ${gTab === t ? 'on' : ''}" data-t="${t}" ${t === 'impl' && !tows ? 'disabled' : ''}>${TAB_NAMES[t]}</button>`).join('')}</div>`;
   root.innerHTML = `
-    <div class="gTop"><button class="btn small cream" id="gBack">◀</button><h2>${shop ? 'Loja' : 'Oficina da Roça'}</h2></div>
-    <div class="panel gPanel">
-      <div class="tabs">${tabs.map(t => `<button class="tab ${gTab === t ? 'on' : ''}" data-t="${t}" ${t === 'impl' && !tows ? 'disabled' : ''}>${TAB_NAMES[t]}</button>`).join('')}</div>
+    <header class="gHeader">
+      <button class="btn small cream" id="gBack" aria-label="Voltar">‹ <span>Voltar</span></button>
+      <div class="gBrand"><span class="gGameName">🌽 Roça Kart</span><h2>${shop ? 'Loja da Roça' : 'Oficina da Roça'}</h2></div>
+      <nav class="gMainNav" aria-label="Seções da oficina">
+        <button class="tab ${!shop && gTab !== 'creations' ? 'on' : ''}" data-page="build">Montar</button>
+        <button class="tab ${gTab === 'creations' ? 'on' : ''}" data-page="creations">Minhas criações</button>
+      </nav><div class="gWallet" aria-label="Moedas de milho">🌽 ${profile.coins}</div>
+    </header>
+    <div class="gPreview" aria-label="Prévia 3D da sua máquina"><span class="gRotateHint">⟳ Arraste para girar</span></div>
+    <aside class="panel gPanel" aria-label="Editor da oficina">
+      <button class="gSheetToggle" id="gSheetToggle" aria-expanded="${!sheetCollapsed}" aria-controls="gEditorBody"><span class="gSheetHandle"></span><span class="gSheetCaption">${sheetCollapsed ? 'Abrir edição' : 'Recolher edição'}</span><span aria-hidden="true">${sheetCollapsed ? '⌃' : '⌄'}</span></button>
+      <div class="gEditorBody" id="gEditorBody">
+      <h3 class="gEditingTitle">${gTab === 'creations' ? 'Minhas criações' : shop ? 'Escolha seu estilo' : 'Editando: ' + (buildTarget === 'broto' && gTab === 'build' ? 'Broto' : ch.name)}</h3>
+      ${gTab === 'creations' ? '' : shop ? catalog : `<details class="gCatalog" ${catalogTabs.includes(gTab) ? 'open' : ''}><summary>Máquina e acessórios <span aria-hidden="true">⚙</span></summary>${catalog}</details>`}
       ${gTab === 'build' ? `<div class="buildTargets" role="group" aria-label="Escolher o que montar">
-        <button class="tab ${buildTarget === 'machine' ? 'on' : ''}" data-target="machine" aria-pressed="${buildTarget === 'machine'}">${ch.name}</button>
-        <button class="tab ${buildTarget === 'broto' ? 'on' : ''}" data-target="broto" aria-pressed="${buildTarget === 'broto'}" ${canBuildBroto ? '' : 'disabled'}>Broto</button>
-        ${canBuildBroto ? '' : '<small>Escolha Tatu e engate o Broto na aba Implemento para montar a plantadeira.</small>'}
-      </div>${buildTarget === 'broto' ? buildImplementEditor() : buildEditor(sel.char)}` : gTab === 'creations' ? buildCreations() : `<div class="items">${itemsFor(gTab).map(i => `
+        <button class="tab ${buildTarget === 'machine' ? 'on' : ''}" data-target="machine" aria-pressed="${buildTarget === 'machine'}"><img src="${ch.img}" alt="">${ch.name}</button>
+        <button class="tab ${buildTarget === 'broto' ? 'on' : ''}" data-target="broto" aria-pressed="${buildTarget === 'broto'}" ${canBuildBroto ? '' : 'disabled'}><img src="assets/ui/broto.png" alt="">Broto</button>
+        ${canBuildBroto ? '' : '<small>Para montar o Broto, escolha Tatu e engate a plantadeira em Máquina e acessórios.</small>'}
+      </div><div class="editorSections" role="group" aria-label="Etapas da montagem">${[['parts','Peças'],['proportions','Proporções'],['colors','Cores']].filter(([key]) => buildTarget !== 'broto' || key !== 'proportions').map(([key,label]) => `<button class="tab ${buildSection === key ? 'on' : ''}" data-section="${key}" aria-pressed="${buildSection === key}">${label}</button>`).join('')}</div>
+      ${buildTarget === 'broto' ? buildImplementEditor() : buildEditor(sel.char)}` : gTab === 'creations' ? buildCreations() : `<div class="items">${itemsFor(gTab).map(i => `
         <div class="it ${sel[selKey(gTab)] === i.id ? 'sel' : ''} ${i.owned ? '' : 'locked'}" data-id="${i.id}">
           ${i.img ? `<img src="${i.img}" alt="">` : i.sw ? `<div class="sw" style="background:${i.sw}"></div>` : `<div class="ic">${i.ic}</div>`}
           <div>${i.name}</div>${i.sub ? `<small>${i.sub}</small>` : ''}
           ${i.owned ? (sel[selKey(gTab)] === i.id ? '<small>✔ equipado</small>' : '<small>tenho</small>') : `<div class="price">🌽 ${i.price}</div>`}
         </div>`).join('')}</div>`}
-      <div class="gInfo">
+      <details class="gAttributes"><summary>Atributos e habilidade <span aria-hidden="true">›</span></summary><div class="gInfo">
         <div><b style="font-family:'Lilita One';font-size:22px">${ch.name}${im && sel.impl !== 'none' ? ' + ' + im.name : ''}</b><br>
           <span class="abilTag">${ab.icon} ${ab.name}</span> ${im ? `<small>${im.perk}</small>` : ''}</div>
         <div class="statsBox">${Object.entries(ch.stats).map(([k, v]) => `<span>${k}</span><em>${stars(v)}</em>`).join('')}</div>
-        ${buyBox}
-        <div>${mode === 'race' ? '<button class="btn orange" id="gGo">CORRER! ▶</button>' : ''}</div>
+      </div></details>
+      ${buyBox ? `<div class="gBuyBox">${buyBox}</div>` : ''}
       </div>
-    </div>`;
+    </aside>
+    <footer class="gFooter"><span class="gSaveStatus" role="status">${preview ? 'Prévia · item não equipado' : garageSaved ? '✓ Salvo automaticamente' : 'Guardado nesta sessão'}</span>
+      <button class="btn cream" id="gSaveCreation" ${preview ? 'disabled' : ''}>▣ <span>Salvar criação</span></button>
+      <button class="btn" id="gGo">CORRER ▶</button>
+    </footer>`;
   click($('gBack'), () => { preview = null; api.leaveGarage(mode === 'race' ? 'tracks' : 'menu'); }, 'back');
   root.querySelectorAll('.tabs [data-t]').forEach(b => click(b, () => { if (b.disabled) return; gTab = b.dataset.t; preview = null; api.refreshShowroom(); buildGarage(mode); }));
+  root.querySelectorAll('[data-page]').forEach(button => click(button, () => {
+    gTab = button.dataset.page; preview = null; sheetCollapsed = false;
+    if (shop) { api.openGarage('menu'); ui.show('garage'); }
+    else api.refreshShowroom();
+    buildGarage(shop ? 'menu' : mode);
+  }));
+  click($('gSheetToggle'), () => {
+    sheetCollapsed = !sheetCollapsed;
+    root.classList.toggle('sheetCollapsed', sheetCollapsed);
+    $('gSheetToggle').setAttribute('aria-expanded', String(!sheetCollapsed));
+    $('gSheetToggle').querySelector('.gSheetCaption').textContent = sheetCollapsed ? 'Abrir edição' : 'Recolher edição';
+    $('gSheetToggle').lastElementChild.textContent = sheetCollapsed ? '⌃' : '⌄';
+  });
+  click($('gSaveCreation'), () => {
+    gTab = 'creations'; sheetCollapsed = false;
+    if (shop) { api.openGarage('menu'); ui.show('garage'); }
+    buildGarage(shop ? 'menu' : mode); $('creationName').focus();
+  });
   root.querySelectorAll('.it').forEach(el => click(el, () => {
     const id = el.dataset.id, k = selKey(gTab);
     if (gTab === 'horn') audio.horn(id);
@@ -221,7 +264,7 @@ function buildGarage(mode) {
     if (!cat || owns(cat, id)) {
       profile.sel[k] = id;
       if (gTab === 'paint' && profile.builds[sel.char]) profile.builds[sel.char].bodyColor = null;
-      save(); preview = null;
+      saveGarage(); preview = null;
     }
     else preview = { [k]: id };
     api.refreshShowroom(preview ?? undefined);
@@ -233,13 +276,16 @@ function buildGarage(mode) {
     if (buy(CAT[tab], id)) {
       audio.sfx('buy'); profile.sel[k] = id;
       if (k === 'paint' && profile.builds[sel.char]) profile.builds[sel.char].bodyColor = null;
-      save(); preview = null; api.refreshShowroom(); updateWallet(); buildGarage(mode);
+      saveGarage(); preview = null; api.refreshShowroom(); updateWallet(); buildGarage(mode);
     }
     else audio.sfx('deny');
   }, 'click');
   const go = $('gGo');
   if (go) click(go, () => { preview = null; api.startRace(profile.sel.track); });
   if (gTab === 'build') {
+    root.querySelectorAll('[data-section]').forEach(button => click(button, () => {
+      buildSection = button.dataset.section; buildGarage(mode);
+    }));
     root.querySelectorAll('[data-target]').forEach(button => click(button, () => {
       if (button.disabled) return;
       buildTarget = button.dataset.target; buildGarage(mode);
@@ -248,6 +294,11 @@ function buildGarage(mode) {
     else bindEditor(root, sel.char, mode);
   }
   if (gTab === 'creations') bindCreations(root, mode);
+}
+
+function saveGarage() {
+  garageSaved = save();
+  document.querySelectorAll('.gSaveStatus').forEach(el => { el.textContent = garageSaved ? '✓ Salvo automaticamente' : 'Guardado nesta sessão'; });
 }
 
 // Small vector drawings show each part's silhouette before it is fitted to the machine.
@@ -306,14 +357,16 @@ function buildEditor(char) {
     ['frontSize','Rodas dianteiras'], ['rearSize','Rodas traseiras'], ['tireWidth','Largura dos pneus'], ['stance','Distância entre rodas'],
     ...(char === 'tatu' ? [['hoodWidth','Largura do capô'],['hoodHeight','Altura do capô']] : [['tankSize','Tamanho do tanque'],['armSize','Braços de irrigação']]),
   ];
-  return `<div class="buildIntro"><b>Crie sua máquina!</b> Peças encaixadas · arraste o modelo para girar · salvo automaticamente</div>
-    ${choices.length ? `<div class="partGroups">${choices.map(([key,label,options]) => `<fieldset class="partGroup"><legend>${label}</legend><div class="partOptions">${options.map(([v,text]) => `
+  return `<div class="buildIntro">${buildSection === 'parts' ? 'Escolha pelo desenho e monte do seu jeito.' : buildSection === 'proportions' ? 'Ajuste os tamanhos da sua máquina.' : 'Escolha as cores da sua montagem.'}</div>
+    ${buildSection === 'parts' ? choices.length ? `<div class="partGroups">${choices.map(([key,label,options]) => `<fieldset class="partGroup"><legend>${label}</legend><div class="partOptions">${options.map(([v,text]) => `
       <label class="partOption"><input type="radio" name="build-${key}" data-build="${key}" value="${v}" ${b[key] === v ? 'checked' : ''}>
-      <span class="partCard">${partDrawing(key,v)}<span class="partLabel">${text}</span><span class="partSelected">✓ Selecionado</span></span></label>`).join('')}</div></fieldset>`).join('')}</div>` : ''}
-    <div class="buildGrid">
+      <span class="partCard">${partDrawing(key,v)}<span class="partLabel">${text}</span><span class="partSelected">✓ Selecionado</span></span></label>`).join('')}</div></fieldset>`).join('')}</div>` : '<div class="gEditorTip">💧 O Pingo tem tanque e braços ajustáveis. Personalize os tamanhos em <b>Proporções</b> ou escolha uma nova combinação em <b>Cores</b>.</div>' : ''}
+    ${buildSection === 'proportions' ? `<div class="buildGrid">
     ${sliders.map(([key,label]) => `<label>${label} <output data-value="${key}">${Math.round(b[key]*100)}%</output><input aria-label="${label}" data-build="${key}" type="range" min="${BUILD_RANGES[key][0]}" max="${BUILD_RANGES[key][1]}" step=".01" value="${b[key]}"></label>`).join('')}
+    </div>` : ''}
+    ${buildSection === 'colors' ? `<div class="buildGrid">
     ${[['bodyColor','Carroceria',b.bodyColor ?? paintColor(profile.sel.paint)],['accent','Detalhes',b.accent],['trim','Acabamento',b.trim]].map(([key,label,value]) => `<label class="buildColor">${label}<input aria-label="${label}" data-build="${key}" type="color" value="${value}"></label>`).join('')}
-    </div><div class="buildActions"><small>A montagem é visual; os atributos da máquina-base continuam valendo.</small><button class="btn small cream" id="buildReset">Restaurar montagem</button></div>`;
+    </div>` : ''}<div class="buildActions"><small>Visual livre, corrida equilibrada.</small><button class="btn small cream" id="buildReset">Restaurar montagem</button></div>`;
 }
 function bindEditor(root, char, mode) {
   root.querySelectorAll('[data-build]').forEach(input => input.addEventListener('input', () => {
@@ -322,9 +375,9 @@ function bindEditor(root, char, mode) {
     profile.builds[char] = cleanBuild(b);
     const out = root.querySelector(`[data-value="${input.dataset.build}"]`);
     if (out) out.value = Math.round(Number(input.value)*100) + '%';
-    save(); api.refreshShowroom();
+    saveGarage(); api.refreshShowroom();
   }));
-  click($('buildReset'), () => { profile.builds[char] = { ...BUILD_DEFAULTS }; save(); api.refreshShowroom(); buildGarage(mode); });
+  click($('buildReset'), () => { profile.builds[char] = { ...BUILD_DEFAULTS }; saveGarage(); api.refreshShowroom(); buildGarage(mode); });
 }
 
 function buildImplementEditor() {
@@ -333,12 +386,12 @@ function buildImplementEditor() {
     ['hopper', 'Reservatórios', [['seed','Sementes'],['barrel','Barris'],['crate','Caixotes']]],
     ['wheels', 'Rodas', [['small','Pequenas'],['wide','Largas'],['double','Duplas']]],
   ];
-  return `<div class="buildIntro"><b>Monte o seu Broto!</b> Cores independentes do trator · salvo automaticamente</div>
-    <div class="partGroups brotoParts">${choices.map(([key,label,options]) => `<fieldset class="partGroup"><legend>${label}</legend><div class="partOptions">${options.map(([v,text]) => `
+  return `<div class="buildIntro">${buildSection === 'parts' ? 'Escolha os reservatórios e as rodas do Broto.' : 'As cores do Broto são independentes do trator.'}</div>
+    ${buildSection === 'parts' ? `<div class="partGroups brotoParts">${choices.map(([key,label,options]) => `<fieldset class="partGroup"><legend>${label}</legend><div class="partOptions">${options.map(([v,text]) => `
       <label class="partOption"><input type="radio" name="broto-${key}" data-impl-build="${key}" value="${v}" ${b[key] === v ? 'checked' : ''}>
-      <span class="partCard">${partDrawing(key,v)}<span class="partLabel">${text}</span><span class="partSelected">✓ Selecionado</span></span></label>`).join('')}</div></fieldset>`).join('')}</div>
-    <div class="buildGrid">${[['bodyColor','Chassi'],['hopperColor','Reservatórios'],['accent','Detalhes'],['trim','Acabamento']].map(([key,label]) => `
-      <label class="buildColor">${label}<input aria-label="Cor do ${label}" data-impl-build="${key}" type="color" value="${b[key]}"></label>`).join('')}</div>
+      <span class="partCard">${partDrawing(key,v)}<span class="partLabel">${text}</span><span class="partSelected">✓ Selecionado</span></span></label>`).join('')}</div></fieldset>`).join('')}</div>` : ''}
+    ${buildSection === 'colors' ? `<div class="buildGrid">${[['bodyColor','Chassi'],['hopperColor','Reservatórios'],['accent','Detalhes'],['trim','Acabamento']].map(([key,label]) => `
+      <label class="buildColor">${label}<input aria-label="Cor do ${label}" data-impl-build="${key}" type="color" value="${b[key]}"></label>`).join('')}</div>` : ''}
     <div class="buildActions"><small>Peças visuais: a habilidade de plantio continua a mesma.</small><button class="btn small cream" id="implBuildReset">Restaurar Broto</button></div>`;
 }
 function bindImplementEditor(root, mode) {
@@ -346,11 +399,11 @@ function bindImplementEditor(root, mode) {
     const b = cleanImplementBuild(profile.implementBuilds.broto);
     b[input.dataset.implBuild] = input.value;
     profile.implementBuilds.broto = cleanImplementBuild(b);
-    save(); api.refreshShowroom();
+    saveGarage(); api.refreshShowroom();
   }));
   click($('implBuildReset'), () => {
     profile.implementBuilds.broto = { ...IMPLEMENT_DEFAULTS };
-    save(); api.refreshShowroom(); buildGarage(mode);
+    saveGarage(); api.refreshShowroom(); buildGarage(mode);
   });
 }
 
@@ -381,6 +434,7 @@ function bindCreations(root, mode) {
       $('creationName').focus(); return;
     }
     creationNotice = result.persisted ? `“${result.creation.name}” salva! Use quando quiser.` : 'Criação guardada nesta sessão. O navegador não permitiu salvar no armazenamento.';
+    garageSaved = result.persisted;
     audio.sfx('click'); buildGarage(mode);
   });
   root.querySelectorAll('[data-load-creation]').forEach(button => click(button, () => {

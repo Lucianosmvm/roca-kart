@@ -115,7 +115,7 @@ let SUN_OFFSET = new THREE.Vector3(-60, 110, -40);
 
 // garage showroom (separate scene)
 const showScene = new THREE.Scene();
-showScene.background = new THREE.Color('#2b1a0e');
+showScene.background = new THREE.Color('#C9A06A');
 const showCam = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.3, 200);
 showScene.add(new THREE.HemisphereLight('#FFF4E0', '#6B4A2A', 1.4));
 {
@@ -870,6 +870,8 @@ function updateItemEffects(k, dt, fwd, side) {
 // ================================================================== input
 const keys = {};
 addEventListener('keydown', e => {
+  // In the editor, arrows and Space belong to form fields, radio cards and buttons.
+  if (state.mode === 'garage') return;
   keys[e.code] = true;
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
   if (e.repeat) return;
@@ -1439,6 +1441,7 @@ function attractCamera(dt) {
   camera.lookAt(k.pos.x, 1.8, k.pos.z); camera.fov = 58; camera.updateProjectionMatrix();
 }
 let showModel = null, showDrag = null;
+let showRadius = 3.2, showFocusY = 1.6;
 function openGarage(mode) {
   state.mode = 'garage'; state.garageMode = mode;
   audio.play('garage'); ui.showHUD(false);
@@ -1461,21 +1464,56 @@ function refreshShowroom(previewSel) {
     const H = showModel.root.position.clone().add(new THREE.Vector3(0, 0, -ch.hitch.back));
     showModel.trailer.root.position.set(H.x, 0.25 + showModel.ch.hitch.y, H.z);
   }
+  // Center the complete assembly on the turntable so rotation cannot swing a trailer out of frame.
+  const box = new THREE.Box3().setFromObject(showSpin), center = box.getCenter(new THREE.Vector3());
+  const offset = showSpin.worldToLocal(new THREE.Vector3(center.x, 0, center.z));
+  showModel.root.position.x -= offset.x; showModel.root.position.z -= offset.z;
+  if (showModel.trailer) {
+    showModel.trailer.root.position.x -= offset.x; showModel.trailer.root.position.z -= offset.z;
+  }
+  const size = box.getSize(new THREE.Vector3());
+  showRadius = Math.max(2.6, size.length() / 2);
+  showFocusY = center.y;
   showModel.root.traverse(o => { if (o.isMesh) o.castShadow = true; });
 }
-function garageCamera(dt) {
-  if (!showDrag?.active) showSpin.rotation.y += dt * 0.35;
-  const portrait = showCam.aspect < 1;
-  const big = CHARACTERS[profile.sel.char].asset === 'pingo';
-  const tow = CHARACTERS[profile.sel.char].tows && profile.sel.impl !== 'none';
-  const d = (portrait ? 24 : 17) + (big ? 2 : 0) + (tow ? 2 : 0);
-  showCam.position.set(-d * 0.45, 5.2 + (big ? 0.8 : 0), -d * 0.9);
-  // aim below the machine so it sits in the upper half, above the garage panel
-  showCam.lookAt(0, -1.4, tow ? -0.6 : 0);
+function garageViewport() {
+  const root = document.querySelector('#garage:not(.hidden) .gPreview, #shop:not(.hidden) .gPreview');
+  const rect = root?.getBoundingClientRect();
+  return rect && rect.width > 0 && rect.height > 0 ? rect : { left: 0, bottom: innerHeight, width: innerWidth, height: innerHeight };
 }
-addEventListener('pointerdown', e => { if (state.mode === 'garage' && e.target === renderer.domElement) showDrag = { active: true, x: e.clientX }; });
-addEventListener('pointermove', e => { if (showDrag?.active) { showSpin.rotation.y += (e.clientX - showDrag.x) * 0.01; showDrag.x = e.clientX; } });
-addEventListener('pointerup', () => { if (showDrag) showDrag.active = false; });
+function garageCamera(dt) {
+  if (!showDrag?.active) showSpin.rotation.y += dt * 0.15;
+  const rect = garageViewport();
+  showCam.aspect = rect.width / rect.height;
+  const halfAngle = Math.atan(Math.tan(THREE.MathUtils.degToRad(showCam.fov / 2)) * Math.min(1, showCam.aspect));
+  const distance = showRadius / Math.sin(halfAngle) * 1.06;
+  showCam.position.set(-0.4, 0.29, -0.87).normalize().multiplyScalar(distance);
+  showCam.position.y += showFocusY;
+  showCam.lookAt(0, showFocusY, 0); showCam.updateProjectionMatrix();
+}
+function renderGarage() {
+  const rect = garageViewport();
+  // Draw into the visible preview, leaving the sidebar and fixed action bars outside the camera.
+  renderer.setScissorTest(false); renderer.setViewport(0, 0, innerWidth, innerHeight); renderer.clear();
+  renderer.setViewport(rect.left, innerHeight - rect.bottom, rect.width, rect.height);
+  renderer.setScissor(rect.left, innerHeight - rect.bottom, rect.width, rect.height);
+  renderer.setScissorTest(true);
+  effect.render(showScene, showCam);
+  renderer.setScissorTest(false); renderer.setViewport(0, 0, innerWidth, innerHeight);
+}
+addEventListener('pointerdown', e => {
+  if (state.mode !== 'garage' || e.target !== renderer.domElement || e.button !== 0) return;
+  showDrag = { active: true, x: e.clientX, pointerId: e.pointerId };
+  renderer.domElement.setPointerCapture(e.pointerId);
+});
+addEventListener('pointermove', e => { if (showDrag?.active && showDrag.pointerId === e.pointerId) { showSpin.rotation.y += (e.clientX - showDrag.x) * 0.01; showDrag.x = e.clientX; } });
+const endGarageDrag = e => {
+  if (!showDrag || showDrag.pointerId !== e.pointerId) return;
+  showDrag.active = false;
+  if (renderer.domElement.hasPointerCapture(e.pointerId)) renderer.domElement.releasePointerCapture(e.pointerId);
+};
+addEventListener('pointerup', endGarageDrag);
+addEventListener('pointercancel', endGarageDrag);
 
 function togglePause(force) {
   if (!(state.mode === 'race' || state.mode === 'countdown')) return;
@@ -1489,7 +1527,7 @@ const clock = new THREE.Clock();
 function frame() {
   const dt = Math.min(clock.getDelta(), 1 / 30);
   if (!state.paused && !window.__game?.paused) update(dt);
-  if (state.mode === 'garage') effect.render(showScene, showCam);
+  if (state.mode === 'garage') renderGarage();
   else if (S.length) effect.render(scene, camera);
   requestAnimationFrame(frame);
 }
@@ -1609,7 +1647,7 @@ const api = {
   });
   window.__game = {
     camera, hazards, state, karts, CFG, keys, profile, api, sun, hemi, scene, get ramps() { return ramps; }, get coins() { return coinsOnTrack; }, get pads() { return pads; }, loadTrack, get player() { return player; }, get S() { return S; },
-    sim: sec => { for (let i = 0; i < sec * 60; i++) update(1 / 60); effect.render(state.mode === 'garage' ? showScene : scene, state.mode === 'garage' ? showCam : camera); },
+    sim: sec => { for (let i = 0; i < sec * 60; i++) update(1 / 60); if (state.mode === 'garage') renderGarage(); else effect.render(scene, camera); },
   };
   frame();
 })();

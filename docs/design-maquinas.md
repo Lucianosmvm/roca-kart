@@ -70,3 +70,19 @@ com imports locais entre os três arquivos. Não é necessário mudar as depend�
 Por instrução expressa do usuário, não foram executados testes, verificações de sintaxe ou validação no navegador para a personalização do Broto e Minhas criações.
 O teste existente foi atualizado para as peças e a coleção, mas não foi executado.
 O Blender foi usado apenas em segundo plano para produzir e salvar os arquivos 3D.
+
+## Layout aprovado da oficina
+
+- Referência: `docs/art/oficina-layout-aprovado.png` (conceito visual aprovado pelo usuário).
+- PC: prévia 3D na área esquerda; editor lateral com rolagem independente.
+- Celular: prévia acima; painel inferior com botão para recolher e abrir. Em telas baixas na horizontal, editor lateral compacto.
+- Cabeçalho: voltar, identidade Roça Kart, Montar, Minhas criações e moedas.
+- Rodapé: estado do salvamento, atalho para nomear/salvar uma criação e Correr. O atalho de salvamento não equipa itens em prévia.
+- Máquina e acessórios preserva a seleção de máquina, implemento, pintura, acessório e buzina.
+- Tatu/Pingo: Peças, Proporções e Cores separadas. Broto: Peças e Cores. Atributos e habilidade em seção recolhível.
+- A câmera enquadra o conjunto completo no retângulo disponível da prévia; a rotação por arraste funciona com mouse e toque.
+- Botões, cartões, painéis e cores comuns também foram aplicados aos menus inicial, de pistas, opções, créditos e pausa.
+- Cenário: madeira, plataforma com tábuas e aro azul-petróleo, janela e ferramentas. Salvo em `blender/models/garage.blend` e `assets/garage.glb`.
+- O gerador `blender/props_demo.py -- garage` permite regerar somente esse cenário.
+
+Este layout e o enquadramento não foram executados ou testados no PC do usuário. A instrução de não testar permanece em vigor.
