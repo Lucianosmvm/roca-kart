@@ -236,6 +236,36 @@ function buildGarage(mode) {
   if (gTab === 'build') bindEditor(root, sel.char, mode);
 }
 
+// Small vector drawings show each part's silhouette before it is fitted to the machine.
+function partDrawing(key, value) {
+  const drawings = {
+    'hood:shell': `<path fill="#216C79" d="M18 58C16 26 39 14 69 18c25 3 41 17 43 40L95 68H35Z"/>
+      <path d="M38 57c-2-19 6-29 18-36m3 41c0-20 5-32 13-40m10 40c0-14 1-23 2-33" fill="none" stroke="#75C5D4" stroke-width="5"/>`,
+    'hood:box': `<path fill="#75C5D4" d="m19 28 63-9 28 16-64 10Z"/><path fill="#216C79" d="m19 28 27 17v24L19 53Z"/>
+      <path fill="#2C8290" d="m46 45 64-10v24L46 69Z"/><path d="m61 49 34-5m-34 12 34-5m-34 12 34-5" stroke="#203B43" stroke-width="3"/>`,
+    'hood:round': `<path fill="#216C79" d="M38 20h51c31 0 34 42 7 45H40C7 65 6 23 38 20Z"/>
+      <ellipse cx="36" cy="43" rx="20" ry="22" fill="#75C5D4"/><path d="M53 24h34" stroke="#FFF0CF" stroke-width="4" stroke-linecap="round"/>`,
+    'roof:canopy': `<path d="M34 65V31m60 34V31" stroke="#216C79" stroke-width="7"/>
+      <path fill="#E9C46A" d="m16 22 69-9 28 13v9L29 44 16 34Z"/><path fill="#FFF0CF" d="m16 22 69-9 28 13-84 9Z"/>`,
+    'roof:open': `<path d="M30 29v34m68-34v34M30 24h68" stroke="#92A7A9" stroke-width="3" stroke-dasharray="5 5" fill="none"/>
+      <rect x="43" y="39" width="31" height="22" rx="6" fill="#E87578"/><path d="M40 65h43" stroke="#216C79" stroke-width="6"/>
+      <path d="m59 14 5-7 5 7m-5-6v18" stroke="#216C79" stroke-width="3" fill="none" stroke-linecap="round"/>`,
+    'roof:cage': `<path d="M29 65V29q0-9 9-9h49q9 0 9 9v36" stroke="#216C79" stroke-width="9" fill="none"/>
+      <path d="M29 65V29q0-9 9-9h49" stroke="#FFF0CF" stroke-width="4" fill="none"/>
+      <rect x="45" y="42" width="32" height="21" rx="5" fill="#E87578"/>`,
+    'bumper:bar': `<path d="M36 55v12m57-18v13" stroke="#56656B" stroke-width="7"/>
+      <path d="m15 37 88-9 11 9v17l-88 9-11-9Z" fill="#E87578"/><path d="m20 38 84-8 8 7-86 9Z" fill="#F3ADAB"/>
+      <g fill="#FFF0CF"><circle cx="33" cy="52" r="4"/><circle cx="99" cy="45" r="4"/></g>`,
+    'bumper:double': `<path d="M31 33v36m65-43v36" stroke="#56656B" stroke-width="6"/>
+      <path d="m16 23 88-9 9 9v9l-88 9-9-9Zm0 29 88-9 9 9v9l-88 9-9-9Z" fill="#E87578"/>
+      <path d="m21 25 81-8m-81 37 81-8" stroke="#F3ADAB" stroke-width="3"/>
+      <g fill="#FFF0CF"><circle cx="32" cy="33" r="3"/><circle cx="99" cy="26" r="3"/><circle cx="32" cy="62" r="3"/><circle cx="99" cy="55" r="3"/></g>`,
+    'bumper:none': `<rect x="17" y="29" width="94" height="28" rx="8" stroke="#92A7A9" stroke-width="3" stroke-dasharray="6 5" fill="none"/>
+      <circle cx="64" cy="43" r="20" fill="#FFF0CF" stroke="#E87578" stroke-width="4"/><path d="m50 57 28-28" stroke="#E87578" stroke-width="4"/>`,
+  };
+  return `<svg class="partDrawing" viewBox="0 0 128 80" aria-hidden="true" focusable="false"><ellipse cx="64" cy="71" rx="46" ry="4" fill="#203B43" opacity=".09"/>${drawings[key + ':' + value] ?? ''}</svg>`;
+}
+
 function buildEditor(char) {
   const b = cleanBuild(profile.builds[char]);
   const choices = char === 'tatu' ? [
@@ -248,8 +278,10 @@ function buildEditor(char) {
     ...(char === 'tatu' ? [['hoodWidth','Largura do capô'],['hoodHeight','Altura do capô']] : [['tankSize','Tamanho do tanque'],['armSize','Braços de irrigação']]),
   ];
   return `<div class="buildIntro"><b>Crie sua máquina!</b> Peças encaixadas · arraste o modelo para girar · salvo automaticamente</div>
+    ${choices.length ? `<div class="partGroups">${choices.map(([key,label,options]) => `<fieldset class="partGroup"><legend>${label}</legend><div class="partOptions">${options.map(([v,text]) => `
+      <label class="partOption"><input type="radio" name="build-${key}" data-build="${key}" value="${v}" ${b[key] === v ? 'checked' : ''}>
+      <span class="partCard">${partDrawing(key,v)}<span class="partLabel">${text}</span><span class="partSelected">✓ Selecionado</span></span></label>`).join('')}</div></fieldset>`).join('')}</div>` : ''}
     <div class="buildGrid">
-    ${choices.map(([key,label,options]) => `<label>${label}<select data-build="${key}" aria-label="${label}">${options.map(([v,text]) => `<option value="${v}" ${b[key] === v ? 'selected' : ''}>${text}</option>`).join('')}</select></label>`).join('')}
     ${sliders.map(([key,label]) => `<label>${label} <output data-value="${key}">${Math.round(b[key]*100)}%</output><input aria-label="${label}" data-build="${key}" type="range" min="${BUILD_RANGES[key][0]}" max="${BUILD_RANGES[key][1]}" step=".01" value="${b[key]}"></label>`).join('')}
     ${[['bodyColor','Carroceria',b.bodyColor ?? paintColor(profile.sel.paint)],['accent','Detalhes',b.accent],['trim','Acabamento',b.trim]].map(([key,label,value]) => `<label class="buildColor">${label}<input aria-label="${label}" data-build="${key}" type="color" value="${value}"></label>`).join('')}
     </div><div class="buildActions"><small>A montagem é visual; os atributos da máquina-base continuam valendo.</small><button class="btn small cream" id="buildReset">Restaurar montagem</button></div>`;
