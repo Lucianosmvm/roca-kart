@@ -3,6 +3,8 @@
 Kart arcade 3D com máquinas agrícolas, estilo cartoon (Three.js no navegador).
 
 ## Jogar
+**Online (celular/tablet/PC):** https://lucianosmvm.github.io/roca-kart/ — publicado pelo GitHub Pages a cada push na `main`.
+
 Dê dois cliques em `Jogar.bat` (sobe um servidor local na porta 8765 e abre o navegador).
 Ou: `python -m http.server 8765` nesta pasta e abra http://localhost:8765
 
