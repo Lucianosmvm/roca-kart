@@ -16,13 +16,27 @@ const CFG = {
   N: 2000,           // track samples
 };
 const WALL = CFG.halfW + CFG.margin;
+// playable characters (models built in /blender). Stats are 1..5 stars shown on the select screen.
+const CHARACTERS = {
+  maxi: {
+    name: 'Maxi', machine: 'Trator ST MAX 105', asset: 'tractor', img: 'assets/ui/maxi.png',
+    stats: { Velocidade: 3, Arrancada: 4, Curva: 4, Peso: 3 },
+    speedMul: 1, accelMul: 1, turnMul: 1, camH: 4.3, camD: 9.5, exhaust: { side: -0.64, back: -0.5, y: 3.3 },
+  },
+  imperador: {
+    name: 'Imperador', machine: 'Pulverizador Imperador', asset: 'imperador', img: 'assets/ui/imperador.png',
+    stats: { Velocidade: 5, Arrancada: 2, Curva: 2, Peso: 5 },
+    speedMul: 1.06, accelMul: 0.85, turnMul: 0.86, camH: 5.6, camD: 11.5, exhaust: { side: 0, back: 2.3, y: 2.6 },
+  },
+};
+// rivals; the last one becomes whichever character the player did not pick
 const RACERS = [
-  { name: 'Você', paint: '#F27A1C', shirt: '#E23D3D' },
-  { name: 'Zé do Milho', paint: '#D62F2F', shirt: '#F2C94C' },
-  { name: 'Dona Cida', paint: '#2E9E4F', shirt: '#E86FB0' },
-  { name: 'Tonhão', paint: '#2F6FD6', shirt: '#F5F5F5' },
-  { name: 'Bia Colheita', paint: '#F2C21C', shirt: '#7B4FD6' },
-  { name: 'Seu Lindolfo', paint: '#8E44AD', shirt: '#2ECC71' },
+  { name: 'Você', paint: '#F27A1C', char: 'maxi' },
+  { name: 'Zé do Milho', paint: '#D62F2F', char: 'maxi' },
+  { name: 'Dona Cida', paint: '#2E9E4F', char: 'maxi' },
+  { name: 'Tonhão', paint: '#2F6FD6', char: 'maxi' },
+  { name: 'Bia Colheita', paint: '#F2C21C', char: 'maxi' },
+  { name: 'Imperador', paint: '#8E44AD', char: 'imperador', keepPaint: true },
 ];
 
 // ------------------------------------------------------------------ helpers
@@ -106,7 +120,7 @@ const toonColor = (hex, extra = {}) => new THREE.MeshToonMaterial({ color: hex, 
 
 // ------------------------------------------------------------------ assets
 const ASSETS = ['tractor', 'corn', 'wheat', 'sunflower', 'hay', 'haysq', 'barn', 'silo', 'fence', 'tree', 'pine', 'bush',
-  'rock', 'cow', 'scarecrow', 'windmill', 'gate', 'cloud', 'itembox', 'tomato'];
+  'rock', 'cow', 'scarecrow', 'windmill', 'gate', 'cloud', 'itembox', 'tomato', 'imperador'];
 const A = {};
 async function loadAssets() {
   const loader = new GLTFLoader();
@@ -601,28 +615,30 @@ const audio = {
 // ------------------------------------------------------------------ karts
 const ITEMS = { turbo: { icon: '🔥', name: 'Turbo' }, bale: { icon: '🌾', name: 'Fardo' }, tomato: { icon: '🍅', name: 'Tomate' } };
 const karts = [];
-function makeTractor(def) {
-  const model = A.tractor.clone(true);
-  const paint = toonColor(def.paint), shirt = toonColor(def.shirt);
+function makeKartModel(def) {
+  const ch = CHARACTERS[def.char];
+  const model = A[ch.asset].clone(true);
+  const paint = toonColor(def.paint);
   model.traverse(o => {
     if (!o.isMesh) return;
     o.castShadow = true; o.receiveShadow = true;
-    if (o.material.name.startsWith('Paint')) o.material = o.material.name === 'PaintDark' ? toonColor(new THREE.Color(def.paint).multiplyScalar(0.75)) : paint;
-    else if (o.material.name.startsWith('Shirt')) o.material = shirt;
-    else if (o.material.name.startsWith('Beacon')) o.material = o.material.clone();
+    if (o.material.name.startsWith('Paint') && !def.keepPaint) o.material = paint;
+    else if (o.material.name.startsWith('Headlight')) o.material = o.material.clone();
   });
   model.rotation.y = Math.PI; // model faces -Z, karts drive along +Z
   const tilt = new THREE.Group(); tilt.add(model);
   const root = new THREE.Group(); root.add(tilt);
   scene.add(root);
   const W = n => { const w = model.getObjectByName(n); w.rotation.order = 'YXZ'; return w; };
+  const radius = w => new THREE.Box3().setFromObject(w).getSize(new THREE.Vector3()).y / 2;
+  const wheels = { FL: W('WheelFL'), FR: W('WheelFR'), RL: W('WheelRL'), RR: W('WheelRR') };
   const beacon = model.getObjectByName('Beacon');
   let beaconMat = null; beacon?.traverse(o => { if (o.isMesh) beaconMat = o.material; });
-  return { root, tilt, model, wheels: { FL: W('WheelFL'), FR: W('WheelFR'), RL: W('WheelRL'), RR: W('WheelRR') }, beaconMat };
+  return { root, tilt, model, wheels, wheelR: { F: radius(wheels.FL), R: radius(wheels.RL) }, beaconMat, ch };
 }
 
 function createKart(def, i, isPlayer) {
-  const v = makeTractor(def);
+  const v = makeKartModel(def);
   const row = Math.floor(i / 2), col = i % 2;
   const si = sIdx(-14 - row * 16);
   const p = trackPoint(si, col ? -3.6 : 3.6);
@@ -709,7 +725,7 @@ const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in wi
 const OPTS = (() => {
   let o = {};
   try { o = JSON.parse(localStorage.getItem('rocaKartOpts') || '{}'); } catch { /* storage blocked */ }
-  return { autoGas: o.autoGas ?? IS_TOUCH, assist: o.assist ?? IS_TOUCH };
+  return { autoGas: o.autoGas ?? IS_TOUCH, assist: o.assist ?? IS_TOUCH, char: o.char ?? 'maxi' };
 })();
 const saveOpts = () => { try { localStorage.setItem('rocaKartOpts', JSON.stringify(OPTS)); } catch { /* ignore */ } };
 
@@ -733,6 +749,23 @@ function setupTouch() {
     const cb = $(id); cb.checked = OPTS[key];
     cb.addEventListener('change', () => { OPTS[key] = cb.checked; saveOpts(); });
   }
+}
+
+// character select cards on the menu
+function setupCharSelect() {
+  const wrap = $('chars');
+  const render = () => {
+    wrap.innerHTML = Object.entries(CHARACTERS).map(([id, c]) => `
+      <button class="char ${OPTS.char === id ? 'sel' : ''}" data-id="${id}">
+        <img src="${c.img}" alt="${c.name}">
+        <b>${c.name}</b><small>${c.machine}</small>
+        <span class="stats">${Object.entries(c.stats).map(([k, v]) => `<i>${k}</i><em>${'★'.repeat(v)}${'☆'.repeat(5 - v)}</em>`).join('')}</span>
+      </button>`).join('');
+    wrap.querySelectorAll('.char').forEach(b => b.onclick = () => {
+      OPTS.char = b.dataset.id; saveOpts(); render(); resetRace(); audio.beep(660, 0.08);
+    });
+  };
+  render();
 }
 
 // lane-keeping helper: steer toward a point ahead on the track at the current lateral offset
@@ -840,13 +873,14 @@ function updateKart(k, input, dt, frozen) {
     k.boost = Math.max(k.boost, 1.1);
   }
 
-  let max = CFG.maxSpeed * (input.skill ?? 1);
+  const ch = k.v.ch;
+  let max = CFG.maxSpeed * (input.skill ?? 1) * ch.speedMul;
   if (k.offroad) max *= CFG.offroadFactor;
   if (k.inMud) max *= CFG.mudFactor;
   if (k.boost > 0) { max = CFG.boostSpeed * (k.inMud ? 0.8 : 1); k.boost -= dt; }
 
   // longitudinal
-  const accel = k.boost > 0 ? 45 : 15;
+  const accel = k.boost > 0 ? 45 : 15 * ch.accelMul;
   if (input.throttle > 0 && k.speed >= -0.5) {
     if (k.speed < max) k.speed += accel * input.throttle * dt * (1 - 0.55 * clamp(k.speed / max, 0, 1));
   }
@@ -872,7 +906,7 @@ function updateKart(k, input, dt, frozen) {
   }
   k.steer = lerp(k.steer, input.steer, damp(12, dt));
   const sf = clamp(absV / 6, 0, 1) * (1 - 0.32 * Math.min(1, absV / 40));
-  let turn = k.steer * 1.9 * sf * (k.speed < 0 ? -1 : 1);
+  let turn = k.steer * 1.9 * ch.turnMul * sf * (k.speed < 0 ? -1 : 1);
   if (k.drifting) {
     turn = (k.driftDir * 1.05 + k.steer * 0.75) * sf;
     k.driftCharge += dt * (k.steer * k.driftDir > 0.2 ? 1.5 : 0.8);
@@ -944,8 +978,8 @@ function updateKart(k, input, dt, frozen) {
   v.tilt.rotation.x = clamp(-(k.speed - (k.lastSpeed ?? k.speed)) / dt * 0.004, -0.06, 0.06);
   k.lastSpeed = k.speed;
   k.wheelRot -= k.speed * dt;
-  v.wheels.RL.rotation.x = v.wheels.RR.rotation.x = k.wheelRot / 0.95;
-  v.wheels.FL.rotation.x = v.wheels.FR.rotation.x = k.wheelRot / 0.74;
+  v.wheels.RL.rotation.x = v.wheels.RR.rotation.x = k.wheelRot / v.wheelR.R;
+  v.wheels.FL.rotation.x = v.wheels.FR.rotation.x = k.wheelRot / v.wheelR.F;
   v.wheels.FL.rotation.y = v.wheels.FR.rotation.y = k.steer * 0.45;
   if (v.beaconMat) v.beaconMat.emissiveIntensity = k.boost > 0 ? 3.5 : 1.2;
 
@@ -966,12 +1000,13 @@ function updateKart(k, input, dt, frozen) {
       particles.emit(x, 0.25, z, rr(-2, 2), rr(1, 3), rr(-2, 2), col, 0.35, 0.25, 0.1, 8);
     }
   }
+  const exh = v.ch.exhaust;
   if (k.boost > 0) {
-    const ex = k.pos.clone().addScaledVector(back, -0.5).addScaledVector(side, -0.64);
-    particles.emit(ex.x, 3.3, ex.z, rr(-0.5, 0.5), rr(3, 5), rr(-0.5, 0.5), Math.random() < 0.5 ? '#FF6B1A' : '#FFD23F', 0.55, 0.35, 1.2);
+    const ex = k.pos.clone().addScaledVector(back, exh.back).addScaledVector(side, exh.side);
+    particles.emit(ex.x, exh.y, ex.z, rr(-0.5, 0.5), rr(3, 5), rr(-0.5, 0.5), Math.random() < 0.5 ? '#FF6B1A' : '#FFD23F', 0.55, 0.35, 1.2);
   } else if (Math.random() < 0.07) {
-    const ex = k.pos.clone().addScaledVector(back, -0.5).addScaledVector(side, -0.64);
-    particles.emit(ex.x, 3.3, ex.z, rr(-0.3, 0.3), 1.6, rr(-0.3, 0.3), '#6E6E6E', 0.2, 0.7, 1.4);
+    const ex = k.pos.clone().addScaledVector(back, exh.back).addScaledVector(side, exh.side);
+    particles.emit(ex.x, exh.y, ex.z, rr(-0.3, 0.3), 1.6, rr(-0.3, 0.3), '#6E6E6E', 0.2, 0.7, 1.4);
   }
 }
 
@@ -1082,7 +1117,11 @@ function resetRace() {
   karts.length = 0; state.finishOrder = []; state.raceTime = 0;
   for (const h of hazards) scene.remove(h.o); hazards.length = 0;
   for (const b of itemBoxes) { b.active = true; b.g.visible = true; }
-  RACERS.forEach((d, i) => createKart(d, i === 0 ? 5 : i - 1, i === 0)); // player starts last on the grid
+  const mine = CHARACTERS[OPTS.char] ? OPTS.char : 'maxi';
+  const defs = RACERS.map(d => ({ ...d }));
+  defs[0].char = mine; defs[0].keepPaint = true;
+  if (mine === 'imperador') Object.assign(defs[5], { name: 'Maxi', char: 'maxi', paint: '#F27A1C', keepPaint: true });
+  defs.forEach((d, i) => createKart(d, i === 0 ? 5 : i - 1, i === 0)); // player starts last on the grid
   player = karts.find(k => k.isPlayer);
   // put player first in array for convenience
   karts.sort((a, b) => (b.isPlayer ? 1 : 0) - (a.isPlayer ? 1 : 0));
@@ -1149,7 +1188,8 @@ function update(dt) {
   } else {
     camHeading = lerpAngle(camHeading, P.heading - P.driftVis * 0.4, damp(P.spin > 0 ? 1 : 5, dt));
     const portrait = camera.aspect < 1 ? 1.45 : 1; // phones held upright need a wider view
-    const dist = (state.camMode ? 14 : 9.5) * portrait, height = (state.camMode ? 7 : 4.3) * (portrait > 1 ? 1.3 : 1);
+    const ch = P.v.ch;
+    const dist = (state.camMode ? ch.camD + 4.5 : ch.camD) * portrait, height = (state.camMode ? ch.camH + 2.7 : ch.camH) * (portrait > 1 ? 1.3 : 1);
     const desired = new THREE.Vector3(P.pos.x - Math.sin(camHeading) * dist, height, P.pos.z - Math.cos(camHeading) * dist);
     if (state.mode === 'countdown') {
       const k = clamp((state.countdown - 1.2) / 3, 0, 1); // fly-in from the front
@@ -1185,6 +1225,7 @@ function update(dt) {
   $('startBtn').onclick = startRace;
   $('againBtn').onclick = () => { $('results').classList.add('hidden'); resetRace(); startRace(); };
   setupTouch();
+  setupCharSelect();
   const HUD_IDS = ['pos', 'lap', 'time', 'speed', 'item', 'itemName', 'minimap', 'help', 'touch'];
   for (const id of HUD_IDS) $(id).classList.add('hidden');
   const showHud = () => { for (const id of HUD_IDS) $(id).classList.remove('hidden'); };
