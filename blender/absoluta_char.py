@@ -2,8 +2,8 @@
 
 Chibi proportions from Assembly/Seeder/Absolutas/Abs27.blend: row of orange/yellow seed
 hoppers with green lids on a green frame, long drawbar, small tandem wheels, row units.
-The face is on the REAR of the hoppers (sticking its tongue out at whoever is behind) so it
-reads from the chase camera.
+The face is on the FRONT of the hoppers (looking where it goes); the ABSOLUTA badge is on the
+rear, where the chase camera sees it.
 
 Origin = hitch ring (0,0,0); implement extends towards -Y. Ground at z = -HITCH_Z.
 Exports assets/absoluta.glb with nodes Body + Wheel* (origin at hub).
@@ -88,16 +88,17 @@ for i, x in enumerate(HX):
     P(box("hopperFunnel", (0.5, 0.55, 0.3), (x, FY - 0.2, FZ + 0.26), HOPPER, 0.08, 2))
     P(box("lid", (0.9, 1.0, 0.14), (x, FY - 0.2, FZ + 1.12), LID, 0.06, 2))
     P(box("lidHandle", (0.3, 0.06, 0.06), (x, FY + 0.31, FZ + 1.1), DARK, 0.02, 1))
-    P(box("label", (0.6, 0.02, 0.18), (x, FY + 0.27, FZ + 0.8), LID, 0.02, 1))
+    if i in (0, 3):  # outer hoppers keep their labels; the middle two carry the face
+        P(box("label", (0.6, 0.02, 0.18), (x, FY + 0.27, FZ + 0.8), LID, 0.02, 1))
 # walkway rail on top (like the real machine)
 for x in (-1.75, 1.75):
     P(beam("railPost", (x, FY - 0.7, FZ + 0.1), (x, FY - 0.7, FZ + 1.4), 0.05, FRAME))
 P(beam("rail", (-1.75, FY - 0.7, FZ + 1.4), (1.75, FY - 0.7, FZ + 1.4), 0.05, FRAME))
 
-# text badge on the front of the hoppers (facing the tractor)
-bpy.ops.object.text_add(location=(0, FY + 0.29, FZ + 0.55), rotation=(math.pi / 2, 0, math.pi))
+# brand badge on the REAR of the hoppers (what the chase camera and rivals see)
+bpy.ops.object.text_add(location=(0, FY - 0.69, FZ + 0.62), rotation=(math.pi / 2, 0, 0))
 t = bpy.context.active_object
-t.data.body = "ABSOLUTA"; t.data.size = 0.2; t.data.extrude = 0.006; t.data.align_x = "CENTER"
+t.data.body = "ABSOLUTA"; t.data.size = 0.26; t.data.extrude = 0.006; t.data.align_x = "CENTER"
 f = r"C:\Windows\Fonts\arialbd.ttf"
 if os.path.exists(f):
     t.data.font = bpy.data.fonts.load(f, check_existing=True)
@@ -112,35 +113,35 @@ for x in (-1.6, -0.95, -0.32, 0.32, 0.95, 1.6):
     P(cyl("press", 0.12, 0.08, (x, FY - 0.5, G + 0.13), BLACK, 10, rot=(0, math.pi / 2, 0)))
     P(beam("pressArm", (x, FY - 0.2, G + 0.3), (x, FY - 0.5, G + 0.15), 0.04, DARK))
 
-# ---------------- face on the REAR of the hopper row ----------------
-RY = FY - 0.68  # rear face plane of the hoppers
+# ---------------- face on the FRONT of the hopper row (looking where it goes) ----------------
+FRONT = FY + 0.28  # front face plane of the hoppers
 for sx in (-1, 1):
-    ex, ez = sx * 0.46, FZ + 0.82
-    P(uvs("eyeWhite", 0.27, (ex, RY, ez), EYE_W, 24, 12, scale=(1.0, 0.36, 1.15)))
-    P(uvs("iris", 0.17, (ex + sx * 0.03, RY - 0.07, ez - 0.03), IRIS, 20, 10, scale=(1, 0.3, 1.1)))
-    P(uvs("pupil", 0.1, (ex + sx * 0.03, RY - 0.11, ez - 0.04), PUPIL, 16, 8, scale=(1, 0.3, 1.1)))
-    P(uvs("shine", 0.045, (ex - 0.03, RY - 0.14, ez + 0.05), EYE_W, 10, 6, scale=(1, 0.4, 1)))
+    ex, ez = sx * 0.46, FZ + 1.22  # eyes peek above the lids (visible over the tractor)
+    P(uvs("eyeWhite", 0.27, (ex, FRONT, ez), EYE_W, 24, 12, scale=(1.0, 0.36, 1.15)))
+    P(uvs("iris", 0.17, (ex - sx * 0.03, FRONT + 0.07, ez - 0.03), IRIS, 20, 10, scale=(1, 0.3, 1.1)))
+    P(uvs("pupil", 0.1, (ex - sx * 0.03, FRONT + 0.11, ez - 0.04), PUPIL, 16, 8, scale=(1, 0.3, 1.1)))
+    P(uvs("shine", 0.045, (ex + 0.03, FRONT + 0.14, ez + 0.05), EYE_W, 10, 6, scale=(1, 0.4, 1)))
     b = arch("brow", (0, 0, 0), 0.28, 0.35, 0.06, BROW, 0.6, math.pi - 0.6, 10)
-    b.location = (ex, RY - 0.03, ez + 0.08)
-    b.rotation_euler = (0, sx * 0.3, math.pi / 2)  # mischievous tilt
+    b.location = (ex, FRONT + 0.03, ez + 0.08)
+    b.rotation_euler = (0, -sx * 0.2, math.pi / 2)  # happy raised brows
     P(b)
-# cheeky grin + tongue sticking out (on the rear bar, under the eyes)
-bm = bmesh.new(); n = 16; w, h, d = 0.42, 0.2, 0.04
+# big smile with tongue, under the eyes
+bm = bmesh.new(); n = 16; w, h, d = 0.4, 0.2, 0.04
 front, back = [], []
 for i in range(n + 1):
     a = math.pi + math.pi * i / n
     x, z = math.cos(a) * w, math.sin(a) * h + 0.05 * (math.cos(a) ** 4)
-    front.append(bm.verts.new((x, -d, z))); back.append(bm.verts.new((x, d, z)))
-bm.faces.new(front); bm.faces.new(back[::-1])
+    front.append(bm.verts.new((x, d, z))); back.append(bm.verts.new((x, -d, z)))
+bm.faces.new(front[::-1]); bm.faces.new(back)
 for i in range(n):
-    bm.faces.new((front[i + 1], front[i], back[i], back[i + 1]))
-bm.faces.new((front[-1], back[-1], back[0], front[0]))
+    bm.faces.new((front[i], front[i + 1], back[i + 1], back[i]))
+bm.faces.new((front[0], back[0], back[-1], front[-1]))
 bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
 me = bpy.data.meshes.new("mouth"); bm.to_mesh(me); bm.free()
 mo = bpy.data.objects.new("mouth", me); bpy.context.collection.objects.link(mo)
-me.materials.append(MOUTH); mo.location = (0.05, RY - 0.02, FZ + 0.45)
+me.materials.append(MOUTH); mo.location = (0, FRONT + 0.02, FZ + 0.72)
 P(mo)
-P(uvs("tongueOut", 0.14, (0.15, RY - 0.12, FZ + 0.28), TONGUE, 14, 8, scale=(1.0, 0.7, 1.5)))
+P(uvs("tongue", 0.13, (0, FRONT + 0.05, FZ + 0.59), TONGUE, 14, 8, scale=(1.35, 0.35, 0.6)))
 
 # seeds sprinkling from a little chute (decoration)
 for k in range(5):
@@ -194,7 +195,7 @@ if prev:
     sc.view_settings.view_transform = "Standard"
     cam = bpy.data.objects.new("PreviewCam", bpy.data.cameras.new("PreviewCam")); cam.data.lens = 55
     sc.collection.objects.link(cam)
-    for fn, azim, elev, dist in (("abs_a.png", -2.2, 0.25, 9), ("abs_b.png", -math.pi / 2, 0.12, 8), ("abs_c.png", 0.8, 0.3, 9)):
+    for fn, azim, elev, dist in (("abs_a.png", 1.0, 0.25, 9), ("abs_b.png", math.pi / 2, 0.12, 8), ("abs_c.png", -2.2, 0.3, 9)):
         tg = Vector((0, FY, G + 1.0))
         cam.location = tg + Vector((math.cos(azim) * math.cos(elev), math.sin(azim) * math.cos(elev), math.sin(elev))) * dist
         cam.rotation_euler = (tg - cam.location).to_track_quat("-Z", "Y").to_euler()

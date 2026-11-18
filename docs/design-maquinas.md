@@ -22,6 +22,9 @@ Máquinas com motor próprio (ex.: Imperador, autopropelido) correm sozinhas com
 
 **Caixas de item** (universais, qualquer um pega): Turbo de Biodiesel, Piloto **Guia** (tecnologia), Trovoada (raio no 1º).
 
+## Regra visual
+Olhos e rosto **sempre na frente** da máquina/implemento (podem subir acima das tampas para aparecer atrás do trator). A marca/nome fica na traseira.
+
 ## Sensação
 - Implemento balança atrás nas curvas/drift ("rabeada").
 - Implemento pesado: empurra menos nas batidas, arranca mais devagar.
@@ -31,7 +34,7 @@ Máquinas com motor próprio (ex.: Imperador, autopropelido) correm sozinhas com
 Quais máquinas são autopropelidas vs. arrasto (Fênix, Hércules, Bruttus). Autopropelida vira personagem próprio.
 
 ## Ordem de implementação
-1. Absoluta engatada no trator + barra de habilidade (Plantio Relâmpago).
-2. Seleção em 2 etapas (trator → implemento).
-3. Caixas só com itens universais; habilidades por máquina.
+1. ✅ Absoluta engatada no trator + barra de habilidade (Plantio Relâmpago).
+2. ✅ Seleção em 2 etapas (trator → implemento).
+3. ✅ Caixas só com itens universais; habilidades por máquina.
 4. Demais implementos (Hércules, Fênix, Corisco, Cultivador) e tratores 150/180.
