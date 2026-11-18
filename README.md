@@ -24,6 +24,6 @@ Itens: 🔥 Turbo · 🌾 Fardo (solta atrás) · 🍅 Tomate (arremessa pra fre
 Regerar modelos:
 ```
 "C:\Program Files\Blender Foundation\Blender 5.3\blender.exe" -b --factory-startup --python blender/tractor_char.py
-"C:\Program Files\Blender Foundation\Blender 5.3lender.exe" -b --factory-startup --python blender/imperador_char.py
+"C:\Program Files\Blender Foundation\Blender 5.3\blender.exe" -b --factory-startup --python blender/imperador_char.py
 "C:\Program Files\Blender Foundation\Blender 5.3\blender.exe" -b --factory-startup --python blender/props.py
 ```
