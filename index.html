@@ -2,134 +2,202 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F27A1C">
 <title>Roça Kart</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
 <style>
-  :root { --ink:#2b1a0e; --cream:#fff6dc; --orange:#f27a1c; --green:#1d8f45; }
-  * { box-sizing: border-box; }
-  html, body { margin:0; height:100%; overflow:hidden; background:#9fd8ff; font-family:'Nunito',system-ui,sans-serif; user-select:none; }
+  :root { --ink:#2b1a0e; --cream:#fff6dc; --orange:#f27a1c; --green:#1d8f45; --gold:#ffc83d; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; overflow:hidden; background:#9fd8ff; font-family:'Nunito',system-ui,sans-serif;
+               user-select:none; -webkit-user-select:none; touch-action:none; -webkit-touch-callout:none; }
   #game canvas { display:block; }
-  .hud { position:fixed; pointer-events:none; color:#fff; font-family:'Lilita One',sans-serif;
+  .hidden { display:none !important; }
+  button { font:inherit; }
+
+  /* ---------- HUD ---------- */
+  .hud { position:fixed; pointer-events:none; color:#fff; font-family:'Lilita One',sans-serif; z-index:3;
          text-shadow: 3px 3px 0 var(--ink), -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink); }
-  #pos { left:24px; bottom:18px; font-size:96px; line-height:1; }
-  #pos small { font-size:40px; }
+  #pos { left:24px; bottom:18px; font-size:96px; line-height:1; } #pos small { font-size:40px; }
   #lap { right:24px; top:16px; font-size:40px; text-align:right; }
   #time { right:24px; top:64px; font-size:28px; text-align:right; }
-  #speed { right:24px; bottom:22px; font-size:44px; text-align:right; }
-  #speed small { font-size:22px; }
-  #item { left:24px; top:16px; width:96px; height:96px; border-radius:20px; background:rgba(255,246,220,.85);
-          border:5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-size:56px;
-          text-shadow:none; box-shadow: 4px 4px 0 var(--ink); }
-  #itemName { left:24px; top:120px; font-size:20px; line-height:1.05; }
-  #itemName small { font-size:14px; opacity:.9; }
-  #minimap { left:132px; top:16px; width:170px; height:170px; border-radius:16px; background:rgba(255,246,220,.55);
-             border:4px solid var(--ink); }
-  #msg { left:0; right:0; top:28%; text-align:center; font-size:120px; transition: transform .15s; }
+  #speed { right:24px; bottom:22px; font-size:44px; text-align:right; } #speed small { font-size:22px; }
+  #coins { right:24px; top:100px; font-size:30px; } #coins small { font-size:18px; }
+  #item { left:24px; top:16px; width:96px; height:96px; border-radius:20px; background:rgba(255,246,220,.85); border:5px solid var(--ink);
+          display:flex; align-items:center; justify-content:center; font-size:56px; text-shadow:none; box-shadow:4px 4px 0 var(--ink); }
+  #itemName { left:24px; top:120px; font-size:20px; }
+  #minimap { left:132px; top:16px; width:170px; height:170px; border-radius:16px; background:rgba(255,246,220,.55); border:4px solid var(--ink); }
+  #msg { left:0; right:0; top:28%; text-align:center; font-size:120px; }
+  #msg.pop { animation: pop .35s ease-out; }
+  @keyframes pop { from { transform:scale(1.6); opacity:0; } to { transform:scale(1); opacity:1; } }
   #sub { left:0; right:0; top:46%; text-align:center; font-size:34px; }
-  #help { left:50%; transform:translateX(-50%); bottom:14px; font-family:'Nunito'; font-weight:900; font-size:14px;
-          text-shadow:none; color:var(--ink); background:rgba(255,246,220,.8); padding:6px 14px; border-radius:20px; }
-  .overlay { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-             background: radial-gradient(ellipse at center, rgba(255,214,120,.55), rgba(60,30,10,.65)); z-index:10; }
-  .overlay h1 { font-family:'Lilita One'; font-size:clamp(56px,11vw,140px); margin:0; color:var(--orange);
-                text-shadow: 6px 6px 0 var(--ink), -3px -3px 0 var(--ink), 3px -3px 0 var(--ink), -3px 3px 0 var(--ink);
-                transform: rotate(-4deg); letter-spacing:2px; }
-  .overlay h2 { font-family:'Lilita One'; color:var(--cream); margin:4px 0 22px; font-size:clamp(20px,3vw,32px);
-                text-shadow: 3px 3px 0 var(--ink); }
-  .btn { pointer-events:auto; font-family:'Lilita One'; font-size:32px; padding:14px 42px; border-radius:18px; cursor:pointer;
-         background:var(--green); color:#fff; border:5px solid var(--ink); box-shadow:6px 6px 0 var(--ink); }
-  .btn:hover { transform: translate(-2px,-2px); box-shadow:8px 8px 0 var(--ink); }
-  .keys { margin-top:26px; background:rgba(255,246,220,.92); border:4px solid var(--ink); border-radius:16px; padding:14px 22px;
-          color:var(--ink); font-weight:900; line-height:1.7; box-shadow:5px 5px 0 var(--ink); }
-  kbd { background:#fff; border:2px solid var(--ink); border-bottom-width:4px; border-radius:6px; padding:0 7px; font-family:'Nunito'; }
-  #loading { font-family:'Lilita One'; color:#fff; font-size:28px; text-shadow:3px 3px 0 var(--ink); }
-  table.res { border-collapse:collapse; background:rgba(255,246,220,.95); border:4px solid var(--ink); border-radius:12px;
-              box-shadow:6px 6px 0 var(--ink); margin-bottom:22px; font-size:22px; color:var(--ink); }
-  table.res td { padding:6px 18px; border-bottom:2px dashed rgba(43,26,14,.25); }
-  table.res tr.me { background:#ffe08a; }
-  .dot { display:inline-block; width:16px; height:16px; border-radius:50%; border:2px solid var(--ink); vertical-align:middle; }
-  .opts { display:flex; gap:12px; margin:16px 0 0; flex-wrap:wrap; justify-content:center; }
-  .opt { pointer-events:auto; display:flex; align-items:center; gap:8px; background:rgba(255,246,220,.92); border:4px solid var(--ink);
-         border-radius:14px; padding:8px 14px; font-weight:900; color:var(--ink); box-shadow:4px 4px 0 var(--ink); cursor:pointer; }
-  .opt input { width:22px; height:22px; accent-color: var(--green); }
-  /* touch controls */
-  html, body { touch-action:none; -webkit-user-select:none; -webkit-touch-callout:none; }
-  #touch { position:fixed; inset:auto 0 0 0; height:0; z-index:5; display:none; }
-  body.is-touch #touch { display:block; }
-  body.is-touch #help, body.is-touch .keys, body.is-touch #optGasLbl { display:none; }
-  .tbtn { position:fixed; width:92px; height:92px; border-radius:50%; border:5px solid var(--ink); background:rgba(255,246,220,.82);
-          box-shadow:4px 4px 0 var(--ink); font-family:'Lilita One'; font-size:34px; color:var(--ink); display:flex;
-          align-items:center; justify-content:center; pointer-events:auto; touch-action:none; }
-  .tbtn.on { background:#ffe08a; transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
-  .tbtn small { font-size:15px; }
-  #tLeft  { left:18px;  bottom:110px; }  #tRight { left:124px; bottom:110px; }
-  #tBrake { right:18px; bottom:110px; width:74px; height:74px; font-size:16px; }
-  #tDrift { right:104px; bottom:96px; background:rgba(79,195,247,.85); font-size:18px; }
-  #tItem  { right:60px; bottom:200px; background:rgba(255,159,28,.9); font-size:18px; }
-  body.is-touch #pos { bottom:auto; top:120px; left:18px; font-size:64px; }
-  body.is-touch #speed { bottom:auto; top:100px; font-size:30px; }
-  @media (max-width: 720px) {
-    #item { width:70px; height:70px; font-size:40px; left:12px; top:10px; }
-    #itemName { left:12px; top:86px; font-size:15px; }
-    #minimap { left:92px; top:10px; width:110px; height:110px; }
-    #lap { font-size:28px; right:12px; top:8px; } #time { font-size:20px; right:12px; top:42px; }
-    #msg { font-size:80px; } .keys { font-size:13px; }
-    .tbtn { width:76px; height:76px; font-size:28px; }
-    #tRight { left:104px; } #tDrift { right:92px; }
-  }
-  .chars { display:flex; gap:14px; margin:0 0 16px; flex-wrap:wrap; justify-content:center; }
-  .char { pointer-events:auto; cursor:pointer; width:200px; padding:8px 8px 10px; border-radius:18px; border:5px solid var(--ink);
-          background:rgba(255,246,220,.92); box-shadow:5px 5px 0 var(--ink); display:flex; flex-direction:column; align-items:center;
-          font-family:'Nunito'; color:var(--ink); transition:transform .1s; }
-  .char img { width:100%; border-radius:12px; aspect-ratio:4/3; object-fit:cover; background:#bfe3f7; }
-  .char b { font-family:'Lilita One'; font-size:26px; font-weight:400; margin-top:4px; }
-  .char small { font-weight:900; font-size:12px; opacity:.75; }
-  .char .stats { display:grid; grid-template-columns:auto auto; gap:0 8px; margin-top:6px; font-size:12px; text-align:left; }
-  .char .stats i { font-style:normal; font-weight:900; } .char .stats em { font-style:normal; color:#e08a00; letter-spacing:1px; }
-  .char.sel { background:#ffe08a; transform:translateY(-4px) rotate(-1deg); box-shadow:7px 9px 0 var(--ink); }
-  @media (max-width:720px), (max-height:700px) { .char { width:150px; } .char b { font-size:20px; } .keys { display:none; } .overlay h2 { margin-bottom:10px; } }
-  .step { font-family:'Lilita One'; color:var(--cream); font-size:22px; text-shadow:3px 3px 0 var(--ink); margin:2px 0 6px; }
-  .char .abil { margin-top:6px; font-weight:900; font-size:12px; background:#fff; border:2px solid var(--ink); border-radius:10px; padding:2px 8px; }
-  .char .perk { margin-top:4px; font-size:11px; }
-  .char.impl { width:170px; } .char.impl img { aspect-ratio:16/10; }
-  #abil { left:24px; top:166px; display:flex; align-items:center; gap:8px; pointer-events:auto; cursor:pointer; font-size:30px;
-          text-shadow:none; }
+  #abil { left:24px; top:150px; display:flex; align-items:center; gap:8px; pointer-events:auto; cursor:pointer; font-size:30px; text-shadow:none; }
   #abil .bar { width:120px; height:16px; border:4px solid var(--ink); border-radius:10px; background:rgba(255,246,220,.85); overflow:hidden; }
   #abil .bar i { display:block; height:100%; width:0; background:linear-gradient(90deg,#6CC23A,#F7D154); transition:width .2s; }
   #abil kbd { font-size:14px; }
   #abil.full .bar i { background:linear-gradient(90deg,#FF9F1C,#FFE066); }
-  #abil.full { animation: pulse .6s infinite alternate; }
+  #abil.full, .tbtn.full { animation: pulse .6s infinite alternate; }
   @keyframes pulse { from { transform:scale(1); } to { transform:scale(1.1); } }
+  #pauseBtn { position:fixed; left:50%; top:10px; transform:translateX(-50%); z-index:4; width:54px; height:54px; border-radius:16px;
+              border:4px solid var(--ink); background:rgba(255,246,220,.85); font-size:24px; box-shadow:3px 3px 0 var(--ink); cursor:pointer; }
+  #help { left:50%; transform:translateX(-50%); bottom:14px; font-family:'Nunito'; font-weight:900; font-size:13px; text-shadow:none;
+          color:var(--ink); background:rgba(255,246,220,.8); padding:6px 14px; border-radius:20px; white-space:nowrap; }
+  #speedlines { position:fixed; inset:0; pointer-events:none; z-index:2; opacity:0; transition:opacity .25s;
+    background: repeating-conic-gradient(from 0deg at 50% 55%, rgba(255,255,255,0) 0deg 3deg, rgba(255,255,255,.55) 3deg 3.6deg, rgba(255,255,255,0) 3.6deg 9deg);
+    -webkit-mask: radial-gradient(circle at 50% 55%, transparent 32%, #000 70%); mask: radial-gradient(circle at 50% 55%, transparent 32%, #000 70%); }
+  #vignette { position:fixed; inset:0; pointer-events:none; z-index:2; background:radial-gradient(ellipse at center, transparent 60%, rgba(40,20,5,.35) 100%); }
+  #fade { position:fixed; inset:0; background:#2b1a0e; z-index:50; opacity:0; pointer-events:none; transition:opacity .35s; }
+  #fade.on { opacity:1; pointer-events:auto; }
+
+  /* touch */
+  #touch { position:fixed; inset:auto 0 0 0; height:0; z-index:5; display:none; }
+  body.is-touch #touch { display:block; }
+  body.is-touch #help, body.is-touch .keysOnly { display:none !important; }
+  .tbtn { position:fixed; width:92px; height:92px; border-radius:50%; border:5px solid var(--ink); background:rgba(255,246,220,.82);
+          box-shadow:4px 4px 0 var(--ink); font-family:'Lilita One'; font-size:34px; color:var(--ink); display:flex; align-items:center;
+          justify-content:center; pointer-events:auto; touch-action:none; }
+  .tbtn.on { background:#ffe08a; transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
+  #tLeft { left:18px; bottom:110px; } #tRight { left:124px; bottom:110px; }
+  #tBrake { right:18px; bottom:110px; width:74px; height:74px; font-size:16px; }
+  #tDrift { right:104px; bottom:96px; background:rgba(79,195,247,.85); font-size:18px; }
+  #tItem { right:60px; bottom:200px; background:rgba(255,159,28,.9); font-size:18px; }
   #tAbil { right:150px; bottom:200px; background:rgba(108,194,58,.9); font-size:18px; }
-  #tAbil.full { animation: pulse .6s infinite alternate; background:#FFE066; }
+  #tHorn { right:196px; bottom:110px; width:62px; height:62px; font-size:26px; }
+  body.is-touch #pos { bottom:auto; top:120px; left:18px; font-size:64px; }
+  body.is-touch #speed { bottom:auto; top:140px; font-size:30px; }
   body.is-touch #abil kbd { display:none; }
-  @media (max-width:720px) { #abil { left:12px; top:118px; } #abil .bar { width:80px; } #tAbil { right:130px; bottom:180px; } }
-  .overlay { overflow-y:auto; justify-content:safe center; padding:14px 0; }
-  .char img { height:92px; aspect-ratio:auto; }
-  .char.impl img { height:80px; aspect-ratio:auto; }
-  #startBtn { position:sticky; bottom:12px; z-index:2; margin-top:6px; }
-  #implStep { display:flex; flex-direction:column; align-items:center; }
-  @media (max-height:760px) { .overlay h1 { font-size:56px; } .overlay h2 { margin:0 0 6px; font-size:18px; } .char img, .char.impl img { height:60px; }
-    .char .stats { font-size:11px; } .step { font-size:17px; margin:0 0 4px; } .chars { margin-bottom:8px; } }
-  .hidden { display:none !important; }
+
+  /* ---------- screens ---------- */
+  .screen { position:fixed; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:safe center;
+            overflow-y:auto; padding:18px 12px; }
+  .screen.dim { background: radial-gradient(ellipse at center, rgba(255,214,120,.35), rgba(60,30,10,.7)); }
+  .logo { font-family:'Lilita One'; font-size:clamp(60px,12vw,150px); margin:0; color:var(--orange); line-height:1; letter-spacing:2px;
+          text-shadow: 6px 6px 0 var(--ink), -3px -3px 0 var(--ink), 3px -3px 0 var(--ink), -3px 3px 0 var(--ink); transform:rotate(-4deg); }
+  .logo span { display:inline-block; animation: bounce 1.6s ease-in-out infinite; }
+  @keyframes bounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-14px); } }
+  .tag { font-family:'Lilita One'; color:var(--cream); font-size:clamp(18px,3vw,28px); text-shadow:3px 3px 0 var(--ink); margin:8px 0 18px; text-align:center; }
+  h2.title { font-family:'Lilita One'; color:var(--cream); font-size:clamp(34px,6vw,56px); margin:0 0 12px; text-shadow:4px 4px 0 var(--ink); font-weight:400; }
+  .btn { pointer-events:auto; font-family:'Lilita One'; font-size:28px; padding:12px 34px; border-radius:18px; cursor:pointer; color:#fff;
+         background:var(--green); border:5px solid var(--ink); box-shadow:6px 6px 0 var(--ink); transition:transform .08s; }
+  .btn:hover { transform:translate(-2px,-2px) rotate(-1deg); box-shadow:8px 8px 0 var(--ink); }
+  .btn:active { transform:translate(2px,2px); box-shadow:3px 3px 0 var(--ink); }
+  .btn.orange { background:var(--orange); } .btn.blue { background:#2F6FD6; } .btn.cream { background:var(--cream); color:var(--ink); }
+  .btn.small { font-size:20px; padding:8px 20px; border-width:4px; box-shadow:4px 4px 0 var(--ink); }
+  .menuBtns { display:grid; grid-template-columns:repeat(2, minmax(200px, 260px)); gap:14px; margin-top:8px; }
+  .menuBtns .btn.big { grid-column: span 2; font-size:40px; }
+  .panel { background:rgba(255,246,220,.95); border:5px solid var(--ink); border-radius:20px; box-shadow:7px 7px 0 var(--ink);
+           padding:16px 20px; color:var(--ink); }
+  .coinsBadge { position:fixed; top:14px; right:18px; z-index:12; font-family:'Lilita One'; font-size:28px; color:var(--ink);
+                background:var(--gold); border:4px solid var(--ink); border-radius:16px; padding:4px 14px; box-shadow:4px 4px 0 var(--ink); }
+  .backRow { display:flex; gap:14px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
+  .stats { font-weight:900; color:var(--cream); text-shadow:2px 2px 0 var(--ink); margin-top:14px; }
+
+  /* splash */
+  #splash .bar { width:min(420px,80vw); height:24px; border:5px solid var(--ink); border-radius:14px; background:var(--cream); overflow:hidden; margin-top:22px; }
+  #splash .bar i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--orange),var(--gold)); transition:width .2s; }
+  #splash .tap { margin-top:24px; font-family:'Lilita One'; font-size:30px; color:#fff; text-shadow:3px 3px 0 var(--ink); animation:pulse .7s infinite alternate; cursor:pointer; }
+  #splash .credit { position:fixed; bottom:12px; font-weight:900; color:var(--cream); text-shadow:2px 2px 0 var(--ink); font-size:14px; text-align:center; }
+  #splash { background: radial-gradient(ellipse at center, #FFD27A 0%, #F27A1C 55%, #8E3B0E 100%); }
+  .splashMachines { display:flex; gap:10px; margin-top:16px; }
+  .splashMachines img { width:min(150px,26vw); border-radius:16px; border:4px solid var(--ink); box-shadow:4px 4px 0 var(--ink); animation: bounce 2s ease-in-out infinite; }
+  .splashMachines img:nth-child(2) { animation-delay:.25s; } .splashMachines img:nth-child(3) { animation-delay:.5s; }
+
+  /* cards (tracks) */
+  .cards { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
+  .card { pointer-events:auto; cursor:pointer; width:230px; border-radius:18px; border:5px solid var(--ink); background:rgba(255,246,220,.95);
+          box-shadow:5px 5px 0 var(--ink); padding:10px; display:flex; flex-direction:column; align-items:center; color:var(--ink); transition:transform .1s; }
+  .card:hover { transform:translateY(-3px); }
+  .card.sel { background:#ffe08a; transform:translateY(-6px) rotate(-1deg); box-shadow:8px 10px 0 var(--ink); }
+  .card canvas { width:100%; border-radius:12px; }
+  .card b { font-family:'Lilita One'; font-size:24px; font-weight:400; margin-top:6px; text-align:center; }
+  .card small { font-weight:900; font-size:13px; opacity:.8; text-align:center; }
+  .card .diff { font-size:18px; margin-top:4px; }
+  .card .best { font-size:13px; font-weight:900; margin-top:4px; }
+
+  /* garage / shop overlay on the 3D showroom */
+  #garage, #shop { justify-content:flex-end; align-items:stretch; padding:0; pointer-events:none; }
+  .gTop { position:fixed; top:14px; left:18px; z-index:12; pointer-events:auto; display:flex; gap:10px; align-items:center; }
+  .gTop h2 { margin:0; font-family:'Lilita One'; font-weight:400; color:var(--cream); font-size:40px; text-shadow:4px 4px 0 var(--ink); }
+  .gPanel { pointer-events:auto; margin:0 auto 16px; width:min(980px, 96vw); }
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .tab { font-family:'Lilita One'; font-size:20px; padding:6px 16px; border-radius:14px; border:4px solid var(--ink); background:#fff; cursor:pointer; color:var(--ink); }
+  .tab.on { background:var(--orange); color:#fff; } .tab:disabled { opacity:.35; cursor:not-allowed; }
+  .items { display:flex; gap:10px; overflow-x:auto; padding:6px 2px 10px; touch-action:pan-x; }
+  .it { flex:0 0 auto; width:128px; border-radius:14px; border:4px solid var(--ink); background:#fff; cursor:pointer; padding:8px 6px;
+        display:flex; flex-direction:column; align-items:center; gap:4px; font-weight:900; font-size:13px; text-align:center; color:var(--ink); }
+  .it .sw { width:56px; height:56px; border-radius:50%; border:4px solid var(--ink); }
+  .it .ic { font-size:40px; line-height:56px; } .it img { width:100%; height:64px; object-fit:cover; border-radius:8px; }
+  .it.sel { background:#ffe08a; box-shadow:0 0 0 4px var(--orange); } .it.locked { background:#eee; }
+  .it .price { font-family:'Lilita One'; font-weight:400; font-size:16px; color:#b06a00; }
+  .gInfo { display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .gInfo .statsBox { display:grid; grid-template-columns:auto auto; gap:2px 10px; font-weight:900; font-size:14px; }
+  .gInfo em { font-style:normal; color:#e08a00; letter-spacing:1px; }
+  .abilTag { display:inline-block; font-weight:900; background:#fff; border:3px solid var(--ink); border-radius:12px; padding:2px 10px; margin-top:4px; }
+
+  /* cutscene */
+  #cutscene { justify-content:flex-end; pointer-events:none; padding-bottom:calc(9vh + 14px); }
+  .letterbox { position:fixed; left:0; right:0; height:9vh; background:#000; z-index:11; }
+  .letterbox.top { top:0; } .letterbox.bot { bottom:0; }
+  .dialog { pointer-events:none; z-index:12; display:flex; gap:14px; align-items:center; width:min(900px,94vw); }
+  .dialog img, .dialog .avatar { width:110px; height:110px; border-radius:50%; border:5px solid var(--ink); object-fit:cover; background:var(--cream);
+                                  display:flex; align-items:center; justify-content:center; font-size:60px; flex:0 0 auto; box-shadow:4px 4px 0 var(--ink); }
+  .dialog .bubble { flex:1; animation: pop .3s ease-out; } .dialog .who { font-family:'Lilita One'; font-size:24px; color:var(--orange); }
+  .dialog .text { font-weight:900; font-size:clamp(17px,2.4vw,24px); }
+  .skip { position:fixed; right:18px; top:calc(9vh + 12px); z-index:13; pointer-events:auto; }
+  .bigTitle { position:fixed; top:20%; left:0; right:0; text-align:center; z-index:12; animation:pop .6s ease-out; }
+
+  /* results */
+  table.res { border-collapse:collapse; font-size:20px; width:100%; }
+  table.res td { padding:5px 12px; border-bottom:2px dashed rgba(43,26,14,.25); }
+  table.res tr.me { background:#ffe08a; }
+  .dot { display:inline-block; width:16px; height:16px; border-radius:50%; border:2px solid var(--ink); vertical-align:middle; }
+  #results { justify-content:center; align-items:flex-end; padding-right:4vw; }
+  #results .panel { width:min(440px, 94vw); }
+  .reward { font-family:'Lilita One'; font-size:22px; margin-top:10px; } .reward .gold { color:#b06a00; }
+
+  /* options */
+  .optRow { display:flex; align-items:center; justify-content:space-between; gap:18px; margin:10px 0; font-weight:900; font-size:18px; }
+  .optRow input[type=range] { width:200px; accent-color:var(--orange); }
+  .optRow input[type=checkbox] { width:26px; height:26px; accent-color:var(--green); }
+  .optRow select { font:inherit; font-size:16px; padding:4px 8px; border:3px solid var(--ink); border-radius:10px; }
+  kbd { background:#fff; border:2px solid var(--ink); border-bottom-width:4px; border-radius:6px; padding:0 7px; font-family:'Nunito'; color:var(--ink); }
+  .keys { line-height:1.8; font-weight:900; font-size:14px; margin-top:12px; }
+  .credits p { margin:6px 0; font-weight:900; text-align:center; }
+
+  @media (max-width:720px) {
+    #item { width:70px; height:70px; font-size:40px; left:12px; top:10px; }
+    #itemName { left:12px; top:86px; font-size:15px; }
+    #minimap { left:92px; top:10px; width:110px; height:110px; }
+    #lap { font-size:28px; right:12px; top:8px; } #time { font-size:20px; right:12px; top:42px; } #coins { right:12px; top:70px; font-size:22px; }
+    #msg { font-size:80px; } #abil { left:12px; top:118px; } #abil .bar { width:80px; }
+    .tbtn { width:76px; height:76px; font-size:28px; } #tRight { left:104px; } #tDrift { right:92px; } #tAbil { right:130px; bottom:180px; }
+    .menuBtns { grid-template-columns:1fr 1fr; } .menuBtns .btn { font-size:20px; padding:10px 12px; } .menuBtns .btn.big { font-size:32px; }
+    .card { width:44vw; } #results { align-items:center; padding-right:0; } .gTop h2 { font-size:28px; }
+    .dialog img, .dialog .avatar { width:70px; height:70px; font-size:40px; }
+  }
+  @media (max-height:600px) { .logo { font-size:64px; } .menuBtns { gap:8px; } .btn { font-size:20px; padding:8px 18px; } }
 </style>
 </head>
 <body>
 <div id="game"></div>
+<div id="vignette"></div>
+<div id="speedlines"></div>
 
+<!-- HUD -->
 <div class="hud" id="item"></div>
 <div class="hud" id="itemName"></div>
 <div class="hud" id="abil"><span id="abilIcon"></span><div class="bar"><i id="abilFill"></i></div><kbd>Q</kbd></div>
 <canvas class="hud" id="minimap" width="170" height="170"></canvas>
 <div class="hud" id="lap"></div>
 <div class="hud" id="time"></div>
+<div class="hud" id="coins"></div>
 <div class="hud" id="pos"></div>
 <div class="hud" id="speed"></div>
 <div class="hud" id="msg"></div>
 <div class="hud" id="sub"></div>
-<div class="hud" id="help">W/↑ acelera · S/↓ freia · A/D vira · ESPAÇO drift · E/SHIFT usa item · Q habilidade · R volta pra pista · C câmera</div>
-
+<div class="hud" id="help">W/↑ acelera · S/↓ freia · A/D vira · ESPAÇO drift/manobra · E item · Q habilidade · H buzina · ESC pausa</div>
+<button id="pauseBtn" aria-label="Pausar">⏸</button>
 <div id="touch">
   <div class="tbtn" id="tLeft" data-k="ArrowLeft">◀</div>
   <div class="tbtn" id="tRight" data-k="ArrowRight">▶</div>
@@ -137,35 +205,22 @@
   <div class="tbtn" id="tAbil" data-k="KeyQ">HAB</div>
   <div class="tbtn" id="tDrift" data-k="Space">DRIFT</div>
   <div class="tbtn" id="tBrake" data-k="ArrowDown">FREIO</div>
+  <div class="tbtn" id="tHorn" data-k="KeyH">📯</div>
 </div>
 
-<div class="overlay" id="menu">
-  <h1>Roça Kart</h1>
-  <h2>Pista 1 · Fazenda Milharal</h2>
-  <div class="step">1 · Máquina</div>
-  <div class="chars" id="chars"></div>
-  <div id="implStep"><div class="step">2 · Implemento engatado</div><div class="chars" id="impls"></div></div>
-  <div id="loading">Carregando a roça...</div>
-  <button class="btn hidden" id="startBtn">CORRER!</button>
-  <div class="opts">
-    <label class="opt" id="optGasLbl"><input type="checkbox" id="optGas"> 🚜 Acelerar sozinho</label>
-    <label class="opt"><input type="checkbox" id="optAssist"> 🧭 Direção assistida</label>
-  </div>
-  <div class="keys">
-    <kbd>W</kbd>/<kbd>↑</kbd> acelerar &nbsp; <kbd>S</kbd>/<kbd>↓</kbd> freio/ré &nbsp; <kbd>A</kbd><kbd>D</kbd> virar<br>
-    <kbd>ESPAÇO</kbd> drift (segure na curva e solte = turbo!)<br>
-    <kbd>Q</kbd> habilidade da máquina (enche dirigindo, no drift e ultrapassando)<br>
-    <kbd>E</kbd>/<kbd>SHIFT</kbd> item da caixa: ⛽ Biodiesel · 🛰️ Guia · ⚡ Trovoada<br>
-    Dica: acelere quando aparecer o <b>1</b> pra largar com turbo!
-  </div>
-</div>
-
-<div class="overlay hidden" id="results">
-  <h1 id="resTitle">Fim!</h1>
-  <h2>Resultado · Fazenda Milharal</h2>
-  <table class="res" id="resTable"></table>
-  <button class="btn" id="againBtn">CORRER DE NOVO</button>
-</div>
+<!-- screens (filled by ui.js) -->
+<div class="screen" id="splash"></div>
+<div class="screen dim hidden" id="menu"></div>
+<div class="screen dim hidden" id="tracks"></div>
+<div class="screen hidden" id="garage"></div>
+<div class="screen hidden" id="shop"></div>
+<div class="screen dim hidden" id="options"></div>
+<div class="screen dim hidden" id="credits"></div>
+<div class="screen dim hidden" id="pause"></div>
+<div class="screen hidden" id="results"></div>
+<div class="screen hidden" id="cutscene"></div>
+<div class="coinsBadge hidden" id="wallet"></div>
+<div id="fade"></div>
 
 <script type="importmap">
 { "imports": {
