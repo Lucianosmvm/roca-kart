@@ -20,9 +20,11 @@ Itens (implementos Stara):
 Itens fortes saem mais para quem está atrás. Segure acelerar no "1" da largada = turbo.
 
 ## Estrutura
-- `blender/tractor_char.py` — **trator personagem atual** (olhos no para-brisa, sorriso na grade, faixa ST MAX 105), baseado na arte de referência e nas medidas de `Assembly/Tractor/StMax105.blend`. Gera `assets/tractor.glb` + `blender/tractor_character.blend`.
+- `blender/models/*.blend` — **todos os modelos editáveis** (trator, Imperador, Absoluta, props), texturas embutidas. Abra no Blender, edite e exporte (File → Export → glTF .glb) para `assets/` com o mesmo nome. Rodar os scripts abaixo regera e **sobrescreve** esses .blend.
+- `blender/tractor_char.py` — **trator personagem atual** (olhos no para-brisa, sorriso na grade, faixa ST MAX 105), baseado na arte de referência e nas medidas de `Assembly/Tractor/StMax105.blend`. Gera `assets/tractor.glb` + `blender/models/tractor.blend`.
 - `blender/tractor.py` — versão anterior (low-poly com fazendeiro); rodar sobrescreve `assets/tractor.glb`.
-- `blender/imperador_char.py` — personagem Imperador (pulverizador autopropelido, coroa + bigode). Gera `assets/imperador.glb` (barras `BoomL/BoomR` separadas, pivô na frente) + `blender/imperador_character.blend`.
+- `blender/imperador_char.py` — personagem Imperador (pulverizador autopropelido, coroa + bigode). Gera `assets/imperador.glb` (barras `BoomL/BoomR` separadas, pivô na frente) + `blender/models/imperador.blend`.
+- `blender/absoluta_char.py` — plantadeira Absoluta (implemento de arrasto, rosto na traseira). Gera `assets/absoluta.glb` + `blender/models/absoluta.blend`.
 - `blender/mcp_exec.py` — envia código ao Blender aberto via add-on Blender MCP (porta 9876).
 - `blender/props.py` — props da fazenda (milho, trigo, girassol, fardos, celeiro, silo, cerca, árvores, vaca, espantalho, cata-vento, portal, nuvem, caixa de item, tomate).
 - `blender/common.py` — helpers de modelagem/export.

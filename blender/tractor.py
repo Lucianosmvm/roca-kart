@@ -151,7 +151,7 @@ beacon_o = join([beacon], "Beacon")
 allobjs = [body, beacon_o] + wheels
 print("TRACTOR polys:", polycount(allobjs))
 export(allobjs, "tractor.glb")
-bpy.ops.wm.save_as_mainfile(filepath=os.path.join(os.path.dirname(os.path.abspath(__file__)), "tractor_cartoon.blend"))
+save_blend("tractor_v1_lowpoly")
 
 prev = os.environ.get("PREVIEW_DIR")
 if prev:

@@ -254,7 +254,7 @@ beacon_o = join_smooth(beacon_parts, "Beacon")
 allobjs = [body, beacon_o] + booms + wheels
 print("IMPERADOR polys:", polycount(allobjs))
 export(allobjs, "imperador.glb")
-bpy.ops.wm.save_as_mainfile(filepath=os.path.join(os.path.dirname(os.path.abspath(__file__)), "imperador_character.blend"))
+save_blend("imperador")
 
 prev = os.environ.get("PREVIEW_DIR")
 if prev:

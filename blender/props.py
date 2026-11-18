@@ -33,6 +33,7 @@ def C():  # shared palette (recreated after each reset)
 
 def done(objs, name, target=(0, 0, 1), dist=6, elev=0.35, azim=0.8):
     export(objs, f"{name}.glb")
+    save_blend(name)
     if PREV:
         preview(os.path.join(PREV, f"p_{name}.png"), target=target, dist=dist, elev=elev, azim=azim, size=(320, 240))
     reset()

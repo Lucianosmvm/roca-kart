@@ -178,6 +178,21 @@ def export(objs, filename):
     print(f"EXPORTED {filename}: {tris} tris")
 
 
+MODELS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
+os.makedirs(MODELS, exist_ok=True)
+
+
+def save_blend(name):
+    """Save the current scene as an editable .blend in blender/models (textures packed inside)."""
+    try:
+        bpy.ops.file.pack_all()
+    except Exception as e:  # nothing to pack
+        print("pack_all:", e)
+    path = os.path.join(MODELS, f"{name}.blend")
+    bpy.ops.wm.save_as_mainfile(filepath=path, copy=True, compress=True)
+    print(f"SAVED BLEND {path}")
+
+
 def polycount(objs):
     return sum(len(o.data.polygons) for o in objs if o.type == "MESH")
 
