@@ -244,8 +244,8 @@ function courseSurface(pos) {
     segment(route.samples[i],route.samples[i+1],route.start*CFG.N+(route.end-route.start)*CFG.N*i/100,route.start*CFG.N+(route.end-route.start)*CFG.N*(i+1)/100,route.width,route,i/100,(i+1)/100);
   }
   best.height=best.p.y+Math.tan(best.bank)*best.lat;
-  if(best.route && Math.abs(best.lat)>best.width) best.height*=clamp((best.width+8-Math.abs(best.lat))/8,0,1);
-  if(!best.route && Math.abs(best.lat)>10.4) best.height*=clamp((18-Math.abs(best.lat))/7.6,0,1);
+  const shoulder=best.route?best.width:10.4,outer=best.route?best.width+8:18;
+  if(Math.abs(best.lat)>shoulder) best.height=(best.p.y+Math.tan(best.bank)*Math.sign(best.lat)*shoulder)*clamp((outer-Math.abs(best.lat))/(outer-shoulder),0,1);
   return best;
 }
 function drivingTarget(k,meters,lat=0) {
@@ -378,7 +378,7 @@ function buildGround() {
     path(); g.strokeStyle = THEME.margin; g.lineWidth = WALL * 2 * k; g.stroke();
     path(); g.strokeStyle = THEME.roadEdge; g.lineWidth = (CFG.halfW + 1.2) * 2 * k; g.stroke();
   });
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(WB.size, WB.size), toonColor('#ffffff', { map: tex, userData: NO_OUTLINE }));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(WB.size, WB.size), toonColor('#ffffff', { map: tex, userData: NO_OUTLINE, polygonOffset:true,polygonOffsetFactor:2,polygonOffsetUnits:2 }));
   ground.rotation.x = -Math.PI / 2; ground.position.set(WB.x0 + WB.size / 2, 0, WB.z0 + WB.size / 2);
   ground.receiveShadow = true; world.add(ground);
   const outer = new THREE.Mesh(new THREE.CircleGeometry(1400, 48), toonColor(THEME.outer, { userData: NO_OUTLINE }));
@@ -405,7 +405,18 @@ function ribbon(lat0, lat1, y, vScale, step = 2) {
 
 function buildRoad() {
   if(A['course_'+TRACK.id]) {
-    const mesh=A['course_'+TRACK.id].clone(true);mesh.traverse(o=>{if(o.isMesh)o.receiveShadow=true;});world.add(mesh);
+    const mesh=A['course_'+TRACK.id].clone(true);
+    mesh.traverse(o=>{
+      if(!o.isMesh) return;
+      o.receiveShadow=true;
+      // Surface strips already define their borders; expanded outlines can overlap them.
+      o.material.userData={...o.material.userData,...NO_OUTLINE};
+      if(o.material.name==='CourseEmbankment') {
+        // Prefer the driving surface at shortcut joins where earth slopes meet the road.
+        o.material.polygonOffset=true;o.material.polygonOffsetFactor=1;o.material.polygonOffsetUnits=1;
+      }
+    });
+    world.add(mesh);
     const line=new THREE.Mesh(new THREE.PlaneGeometry(16,2),toonColor('#FFF0CF'));
     line.rotation.x=-Math.PI/2;line.rotation.z=-headingOf(S[0].t);line.position.copy(S[0].p).add(new THREE.Vector3(0,.07,0));world.add(line);
     return;

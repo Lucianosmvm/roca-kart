@@ -18,39 +18,40 @@ def catmull(points,t):
 def envelope(t,sections):
     return sum(value*math.sin(math.pi*(t-a)/(b-a))**2 for a,b,value in sections if a<t<b)
 
-def ribbon_mesh(name,samples,width,material,closed=True):
+SURFACE_LIFT=.04
+
+def lateral(samples,i,closed):
+    count=len(samples)
+    before=samples[(i-1)%count] if closed else samples[max(0,i-1)]
+    after=samples[(i+1)%count] if closed else samples[min(count-1,i+1)]
+    dx,dz=after[0]-before[0],after[2]-before[2]
+    length=max(.001,math.hypot(dx,dz))
+    return dz/length,-dx/length
+
+def ribbon_mesh(name,samples,lat0,lat1,material,closed=True,heights=None):
+    """Adjacent strips share their boundary; no full-width layer under the road."""
     verts=[]; faces=[]; count=len(samples)
     for i,p in enumerate(samples):
-        before=samples[(i-1)%count] if closed else samples[max(0,i-1)]
-        after=samples[(i+1)%count] if closed else samples[min(count-1,i+1)]
-        dx,dz=after[0]-before[0],after[2]-before[2]; length=max(.001,math.hypot(dx,dz))
-        lx,lz=dz/length,-dx/length; bank=p[3] if len(p)>3 else 0
-        for side in (-1,1):
-            offset=width*side
+        lx,lz=lateral(samples,i,closed);bank=p[3]
+        for column,offset in enumerate((lat0,lat1)):
+            height=heights(p,offset,column) if heights else p[1]+math.tan(bank)*offset+SURFACE_LIFT
             # Blender coordinates: X, -game-Z, game-Y. glTF export restores the game axes.
-            verts.append((p[0]+lx*offset,-p[2]-lz*offset,p[1]+math.tan(bank)*offset+.04))
+            verts.append((p[0]+lx*offset,-p[2]-lz*offset,height))
     for i in range(count if closed else count-1):
         j=(i+1)%count;faces.append((i*2,j*2,j*2+1,i*2+1))
     mesh=bpy.data.meshes.new(name);mesh.from_pydata(verts,[],faces);mesh.update()
     o=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(o);mesh.materials.append(material)
     return o
 
-def embankment(samples,material,closed=True,inner=10.4,outer=18):
-    verts=[];faces=[];n=len(samples)
+def embankment(samples,material,closed=True,inner=10.4,outer=18,name='EarthSlopes'):
+    objects=[]
     for side in (-1,1):
-        start=len(verts)
-        for i,p in enumerate(samples):
-            q=samples[(i+1)%n] if closed else samples[min(n-1,i+1)]
-            if i==n-1 and not closed:q=samples[i-1]
-            dx,dz=q[0]-p[0],q[2]-p[2];length=max(.001,math.hypot(dx,dz));lx,lz=dz/length,-dx/length
-            for off,height in ((inner,p[1]+math.tan(p[3])*side*inner),(outer,0)):
-                verts.append((p[0]+lx*off*side,-p[2]-lz*off*side,max(0,height)))
-        for i in range(n if closed else n-1):
-            j=(i+1)%n;face=(start+i*2,start+j*2,start+j*2+1,start+i*2+1)
-            faces.append(face if side==1 else tuple(reversed(face)))
-    mesh=bpy.data.meshes.new('EarthSlopes');mesh.from_pydata(verts,[],faces);mesh.update()
-    o=bpy.data.objects.new('EarthSlopes',mesh);bpy.context.collection.objects.link(o);mesh.materials.append(material)
-    return o
+        a,b=sorted((side*inner,side*outer))
+        def height(p,offset,column):
+            u=(abs(offset)-inner)/(outer-inner)
+            return (p[1]+math.tan(p[3])*side*inner)*(1-u)+SURFACE_LIFT
+        objects.append(ribbon_mesh(name,samples,a,b,material,closed,height))
+    return objects
 
 with open(os.path.join(os.path.dirname(__file__),'course_designs.json'),encoding='utf8') as f: designs=json.load(f)
 layouts={}
@@ -62,24 +63,26 @@ for name,d in designs.items():
     samples=[]
     for i in range(2000):
         distance=lengths[-1]*i/2000;j=max(1,bisect.bisect_left(lengths,distance));u=(distance-lengths[j-1])/max(.001,lengths[j]-lengths[j-1]);p=dense[j-1].lerp(dense[j],u)
-        t=i/2000;samples.append([round(p.x,4),round(envelope(t,d.get('hills',[])),4),round(p.y,4),round(math.radians(envelope(t,d.get('banks',[]))),5)])
+        t=i/2000;bank=round(math.radians(envelope(t,d.get('banks',[]))),5)
+        # Banking on flat sections must not push the low shoulder below the terrain.
+        height=max(envelope(t,d.get('hills',[])),abs(math.tan(bank))*10.4)
+        samples.append([round(p.x,4),round(height,4),round(p.y,4),bank])
     road=mat('CourseRoad',d['color']);edge=mat('CourseEdge',d['edge']);earth=mat('CourseEmbankment','#91623F')
-    objects=[ribbon_mesh('Embankment',[[p[0],max(0,p[1]-.14),p[2],p[3]] for p in samples[::4]],10.4,earth),embankment(samples[::4],earth),ribbon_mesh('Road',samples[::2],8.0,road)]
-    # Thin colored edge ribbons, lifted a little to avoid z fighting.
-    for side in (-1,1):
-        shifted=[]
-        for i,p in enumerate(samples[::2]):
-            q=samples[((i*2)+2)%2000];dx,dz=q[0]-p[0],q[2]-p[2];l=max(.001,math.hypot(dx,dz));off=side*8.35
-            shifted.append([p[0]+dz/l*off,p[1]+.035+math.tan(p[3])*off,p[2]-dx/l*off,0])
-        objects.append(ribbon_mesh('Edge',shifted,.34,edge))
+    # Shared samples/tangents keep road, edge, shoulder and slopes joined exactly.
+    objects=[ribbon_mesh('Road',samples,-8,8,road),
+             ribbon_mesh('EdgeLeft',samples,-8.7,-8,edge),
+             ribbon_mesh('EdgeRight',samples,8,8.7,edge),
+             ribbon_mesh('ShoulderLeft',samples,-10.4,-8.7,earth),
+             ribbon_mesh('ShoulderRight',samples,8.7,10.4,earth)]
+    objects.extend(embankment(samples,earth))
     branches=[]
     for branch in d.get('branches',[]):
         a=samples[int(branch['start']*2000)];b=samples[int(branch['end']*2000)];dx,dz=b[0]-a[0],b[2]-a[2];l=max(1,math.hypot(dx,dz));mid=[(a[0]+b[0])/2+dz/l*branch['bend'],(a[2]+b[2])/2-dx/l*branch['bend']]
         route=[]
         for j in range(101):
             u=j/100;route.append([round((1-u)**2*a[0]+2*(1-u)*u*mid[0]+u*u*b[0],4),round(a[1]*(1-u)+b[1]*u+math.sin(math.pi*u)**2*branch['crest']+.04,4),round((1-u)**2*a[2]+2*(1-u)*u*mid[1]+u*u*b[2],4),0])
-        objects.append(ribbon_mesh('Shortcut',route,branch['width'],road,False))
-        objects.append(embankment(route,earth,False,branch['width'],branch['width']+8))
+        objects.append(ribbon_mesh('Shortcut',route,-branch['width'],branch['width'],road,False))
+        objects.extend(embankment(route,earth,False,branch['width'],branch['width']+8,'ShortcutSlopes'))
         branches.append({**branch,'samples':route})
     export(objects,'course_'+name+'.glb');save_blend('course_'+name)
     layouts[name]={'samples':samples,'branches':branches,'features':d['features'],'length':lengths[-1]}

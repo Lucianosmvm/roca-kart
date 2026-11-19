@@ -41,6 +41,18 @@ Status: alterações de código feitas por inspeção dos arquivos. **Não testa
 - Limite inferior em relação ao piso amostrado para reduzir entrada no chão em colinas.
 - Reposicionamento direto ao iniciar corrida ou retornar à pista, evitando interpolação desde uma posição distante.
 
+## Correção de sobreposição do piso
+
+Após relato de chão piscando, a inspeção do gerador encontrou a estrada e a faixa de terra sob ela na mesma altura `0,04` nos trechos planos. Taludes terminavam em `0`, coincidentes com o terreno geral. As bordas eram amostradas de maneira diferente da estrada; nos atalhos, a última amostra do talude invertia a direção lateral. Curvas inclinadas sem elevação também podiam colocar o lado baixo da pista abaixo do terreno.
+
+- Estrada, bordas e acostamentos foram separados em faixas adjacentes com as mesmas amostras e tangentes, compartilhando limites em vez de cobrir a mesma área.
+- Taludes usam a mesma orientação da faixa, inclusive nas extremidades dos atalhos, e mantêm a separação visual de `0,04` em relação ao terreno plano.
+- A altura central das curvas inclinadas respeita a elevação necessária para não enterrar o acostamento baixo. As quatro pistas e os dados de navegação são regenerados juntos para manter piso visual e altura física coerentes.
+- A transição física do acostamento usa a altura da borda interna do talude, sem prolongar a inclinação lateral até fora da pista.
+- O terreno geral recebe deslocamento apenas no cálculo de profundidade. Nas junções dos atalhos, o piso tem prioridade sobre os taludes coincidentes; contornos expandidos foram desativados nas superfícies das pistas.
+
+Fontes preservadas em `blender/courses.py` e `blender/models/course_*.blend`; exportações em `assets/course_*.glb`, com alturas em `assets/course-layouts.json`. Não houve execução de testes ou abertura do jogo. A eliminação visual do sintoma ainda precisa ser observada em ambiente autorizado.
+
 ## Avaliação ainda necessária em outro ambiente autorizado
 
 | Situação | Resultado a observar |
