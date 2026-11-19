@@ -18,6 +18,7 @@ const CFG = {
   offroadFactor: 0.55, mudFactor: 0.5, N: 2000, gravity: 26,
 };
 const WALL = CFG.halfW + CFG.margin;
+const BOOM_FOLDED = 1.25;
 
 export const CHARACTERS = {
   tatu: {
@@ -831,6 +832,8 @@ function makeKartModel(def, parent = scene) {
   const wheels = { FL: W('WheelFL'), FR: W('WheelFR'), RL: W('WheelRL'), RR: W('WheelRR') };
   let beaconMat = null; model.getObjectByName('Beacon')?.traverse(o => { if (o.isMesh) beaconMat = o.material; });
   const booms = { L: model.getObjectByName('BoomL'), R: model.getObjectByName('BoomR') };
+  // The exported neutral pose is open; start folded in races and the garage.
+  if(booms.L && booms.R) {booms.L.rotation.y=-BOOM_FOLDED;booms.R.rotation.y=BOOM_FOLDED;}
   const accessory = addAccessory(model, ch, def.acc);
   if (accessory) accessory.position.y += custom.lift;
   let trailer = null, customTrailer = null;
@@ -860,7 +863,7 @@ function createKart(def, gridPos, isPlayer) {
     lap: 0, progress:si-CFG.N, maxIdx: 0, checkpoint:0, groundY:S[si].p.y, route:null, routeU:0, finished: false, finishTime: 0, place: gridPos + 1,
     drifting: false, driftDir: 0, driftCharge: 0, driftVis: 0, hop: 0, boost: 0, spin: 0, spinAng: 0,
     item: null, rolling: 0, wheelRot: 0, wrongWay: 0, offroad: false, inMud: false, bumpCd: 0,
-    slow: 0, guide: 0, spraying: 0, sprayMode: 'front', plow: 0, plowT: 0, clean: 0, boomAng: 0, sprout: 0,
+    slow: 0, guide: 0, spraying: 0, sprayMode: 'front', plow: 0, plowT: 0, clean: 0, boomAng: BOOM_FOLDED, sprout: 0,
     y: 0, vy: 0, airT: 0, coins: 0, lastLap: 0,
     charge: 0, ability: v.ch.tows ? (im.ability ?? 'arrancada') : v.ch.ability,
     mods: { speed: v.ch.speedMul, accel: v.ch.accelMul * im.accelMul, turn: v.ch.turnMul * im.turnMul },
@@ -1044,8 +1047,9 @@ function updateItemEffects(k, dt, fwd, side) {
       } else if (o.isPlayer) o.wetMsg = false;
     }
   }
-  if (k.v.booms.L) {
-    k.boomAng = lerp(k.boomAng, k.spraying > 0 ? 1.25 : 0, damp(6, dt));
+  if (k.v.booms.L && k.v.booms.R) {
+    const sprayingSides=k.spraying>0 && k.sprayMode==='side';
+    k.boomAng = lerp(k.boomAng, sprayingSides ? 0 : BOOM_FOLDED, damp(6, dt));
     k.v.booms.L.rotation.y = -k.boomAng; k.v.booms.R.rotation.y = k.boomAng;
   }
 }
