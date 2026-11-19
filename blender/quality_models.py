@@ -64,7 +64,7 @@ def wheel(name,loc,radius,width,m):
             a=k*math.tau/n;vertices.append((x*width,math.sin(a)*r*radius,math.cos(a)*r*radius))
     for j in range(len(profile)):
         q=(j+1)%len(profile)
-        for k in range(n):faces.append((j*n+k,j*n+(k+1)%n,q*n+(k+1)%n,q*n+k))
+        for k in range(n):faces.append((j*n+k,q*n+k,q*n+(k+1)%n,j*n+(k+1)%n))
     mesh=bpy.data.meshes.new('RoundedTire');mesh.from_pydata(vertices,[],faces);mesh.update()
     tire=bpy.data.objects.new('Tire',mesh);bpy.context.collection.objects.link(tire);mesh.materials.append(m['rubber']);parts=[tire]
     for k in range(20):

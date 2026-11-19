@@ -87,13 +87,15 @@ if (profile.opts.assist === null) profile.opts.assist = IS_TOUCH;
 if (profile.opts.autoGas === null) profile.opts.autoGas = IS_TOUCH;
 
 // ================================================================== renderer / scenes
-const renderer = new THREE.WebGLRenderer({ antialias: !IS_TOUCH,powerPreference:'high-performance' });
+const renderer = new THREE.WebGLRenderer({ antialias:true,powerPreference:'high-performance' });
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 $('game').appendChild(renderer.domElement);
 function applyQuality() {
   const hi = !IS_TOUCH && profile.opts.quality !== 'baixa';
-  renderer.setPixelRatio(IS_TOUCH ? (profile.opts.quality==='baixa' ? .75 : .9) : hi ? Math.min(devicePixelRatio, 2) : 1);
+  const mobileScale=profile.opts.quality==='baixa'?1:Math.min(devicePixelRatio,1.35);
+  const mobileBudget=profile.opts.quality==='baixa'?900000:1500000;
+  renderer.setPixelRatio(IS_TOUCH ? Math.min(mobileScale,Math.sqrt(mobileBudget/(innerWidth*innerHeight))) : hi ? Math.min(devicePixelRatio, 2) : 1);
   renderer.shadowMap.enabled = hi;
   renderer.setSize(innerWidth, innerHeight);
 }
@@ -106,7 +108,7 @@ scene.fog = new THREE.Fog('#D6F0FF', 260, 820);
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.5, 2000);
 addEventListener('resize', () => {
   camera.aspect = showCam.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); showCam.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
+  applyQuality();
 });
 const NO_OUTLINE = { outlineParameters: { visible: false } };
 
@@ -1176,7 +1178,6 @@ function setupTouch() {
       if (state.mode !== 'race' || state.paused) return;
       if (code === 'KeyE') useItem(player);
       if (code === 'KeyQ') useAbility(player);
-      if (code === 'KeyH') audio.horn(profile.sel.horn);
     };
     const up = e => { e.preventDefault(); btn.classList.remove('on'); keys[code] = false; steerReleased(code); };
     btn.addEventListener('pointerdown', down); btn.addEventListener('pointerup', up);
@@ -2031,9 +2032,9 @@ function update(dt) {
     }
   } else {
     camHeading = lerpAngle(camHeading, P.heading - P.driftVis * 0.4, damp(P.spin > 0 ? 1 : 5, dt));
-    const portrait = camera.aspect < 1 ? 1.45 : 1, ch = P.v.ch, tow = P.v.trailer ? 1 : 0;
-    const dist = ((state.camMode ? ch.camD + 4.5 : ch.camD) + tow * 2.5) * portrait;
-    const height = P.groundY+((state.camMode ? ch.camH + 2.7 : ch.camH) + tow * 0.9) * (portrait > 1 ? 1.3 : 1) + P.y * 0.6;
+    const portrait = camera.aspect < 1 ? 1.08 : 1, ch = P.v.ch, tow = P.v.trailer ? 1 : 0;
+    const dist = ((state.camMode ? ch.camD + 4.5 : ch.camD) + tow * 2.5) * portrait * (IS_TOUCH ? .88 : .94);
+    const height = P.groundY+((state.camMode ? ch.camH + 2.7 : ch.camH) + tow * 0.9) * (portrait > 1 ? 1.06 : 1) * (IS_TOUCH ? .92 : 1) + P.y * 0.6;
     const desired = new THREE.Vector3(P.pos.x - Math.sin(camHeading) * dist, height, P.pos.z - Math.cos(camHeading) * dist);
     if (state.mode === 'countdown') {
       const k = clamp((state.countdown - 1.2) / 3, 0, 1), a = camHeading + Math.PI * k * 0.9;
@@ -2045,7 +2046,7 @@ function update(dt) {
     else {camera.position.lerp(desired,damp(state.mode==='countdown'?4:9,dt));raceLook.lerp(look,damp(10,dt));}
     camera.position.y=Math.max(camera.position.y,courseSurface(camera.position).height+1.2);
     camera.lookAt(raceLook);
-    const fov = (camera.aspect < 1 ? 74 : 62) + clamp(P.speed / CFG.maxSpeed, 0, 1.5) * 8 + (P.boost > 0 ? 8 : 0);
+    const fov = (camera.aspect < 1 ? 66 : 60) + clamp(P.speed / CFG.maxSpeed, 0, 1.5) * 5 + (P.boost > 0 ? 4 : 0);
     camera.fov = lerp(camera.fov, fov, damp(4, dt)); camera.updateProjectionMatrix();
     if (state.shake > 0.01) {
       camera.position.x += (Math.random() - 0.5) * state.shake; camera.position.y += (Math.random() - 0.5) * state.shake;

@@ -1,0 +1,2694 @@
+{
+  "scope": "User-authorized mesh orientation review, not game tests",
+  "repair": true,
+  "assets": [
+    {
+      "name": "tatu",
+      "changed_faces": 1536,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Body",
+          "closed_shells": 54,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Bumper",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Eyes",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Roof",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "WheelRL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelRR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelFL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelFR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "Hood",
+          "closed_shells": 18,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "corn",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Corn",
+          "closed_shells": 9,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "wheat",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Wheat",
+          "closed_shells": 14,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "sunflower",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Sunflower",
+          "closed_shells": 14,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "hay",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hay",
+          "closed_shells": 9,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "haysq",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "HaySq",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "barn",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Barn",
+          "closed_shells": 34,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "silo",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Silo",
+          "closed_shells": 22,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 60,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "fence",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Fence",
+          "closed_shells": 6,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "tree",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Tree",
+          "closed_shells": 5,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "pine",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Pine",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "bush",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Bush",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "rock",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Rock",
+          "closed_shells": 1,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "cow",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Cow",
+          "closed_shells": 26,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "scarecrow",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Scarecrow",
+          "closed_shells": 14,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "windmill",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Tower",
+          "closed_shells": 13,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Blades",
+          "closed_shells": 14,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "gate",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "GateFrame",
+          "closed_shells": 7,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Banner",
+          "closed_shells": 1,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "cloud",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Cloud",
+          "closed_shells": 5,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "itembox",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "ItemCore",
+          "closed_shells": 1,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ItemFrame",
+          "closed_shells": 12,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "pingo",
+      "changed_faces": 1536,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Body",
+          "closed_shells": 53,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Eyes",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Tank",
+          "closed_shells": 16,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "BoomL",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "BoomR",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "WheelRL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelRR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelFL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelFR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        }
+      ]
+    },
+    {
+      "name": "broto",
+      "changed_faces": 768,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Body",
+          "closed_shells": 27,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Eyes",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Hoppers",
+          "closed_shells": 12,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "WheelL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        }
+      ]
+    },
+    {
+      "name": "ramp",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Ramp",
+          "closed_shells": 16,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "coin",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Coin",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "podium",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Podium",
+          "closed_shells": 28,
+          "inward_shells": 0,
+          "open_shells": 9,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "garage",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Garage",
+          "closed_shells": 91,
+          "inward_shells": 0,
+          "open_shells": 47,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 10,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "soy",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Soy",
+          "closed_shells": 6,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "cerrado_tree",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "CerradoTree",
+          "closed_shells": 6,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_straw",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccStraw",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 24,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_cap",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccCap",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 6,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_crown",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccCrown",
+          "closed_shells": 19,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_flower",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccFlower",
+          "closed_shells": 17,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_flag",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccFlag",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_glasses",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccGlasses",
+          "closed_shells": 7,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "broto_hoppers_seed",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hoppers",
+          "closed_shells": 9,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 12,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "broto_hoppers_barrel",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hoppers",
+          "closed_shells": 12,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 12,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "broto_hoppers_crate",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hoppers",
+          "closed_shells": 21,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 18,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "broto_wheels_small",
+      "changed_faces": 768,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "WheelL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        }
+      ]
+    },
+    {
+      "name": "broto_wheels_wide",
+      "changed_faces": 768,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "WheelL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        }
+      ]
+    },
+    {
+      "name": "broto_wheels_double",
+      "changed_faces": 1536,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "WheelL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelEndL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelEndR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        }
+      ]
+    },
+    {
+      "name": "pipoca",
+      "changed_faces": 1536,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Body",
+          "closed_shells": 66,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Eyes",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "WheelFL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelFR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelRL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelRR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        }
+      ]
+    },
+    {
+      "name": "bento",
+      "changed_faces": 1536,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Body",
+          "closed_shells": 69,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Eyes",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "WheelFL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelFR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelRL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        },
+        {
+          "object": "WheelRR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 384
+        }
+      ]
+    },
+    {
+      "name": "course_milharal",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Road",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "EdgeLeft",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "EdgeRight",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShoulderLeft",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShoulderRight",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "EarthSlopes",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "EarthSlopes.001",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Shortcut",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShortcutSlopes",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShortcutSlopes.001",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "course_girassol",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Road",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "EdgeLeft",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "EdgeRight",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShoulderLeft",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShoulderRight",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "EarthSlopes",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "EarthSlopes.001",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Shortcut",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShortcutSlopes",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShortcutSlopes.001",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "course_cerrado",
+      "changed_faces": 42,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Road",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "EdgeLeft",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 3
+        },
+        {
+          "object": "EdgeRight",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShoulderLeft",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 4
+        },
+        {
+          "object": "ShoulderRight",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 1
+        },
+        {
+          "object": "EarthSlopes",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 23
+        },
+        {
+          "object": "EarthSlopes.001",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 11
+        },
+        {
+          "object": "Shortcut",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShortcutSlopes",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShortcutSlopes.001",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "course_feira",
+      "changed_faces": 28,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Road",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "EdgeLeft",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 5
+        },
+        {
+          "object": "EdgeRight",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShoulderLeft",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 6
+        },
+        {
+          "object": "ShoulderRight",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "EarthSlopes",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 17
+        },
+        {
+          "object": "EarthSlopes.001",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Shortcut",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShortcutSlopes",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ShortcutSlopes.001",
+          "closed_shells": 0,
+          "inward_shells": 0,
+          "open_shells": 1,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_barn",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_barn",
+          "closed_shells": 14,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_bridge",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_bridge",
+          "closed_shells": 44,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 16,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_canyon",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_canyon",
+          "closed_shells": 16,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_tunnel",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_tunnel",
+          "closed_shells": 17,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_stall",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_stall",
+          "closed_shells": 29,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_mill",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_mill",
+          "closed_shells": 6,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_shortcut",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_shortcut",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 21,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 2,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_curve_left",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_curve_left",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 2,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_curve_right",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_curve_right",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 2,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_sign_jump",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_sign_jump",
+          "closed_shells": 5,
+          "inward_shells": 0,
+          "open_shells": 17,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 2,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_sign_route",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_sign_route",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 21,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 2,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_edge_marker",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_edge_marker",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "tatu_hood_box",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hood",
+          "closed_shells": 10,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "tatu_hood_round",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hood",
+          "closed_shells": 10,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "tatu_roof_cage",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "RoofCage",
+          "closed_shells": 5,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "tatu_bumper_double",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Bumper",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "tatu_mobile",
+      "changed_faces": 1224,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Body",
+          "closed_shells": 54,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Bumper",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Eyes",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Roof",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "WheelRL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 284
+        },
+        {
+          "object": "WheelRR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 284
+        },
+        {
+          "object": "WheelFL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 328
+        },
+        {
+          "object": "WheelFR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 328
+        },
+        {
+          "object": "Hood",
+          "closed_shells": 18,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "corn_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Corn",
+          "closed_shells": 9,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "wheat_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Wheat",
+          "closed_shells": 14,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "sunflower_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Sunflower",
+          "closed_shells": 14,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "hay_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hay",
+          "closed_shells": 9,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "haysq_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "HaySq",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "barn_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Barn",
+          "closed_shells": 34,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "silo_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Silo",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 14,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 60,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "fence_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Fence",
+          "closed_shells": 6,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "tree_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Tree",
+          "closed_shells": 5,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "pine_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Pine",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "bush_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Bush",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "rock_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Rock",
+          "closed_shells": 1,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "cow_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Cow",
+          "closed_shells": 26,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "scarecrow_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Scarecrow",
+          "closed_shells": 14,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "windmill_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Tower",
+          "closed_shells": 13,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Blades",
+          "closed_shells": 14,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "gate_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "GateFrame",
+          "closed_shells": 7,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Banner",
+          "closed_shells": 1,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "cloud_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Cloud",
+          "closed_shells": 5,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "itembox_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "ItemCore",
+          "closed_shells": 1,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "ItemFrame",
+          "closed_shells": 12,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "pingo_mobile",
+      "changed_faces": 1280,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Body",
+          "closed_shells": 53,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Eyes",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Tank",
+          "closed_shells": 16,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "BoomL",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "BoomR",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "WheelRL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 320
+        },
+        {
+          "object": "WheelRR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 320
+        },
+        {
+          "object": "WheelFL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 320
+        },
+        {
+          "object": "WheelFR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 320
+        }
+      ]
+    },
+    {
+      "name": "broto_mobile",
+      "changed_faces": 624,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Body",
+          "closed_shells": 27,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Eyes",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Hoppers",
+          "closed_shells": 12,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "WheelL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 312
+        },
+        {
+          "object": "WheelR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 312
+        }
+      ]
+    },
+    {
+      "name": "ramp_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Ramp",
+          "closed_shells": 16,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "coin_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Coin",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "podium_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Podium",
+          "closed_shells": 28,
+          "inward_shells": 0,
+          "open_shells": 9,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "garage_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Garage",
+          "closed_shells": 91,
+          "inward_shells": 0,
+          "open_shells": 47,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 10,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "soy_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Soy",
+          "closed_shells": 6,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "cerrado_tree_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "CerradoTree",
+          "closed_shells": 6,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_straw_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccStraw",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 24,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_cap_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccCap",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 6,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_crown_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccCrown",
+          "closed_shells": 19,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_flower_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccFlower",
+          "closed_shells": 17,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_flag_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccFlag",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "acc_glasses_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "AccGlasses",
+          "closed_shells": 7,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "broto_hoppers_seed_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hoppers",
+          "closed_shells": 9,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 12,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "broto_hoppers_barrel_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hoppers",
+          "closed_shells": 12,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 12,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "broto_hoppers_crate_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hoppers",
+          "closed_shells": 21,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 18,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "broto_wheels_small_mobile",
+      "changed_faces": 488,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "WheelL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 244
+        },
+        {
+          "object": "WheelR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 244
+        }
+      ]
+    },
+    {
+      "name": "broto_wheels_wide_mobile",
+      "changed_faces": 552,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "WheelL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 276
+        },
+        {
+          "object": "WheelR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 276
+        }
+      ]
+    },
+    {
+      "name": "broto_wheels_double_mobile",
+      "changed_faces": 848,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "WheelL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 212
+        },
+        {
+          "object": "WheelEndL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 212
+        },
+        {
+          "object": "WheelR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 212
+        },
+        {
+          "object": "WheelEndR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 212
+        }
+      ]
+    },
+    {
+      "name": "pipoca_mobile",
+      "changed_faces": 1256,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Body",
+          "closed_shells": 66,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Eyes",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "WheelFL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 308
+        },
+        {
+          "object": "WheelFR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 308
+        },
+        {
+          "object": "WheelRL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 320
+        },
+        {
+          "object": "WheelRR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 320
+        }
+      ]
+    },
+    {
+      "name": "bento_mobile",
+      "changed_faces": 1296,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Body",
+          "closed_shells": 69,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "Eyes",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "WheelFL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 324
+        },
+        {
+          "object": "WheelFR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 324
+        },
+        {
+          "object": "WheelRL",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 324
+        },
+        {
+          "object": "WheelRR",
+          "closed_shells": 63,
+          "inward_shells": 1,
+          "open_shells": 0,
+          "flipped_faces": 324
+        }
+      ]
+    },
+    {
+      "name": "race_barn_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_barn",
+          "closed_shells": 14,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_bridge_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_bridge",
+          "closed_shells": 44,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 16,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_canyon_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_canyon",
+          "closed_shells": 16,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_tunnel_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_tunnel",
+          "closed_shells": 17,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_stall_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_stall",
+          "closed_shells": 29,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_mill_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_mill",
+          "closed_shells": 6,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_shortcut_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_shortcut",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 21,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 2,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_curve_left_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_curve_left",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 2,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_curve_right_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_curve_right",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 2,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_sign_jump_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_sign_jump",
+          "closed_shells": 5,
+          "inward_shells": 0,
+          "open_shells": 17,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 2,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_sign_route_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_sign_route",
+          "closed_shells": 4,
+          "inward_shells": 0,
+          "open_shells": 21,
+          "flipped_faces": 0
+        },
+        {
+          "object": "CraftDetails",
+          "closed_shells": 2,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "race_edge_marker_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "race_edge_marker",
+          "closed_shells": 3,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "tatu_hood_box_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hood",
+          "closed_shells": 10,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "tatu_hood_round_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Hood",
+          "closed_shells": 10,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "tatu_roof_cage_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "RoofCage",
+          "closed_shells": 5,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    },
+    {
+      "name": "tatu_bumper_double_mobile",
+      "changed_faces": 0,
+      "remaining_faces": 0,
+      "objects": [
+        {
+          "object": "Bumper",
+          "closed_shells": 8,
+          "inward_shells": 0,
+          "open_shells": 0,
+          "flipped_faces": 0
+        }
+      ]
+    }
+  ]
+}

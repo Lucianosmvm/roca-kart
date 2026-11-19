@@ -600,7 +600,7 @@ function buildOptions() {
     <label class="optRow">🔊 Efeitos <input type="range" min="0" max="1" step="0.05" id="oSfx" value="${o.sfx}"></label>
     <label class="optRow">🚜 Acelerar sozinho <input type="checkbox" id="oGas" ${o.autoGas ? 'checked' : ''}></label>
     <label class="optRow">🧭 Direção assistida <input type="checkbox" id="oAssist" ${o.assist ? 'checked' : ''}></label>
-    <label class="optRow">🖥️ Qualidade gráfica <select id="oQual"><option value="alta">${IS_TOUCH()?'Leve (celular)':'Alta'}</option><option value="baixa">${IS_TOUCH()?'Econômica':'Baixa'}</option></select></label>
+    <label class="optRow">🖥️ Qualidade gráfica <select id="oQual"><option value="alta">${IS_TOUCH()?'Nítida (celular)':'Alta'}</option><option value="baixa">${IS_TOUCH()?'Econômica':'Baixa'}</option></select></label>
     <div class="keys keysOnly"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> dirigir · 2 toques rápidos no mesmo lado e mantenha o segundo para drift · <kbd>E</kbd> item ·
       <kbd>Q</kbd> habilidade · <kbd>H</kbd> buzina · <kbd>C</kbd> câmera · <kbd>R</kbd> volta pra pista · <kbd>ESC</kbd> pausa</div>
     <p class="gestureHelp">📱 Drift: toque duas vezes rapidamente em ◀ ou ▶ e mantenha o segundo toque. Solte para liberar o turbo. As rampas fazem saltos normais, sem acrobacias. No celular, modelos leves e efeitos reduzidos são usados automaticamente.</p>

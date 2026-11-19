@@ -54,7 +54,8 @@ O Plantio Relâmpago do Broto planta **um único girassol por uso**, centralizad
 
 **Teclado:** W/↑ acelera · S/↓ freia · A/D vira · E item · Q habilidade · H buzina · C câmera · R volta à pista · ESC pausa.
 As rampas fazem saltos normais, sem acrobacias ou bônus de manobra. No celular não há botão separado de drift.
-Celulares carregam modelos `_mobile.glb` com menos geometria, materiais simples, menos vegetação e partículas, sem sombras ou passe extra de contornos. O modo Econômica reduz mais a resolução. As fontes `_mobile.blend` e o gerador estão preservados; veja [a correção de desempenho](docs/desempenho-mobile.md).
+Celulares carregam modelos `_mobile.glb` com menos geometria, materiais simples, menos vegetação e partículas, sem sombras ou passe extra de contornos. O perfil Nítida usa suavização de bordas e resolução limitada para melhorar a imagem; Econômica reduz a resolução. A câmera foi aproximada e o botão de buzina foi removido do celular. As fontes `_mobile.blend` e o gerador estão preservados; veja [a correção de desempenho](docs/desempenho-mobile.md).
+Uma [revisão das malhas solicitada pelo usuário](docs/revisao-malhas.md) corrigiu faces invertidas dos pneus e de trechos de duas pistas, com fontes e exportações salvas.
 
 ## Corridas e progressão
 

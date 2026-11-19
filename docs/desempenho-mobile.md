@@ -13,8 +13,8 @@ Também havia busca de todos os segmentos dos atalhos em cada consulta de piso e
 - Modelos leves independentes, carregados automaticamente em dispositivos com os controles de toque. O PC continua usando as fontes detalhadas.
 - Geração com orçamento de geometria por categoria. As quatro máquinas têm alvo de 16 mil triângulos cada; o Tatu gerado registrou 15.990. Isso é informação da produção da malha, não medição de desempenho.
 - Plantas, árvores, acessórios, peças, oficina e marcos recebem versões leves próprias. Não há suavização ou decimação das superfícies navegáveis: os circuitos originais são reutilizados para manter a correção do piso.
-- Materiais Lambert no celular, inclusive as cores da personalização; sem sombras, antialiasing inicial ou passe extra de contornos.
-- Resolução de renderização de 0,9× no perfil Leve, ou 0,75× em Econômica. Não usa a densidade de pixels 2× dos aparelhos.
+- Materiais Lambert no celular, inclusive as cores da personalização; sem sombras ou passe extra de contornos.
+- Após relato de imagem pixelizada, suavização de bordas foi habilitada e a resolução passou a ter limite de 1,35× no perfil Nítida, com orçamento de 1,5 milhão de pixels. Econômica usa limite de 1× e 900 mil pixels. Telas grandes respeitam o orçamento reduzindo a escala; não há uso irrestrito da densidade 2×/3× dos aparelhos.
 - Menor densidade de vegetação, textura de chão menor, capacidade de partículas de 350 em vez de 1.400 e emissão reduzida.
 - Consultas de atalhos usam uma grade espacial e examinam apenas segmentos próximos.
 - Ao trocar de pista, geometrias, materiais e texturas exclusivos do cenário anterior são liberados. Recursos compartilhados dos modelos permanecem disponíveis.
@@ -36,3 +36,9 @@ Depois de regenerar modelos detalhados, gerar também os leves em uma chamada se
 ```
 
 O Blender foi usado somente em segundo plano para produzir e salvar assets. Não há FPS medido, garantia de desempenho ou confirmação de encaixe das malhas simplificadas sem avaliação no aparelho em ambiente autorizado.
+
+## Enquadramento e controles
+
+O multiplicador de distância em retrato passou de 1,45 para 1,08, com aproximação adicional no celular e menor abertura de campo de visão. A câmera mantém a compensação pelo Broto e a opção de distância alternativa no teclado. O botão de buzina foi removido dos controles por toque; a buzina por H permanece no PC.
+
+A inspeção de malhas invertidas, solicitada explicitamente depois, foi executada separadamente no Blender. Seus resultados estão em [revisao-malhas.md](revisao-malhas.md). Essa autorização é restrita à geometria; jogo, navegador, testes de código e benchmarks continuam sem execução.

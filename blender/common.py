@@ -167,6 +167,10 @@ def join(objs, name):
 
 
 def export(objs, filename):
+    # Keep generated shells outward-facing; course strips explicitly face upward.
+    from mesh_orientation import orient_object
+    for obj in objs:
+        if obj.type=='MESH':orient_object(obj,fix=True,course=filename.startswith('course_'))
     bpy.ops.object.select_all(action="DESELECT")
     for o in objs:
         o.select_set(True)
