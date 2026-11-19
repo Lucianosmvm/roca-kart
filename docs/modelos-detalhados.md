@@ -6,7 +6,7 @@ Referências fornecidas pelo usuário: caminhão e trator com volumes suaves, ma
 
 A solicitação inclui todos os modelos ativos: Tatu, Pingo, Pipoca, Bento, Broto, peças intercambiáveis, acessórios, vegetação, construções, objetos de corrida, oficina e sinalização. Os modelos antigos de fabricantes, preservados como histórico e não carregados pelo jogo, não fazem parte do novo elenco.
 
-O pacote usa os geradores próprios do projeto como base, com uma etapa de modelagem e acabamento em `blender/quality_models.py`. Não é uma conversão das imagens em malhas, nem uma recriação de cada objeto do zero. A geometria recebe detalhes por categoria, bordas com mais segmentos, pneus de perfil arredondado, sombreamento suave e normais ponderadas.
+O pacote usa os geradores próprios do projeto, com modelagem low-poly em `blender/quality_models.py`. Capôs e painéis largos recebem até três segmentos nos cantos. Frisos e blocos dos pneus usam um único chanfro. Cada pneu tem 32 divisões no contorno e 16 pares de garras. Olhos, faróis e reservatórios usam mais segmentos conforme o tamanho para manter a silhueta de brinquedo. As normais ponderadas dão continuidade aos reflexos nas superfícies arredondadas.
 
 ## Máquinas
 

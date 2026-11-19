@@ -17,16 +17,21 @@ raw_box,raw_cyl,raw_uvs,raw_ico,raw_join,raw_export=c.box,c.cyl,c.uvs,c.ico,c.jo
 def soft_box(name,size,loc,m,bevel=.04,seg=1,rot=(0,0,0)):
     # Keep intentional thin paint lines / floor planes flat. Round actual volumes.
     bevel=min(bevel,min(size)*.45) if bevel else 0
-    return raw_box(name,size,loc,m,bevel,max(4,seg) if bevel else seg,rot)
+    # Broad panels need a second highlight band; narrow trim reads as one bevel.
+    segments = 3 if bevel >= .18 else 2 if bevel >= .045 else 1
+    return raw_box(name,size,loc,m,bevel,segments,rot)
 
 def soft_cyl(name,r,depth,loc,m,verts=12,rot=(0,0,0),bevel=0,seg=1,r2=None):
-    return raw_cyl(name,r,depth,loc,m,max(24,verts),rot,bevel,max(3,seg),r2)
+    sides = min(verts, 8 if r < .08 else 12 if r < .25 else 24)
+    return raw_cyl(name,r,depth,loc,m,sides,rot,bevel,2 if bevel >= .05 else 1,r2)
 
 def soft_uvs(name,r,loc,m,seg=10,rings=6,scale=(1,1,1)):
-    return raw_uvs(name,r,loc,m,max(12 if r<.25 else 24,seg),max(8 if r<.25 else 14,rings),scale)
+    extent = r * max(scale)
+    sides, bands = (10, 6) if extent < .15 else (16, 8) if extent < .6 else (24, 12)
+    return raw_uvs(name,r,loc,m,sides,bands,scale)
 
 def soft_ico(name,r,loc,m,sub=1,scale=(1,1,1),rot=(0,0,0)):
-    return raw_ico(name,r,loc,m,max(2,sub),scale,rot)
+    return raw_ico(name,r,loc,m,sub,scale,rot)
 
 def smooth(obj):
     for face in obj.data.polygons: face.use_smooth=True
@@ -48,7 +53,7 @@ def tube(name,a,b,r,material):
     return obj
 
 def ring(name,r,minor,loc,material,rotation=(0,0,0)):
-    bpy.ops.mesh.primitive_torus_add(major_radius=r,minor_radius=minor,major_segments=40,minor_segments=8,location=loc,rotation=rotation)
+    bpy.ops.mesh.primitive_torus_add(major_radius=r,minor_radius=minor,major_segments=24 if r>.3 else 16,minor_segments=5,location=loc,rotation=rotation)
     obj=bpy.context.object;obj.name=name;obj.data.materials.append(material)
     for p in obj.data.polygons:p.use_smooth=True
     return obj
@@ -58,7 +63,7 @@ def sphere(name,size,loc,m):return soft_uvs(name,1,loc,m,scale=size)
 def wheel(name,loc,radius,width,m):
     # A rounded tire cross-section, separate sidewall rings, rim recess and paired tread.
     profile=[(-.5,.66),(-.55,.78),(-.5,.9),(-.36,.965),(.36,.965),(.5,.9),(.55,.78),(.5,.66)]
-    vertices=[];faces=[];n=48
+    vertices=[];faces=[];n=32
     for x,r in profile:
         for k in range(n):
             a=k*math.tau/n;vertices.append((x*width,math.sin(a)*r*radius,math.cos(a)*r*radius))
@@ -67,11 +72,15 @@ def wheel(name,loc,radius,width,m):
         for k in range(n):faces.append((j*n+k,q*n+k,q*n+(k+1)%n,j*n+(k+1)%n))
     mesh=bpy.data.meshes.new('RoundedTire');mesh.from_pydata(vertices,[],faces);mesh.update()
     tire=bpy.data.objects.new('Tire',mesh);bpy.context.collection.objects.link(tire);mesh.materials.append(m['rubber']);parts=[tire]
-    for k in range(20):
-        a=k*math.tau/20
+    for k in range(16):
+        a=k*math.tau/16
         for side in (-1,1):
-            obj=soft_box('ChevronTread',(width*.57,radius*.15,radius*.075),(side*width*.23,math.sin(a)*radius*.975,math.cos(a)*radius*.975),m['rubber'],radius*.022)
-            obj.rotation_euler=(-a,0,side*.32);parts.append(obj)
+            obj=soft_box('ChevronTread',(width*.57,radius*.15,radius*.075),(0,0,0),m['rubber'],radius*.022)
+            obj.location=(side*width*.23,math.sin(a)*radius*.97,math.cos(a)*radius*.97)
+            # Tilt the lug in its tangent plane, then wrap it around the axle.
+            obj.rotation_mode='ZYX'
+            obj.rotation_euler=(-a,0,side*.32)
+            parts.append(obj)
     for side in (-1,1):
         parts.append(ring('SidewallLine',radius*.78,radius*.018,(side*width*.525,0,0),m['rubber'],(0,math.pi/2,0)))
         parts.append(soft_cyl('RimRecess',radius*.66,.06,(side*width*.51,0,0),m['metal'],32,rot=(0,math.pi/2,0),bevel=.018))

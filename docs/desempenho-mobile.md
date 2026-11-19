@@ -11,7 +11,7 @@ Também havia busca de todos os segmentos dos atalhos em cada consulta de piso e
 ## Alterações
 
 - Modelos leves independentes, carregados automaticamente em dispositivos com os controles de toque. O PC continua usando as fontes detalhadas.
-- Geração com orçamento de geometria por categoria. As quatro máquinas têm alvo de 16 mil triângulos cada; o Tatu gerado registrou 15.990. Isso é informação da produção da malha, não medição de desempenho.
+- A geração reserva os olhos e as malhas pequenas antes de distribuir o orçamento por categoria. As quatro máquinas low-poly do PC têm entre 25.618 e 27.572 triângulos. No celular, o exportador registrou 15.996 para Tatu, Pipoca e Bento, 15.990 para Pingo e 8.998 para o implemento Broto.
 - Plantas, árvores, acessórios, peças, oficina e marcos recebem versões leves próprias. Não há suavização ou decimação das superfícies navegáveis: os circuitos originais são reutilizados para manter a correção do piso.
 - Materiais Lambert no celular, inclusive as cores da personalização; sem sombras ou passe extra de contornos.
 - Após relato de imagem pixelizada, suavização de bordas foi habilitada e a resolução passou a ter limite de 1,35× no perfil Nítida, com orçamento de 1,5 milhão de pixels. Econômica usa limite de 1× e 900 mil pixels. Telas grandes respeitam o orçamento reduzindo a escala; não há uso irrestrito da densidade 2×/3× dos aparelhos.
