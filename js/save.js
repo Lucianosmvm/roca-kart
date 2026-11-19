@@ -62,7 +62,7 @@ function read() {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) return { ...fresh(), ...JSON.parse(raw) };
-    // migrate options from the first prototype
+    // Preserve options saved by the first version.
     const old = JSON.parse(localStorage.getItem('rocaKartOpts') || 'null');
     const p = fresh();
     if (old) { Object.assign(p.sel, { char: old.char ?? 'maxi', impl: old.impl ?? 'absoluta' }); p.opts.assist = old.assist ?? null; p.opts.autoGas = old.autoGas ?? null; }

@@ -85,7 +85,7 @@ Primeira passagem implementada em [acabamento-apresentacao.md](acabamento-aprese
 - Inventariar procedência e licenças de modelos, fontes, músicas, imagens, código e dependências distribuídas; incluir avisos exigidos.
 - Revisar referências antigas e material comercial para garantir a identidade própria do produto.
 - Produzir trailer curto com captura real, imagens de loja e descrição fiel ao conteúdo entregue.
-- Preparar demo limitada à pista Milharal, usando os mesmos sistemas e salvamento isolado do jogo completo. Produzir depois da estabilização, sem novos sistemas exclusivos para a demo.
+- Preparar o pacote do jogo completo, com as quatro pistas, quatro máquinas e modos previstos no escopo comercial.
 - Preparar página da Steam e publicação na itch.io; cadastro, taxas, preço e publicação dependem de decisão posterior do usuário.
 
 **Condição de conclusão:** pacote e página descrevem a mesma experiência; licenças estão documentadas; não existem promessas de recursos futuros necessárias para justificar a compra.

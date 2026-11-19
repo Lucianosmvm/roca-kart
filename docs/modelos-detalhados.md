@@ -46,7 +46,7 @@ Usar este comando para regenerar o pacote com o novo acabamento:
 & 'C:\Program Files\Blender Foundation\Blender 5.3\blender.exe' -b --factory-startup --python-exit-code 1 --python blender/quality_models.py
 ```
 
-Para gerar apenas um grupo, acrescentar `-- vehicles`, `-- parts`, `-- scenery`, `-- courses` ou `-- signs`. Mais de um grupo pode ser informado na mesma chamada. O pipeline estende `oficina.py`, `broto_parts.py`, `adventure.py`, `props.py`, `props_demo.py`, `courses.py` e `race_signs.py`; executar esses geradores diretamente não inclui todos os acabamentos desta etapa.
+Para gerar apenas um grupo, acrescentar `-- vehicles`, `-- parts`, `-- scenery`, `-- courses` ou `-- signs`. Mais de um grupo pode ser informado na mesma chamada. O pipeline estende `oficina.py`, `broto_parts.py`, `adventure.py`, `props.py`, `props_extras.py`, `courses.py` e `race_signs.py`; executar esses geradores diretamente não inclui todos os acabamentos desta etapa.
 
 ## Limites da entrega
 

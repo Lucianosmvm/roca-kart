@@ -85,7 +85,7 @@ O Blender foi usado apenas em segundo plano para produzir e salvar os arquivos 3
 - A câmera enquadra o conjunto completo no retângulo disponível da prévia; a rotação por arraste funciona com mouse e toque.
 - Botões, cartões, painéis e cores comuns também foram aplicados aos menus inicial, de pistas, opções, créditos e pausa.
 - Cenário: madeira, plataforma com tábuas e aro azul-petróleo, janela e ferramentas. Salvo em `blender/models/garage.blend` e `assets/garage.glb`.
-- O gerador `blender/props_demo.py -- garage` permite regerar somente esse cenário.
+- O gerador `blender/props_extras.py -- garage` permite regerar somente esse cenário.
 
 Este layout e o enquadramento não foram executados ou testados no PC do usuário. A instrução de não testar permanece em vigor.
 

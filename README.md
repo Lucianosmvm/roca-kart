@@ -128,7 +128,7 @@ A referência aprovada está em `docs/art/oficina-layout-aprovado.png`.
 Para gerar apenas o cenário, preservando os outros modelos:
 
 ```powershell
-& 'C:\Program Files\Blender Foundation\Blender 5.3\blender.exe' -b --factory-startup --python blender/props_demo.py -- garage
+& 'C:\Program Files\Blender Foundation\Blender 5.3\blender.exe' -b --factory-startup --python blender/props_extras.py -- garage
 ```
 
 O novo layout não foi testado neste PC, conforme instrução do usuário. O Blender foi usado somente para gerar e salvar o cenário.

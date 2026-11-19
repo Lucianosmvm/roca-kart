@@ -1,4 +1,4 @@
-// Roça Kart — demo jogável: kart arcade com máquinas inventadas da Oficina da Roça (cartoon).
+// Roça Kart — corrida arcade com máquinas inventadas da Oficina da Roça (cartoon).
 // Models are built by the scripts in /blender and loaded as GLB. Screens live in ui.js,
 // music/SFX in audio.js, player progress in save.js, track layouts in tracks.js.
 import * as THREE from 'three';

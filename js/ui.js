@@ -132,7 +132,7 @@ function buildSplash() {
     <div class="splashMachines"><img src="assets/ui/tatu.png" alt="Tatu"><img src="assets/ui/broto.png" alt="Broto"><img src="assets/ui/pingo.png" alt="Pingo"></div>
     <div class="bar"><i id="splashBar"></i></div>
     <div class="tap hidden" id="splashTap"></div>
-    <div class="credit">Demo jogável · protótipo para apresentação · Oficina da Roça · máquinas inventadas para correr</div>`;
+    <div class="credit">Oficina da Roça · máquinas inventadas para correr</div>`;
 }
 
 // ---------------------------------------------------------------- menu
@@ -625,7 +625,7 @@ function buildOptions() {
 }
 function buildCredits() {
   $('credits').innerHTML = `<h2 class="title">Créditos</h2><div class="panel credits" style="width:min(560px,94vw)">
-    <p style="font-family:'Lilita One';font-size:28px;color:var(--orange)">Roça Kart · demo jogável</p>
+    <p style="font-family:'Lilita One';font-size:28px;color:var(--orange)">Roça Kart · Oficina da Roça</p>
     <p>Tatu, Pingo, Pipoca, Bento e Broto: máquinas inventadas na Oficina da Roça.</p>
     <p>Modelos 3D originais construídos com formas geométricas no Blender.</p>
     <p>Jogo em Three.js · música e efeitos sonoros sintetizados ao vivo (baião com zabumba, triângulo e sanfona).</p>

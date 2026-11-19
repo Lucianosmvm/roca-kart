@@ -287,7 +287,7 @@ for stage in stages:
         run('adventure.py',('pipoca','bento'))
     elif stage=='parts':run('broto_parts.py');variants()
     elif stage=='scenery':
-        run('props.py');run('props_demo.py');run('adventure.py',('race_barn','race_bridge','race_canyon','race_tunnel','race_stall','race_mill','race_shortcut'))
+        run('props.py');run('props_extras.py');run('adventure.py',('race_barn','race_bridge','race_canyon','race_tunnel','race_stall','race_mill','race_shortcut'))
     elif stage=='courses':run('courses.py')
     elif stage=='signs':run('race_signs.py')
     else:raise ValueError('Unknown generation stage: '+stage)

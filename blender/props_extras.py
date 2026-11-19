@@ -1,7 +1,7 @@
-"""Extra cartoon models for the marketing demo: jump ramp, corn coin, podium, garage showroom,
+"""Cartoon game models: jump ramp, corn coin, podium, garage showroom,
 roof accessories (hats, crown, flower, flag, sunglasses) and cerrado/soy vegetation.
 
-Run: blender -b --factory-startup --python blender/props_demo.py
+Run: blender -b --factory-startup --python blender/props_extras.py
 Exports assets/<name>.glb and blender/models/<name>.blend.
 Accessories: origin at the mounting point (roof top for hats, between the eyes for glasses), forward = +Y.
 """
@@ -272,4 +272,4 @@ if __name__ == '__main__':
         if not selected or fn.__name__ in selected:
             reset()
             fn()
-    print("DEMO PROPS SAVED")
+    print("GAME PROPS SAVED")
