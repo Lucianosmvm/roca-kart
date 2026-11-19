@@ -1,18 +1,21 @@
 // DOM screens for Roça Kart: splash, menu, track select, garage/shop (over the 3D showroom),
 // options, credits, pause, cutscene dialogue and results. The game engine talks to it via `api`.
 import { audio } from './audio.js';
-import { profile, save, CATALOG, buy, owns, resetProfile, paintColor, saveCreation, loadCreation, removeCreation } from './save.js';
+import { profile, save, storageState, CATALOG, buy, owns, resetProfile, paintColor, saveCreation, loadCreation, removeCreation, renameCreation, duplicateCreation, exportCreation, importCreation } from './save.js';
 import { BUILD_DEFAULTS, BUILD_RANGES, cleanBuild, IMPLEMENT_DEFAULTS, cleanImplementBuild } from './customize.js';
 import { TRACKS } from './tracks.js';
 
 const $ = id => document.getElementById(id);
-const SCREENS = ['splash', 'menu', 'tracks', 'garage', 'shop', 'options', 'credits', 'pause', 'results', 'cutscene'];
-const HUD = ['item', 'itemName', 'abil', 'minimap', 'lap', 'time', 'coins', 'pos', 'standings', 'speed', 'msg', 'sub', 'help', 'pauseBtn', 'touch'];
+const SCREENS = ['splash', 'menu', 'tracks', 'garage', 'shop', 'options', 'credits', 'pause', 'results', 'cutscene','guide'];
+const HUD = ['item', 'itemName', 'abil', 'minimap', 'lap', 'time', 'coins', 'pos', 'standings', 'speed', 'msg', 'sub', 'help', 'pauseBtn', 'touch','raceEvent','driftStatus'];
 const fmt = t => { const m = Math.floor(t / 60), s = t % 60; return `${m}:${s.toFixed(2).padStart(5, '0')}`; };
 const stars = n => '★'.repeat(n) + '☆'.repeat(5 - n);
 let api = null;
 let optionsReturn = 'menu';
 let pickedTrack = profile.sel.track;
+let pickedMode='quick',pickedChallenge='drift';
+let closeGuide=null;
+const storageFeedback=()=>storageState.ok?'':'<p class="storageWarning" role="status">Não foi possível salvar neste dispositivo. O progresso está nesta sessão; exporte suas criações antes de fechar.</p>';
 
 function click(el, fn, sound = 'click') {
   el.addEventListener('click', e => { e.stopPropagation(); audio.sfx(sound); fn(e); });
@@ -34,6 +37,32 @@ export const ui = {
     if (name === 'tracks') buildTracks();
   },
   showHUD(on) { for (const id of HUD) $(id).classList.toggle('hidden', !on); if (!on) $('speedlines').style.opacity = 0; },
+  showDrivingGuide(onStart=null) {
+    const previous=SCREENS.find(id=>!$(id).classList.contains('hidden'))??'menu';
+    const focus=document.activeElement;
+    const leave=()=>{closeGuide=null;this.show(previous);if(focus?.isConnected) focus.focus();};
+    closeGuide=leave;
+    $('guide').innerHTML=`<section class="panel drivingGuide" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+      <span class="guideEyebrow">Oficina de pilotagem</span><h2 id="guideTitle">Curva com mini-turbo</h2>
+      <p>Ganhe velocidade, escolha um lado e faça o gesto:</p>
+      <ol class="gestureSteps"><li><span class="gestureKey">◀</span><b>1. Toque</b><small>Aperte a direção.</small></li><li><span class="gestureKey released">◀</span><b>2. Solte</b><small>Solte rapidamente.</small></li><li><span class="gestureKey held">◀</span><b>3. Segure</b><small>Aperte de novo no mesmo lado, em até 0,3 s, e mantenha.</small></li><li><span class="gestureKey turbo">↗</span><b>4. Mini-turbo!</b><small>Espere BOM ou PERFEITO e solte.</small></li></ol>
+      <p class="guideHint">Também funciona para a direita. No teclado, use A/D ou as setas; no celular, os botões ◀ e ▶. Faça o gesto já em movimento.</p>
+      <div class="guideLegend"><span>➜ Placa amarela: curva</span><span>↗ SALTO: rampa adiante</span><span>↗ ATALHO: caminho alternativo</span></div>
+      <p class="guideHint">${IS_TOUCH()?'O veículo acelera sozinho. Toque em ITEM e HAB para usar o que estiver disponível. As manobras no ar são automáticas.':'W/↑ acelera · S/↓ freia · E usa item · Q usa habilidade · ESPAÇO faz manobra no ar · R volta à pista · ESC pausa.'}</p>
+      <div class="backRow"><button class="btn cream" id="guideBack">◀ Voltar</button><button class="btn orange" id="guideDone">${onStart?'Entendi, vamos correr!':'Entendi!'}</button></div>
+    </section>`;
+    this.show('guide');
+    click($('guideBack'),leave,'back');
+    click($('guideDone'),()=>{leave();if(onStart)onStart();});
+    $('guide').onkeydown=e=>{
+      if(e.key!=='Tab') return;
+      const first=$('guideBack'),last=$('guideDone');
+      if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus();}
+      else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
+    };
+    $('guideDone').focus();
+  },
+  closeDrivingGuide(){closeGuide?.();},
   fade(cb) {
     const f = $('fade'); f.classList.add('on');
     setTimeout(() => { try { cb(); } finally { setTimeout(() => f.classList.remove('on'), 60); } }, 360);
@@ -52,7 +81,7 @@ export const ui = {
     addEventListener('keydown', key);
   },
   cutsceneLine(who, text, title) {
-    const img = { Tatu: 'assets/ui/tatu.png', Broto: 'assets/ui/broto.png', Pingo: 'assets/ui/pingo.png' }[who];
+    const img = { Tatu: 'assets/ui/tatu.png', Broto: 'assets/ui/broto.png', Pingo: 'assets/ui/pingo.png',Pipoca:'assets/ui/pipoca.png',Bento:'assets/ui/bento.png' }[who];
     $('cutscene').innerHTML = `
       <div class="letterbox top"></div><div class="letterbox bot"></div>
       <button class="btn small cream skip" id="skipBtn">Pular ▶▶</button>
@@ -64,16 +93,22 @@ export const ui = {
   showResults(d) {
     const medal = ['🥇', '🥈', '🥉'];
     $('results').innerHTML = `<div class="panel">
-      <h2 class="title" style="color:var(--orange);margin:0">${d.myPos === 1 ? 'Campeão da Roça!' : d.myPos <= 3 ? 'No pódio!' : 'Bora de novo!'}</h2>
+      <h2 class="title" style="color:var(--orange);margin:0">${d.mode==='time'?(d.record?'Novo recorde!':'Tempo concluído!'):d.mode==='challenge'?'Desafio finalizado!':d.myPos === 1 ? 'Campeão da Roça!' : d.myPos <= 3 ? 'No pódio!' : 'Bora de novo!'}</h2>
       <div style="font-weight:900;margin-bottom:6px">${d.track.name}${d.record ? ' · 🏅 Novo recorde!' : ''}</div>
+      <div class="eventResultTitle">${escapeHTML(d.eventTitle??'Corrida rápida')}${d.cup?` · etapa ${d.cup.stage}/${d.cup.total}`:''}</div>
       <table class="res">${d.order.map((k, i) => `<tr class="${k.me ? 'me' : ''}"><td><b>${medal[i] ?? (i + 1) + 'º'}</b></td>
         <td><span class="dot" style="background:${k.paint}"></span> ${k.name}</td><td>${k.time}</td></tr>`).join('')}</table>
       <div class="reward">Prêmio do ${d.myPos}º lugar: <span class="gold">+${d.prize} 🌽</span></div>
       <div class="reward">Moedas de milho (${d.coinsGot}): <span class="gold">+${d.coinBonus} 🌽</span></div>
       <div class="reward">Total na carteira: <span class="gold">${d.total} 🌽</span></div>
+      ${storageFeedback()}
+      ${d.cup?`<div class="cupStandings"><b>Pontuação da copa</b>${d.cup.standings.map((row,i)=>`<div class="${row.me?'isPlayer':''}">${i+1}º ${escapeHTML(row.name)} <strong>${row.points} pontos</strong></div>`).join('')}</div>`:''}
+      ${d.earned?.length?`<div class="earnedRewards">${d.earned.map(label=>`<div>🎁 ${escapeHTML(label)}</div>`).join('')}</div>`:''}
+      ${d.challenge?`<p class="challengeResult">${(d.challenge.metric==='drift'?d.metrics.drift+d.metrics.perfect:d.metrics[d.challenge.metric])>=d.challenge.target?'✓ Objetivo alcançado!':'Continue praticando!'} · ${d.challenge.metric==='drift'?d.metrics.drift+d.metrics.perfect:d.metrics[d.challenge.metric]}/${d.challenge.target}</p>`:''}
+      ${d.metrics?`<p class="runStats">Drifts: ${d.metrics.drift+d.metrics.perfect} · Perfeitos: ${d.metrics.perfect} · Saltos: ${d.metrics.jumps} · Atalhos: ${d.metrics.shortcuts}</p>`:''}
       <div class="backRow">
         <button class="btn small" id="rAgain">Correr de novo</button>
-        <button class="btn small orange" id="rNext">Próxima pista ▶</button>
+        <button class="btn small orange" id="rNext">${d.cup?(d.cup.stage<d.cup.total?'Próxima etapa ▶':'Concluir copa 🏆'):'Próxima pista ▶'}</button>
         <button class="btn small cream" id="rGarage">Garagem</button>
         <button class="btn small cream" id="rMenu">Menu</button>
       </div></div>`;
@@ -103,7 +138,7 @@ function buildSplash() {
 // ---------------------------------------------------------------- menu
 function buildMenu() {
   $('menu').innerHTML = `${logo()}
-    <div class="tag">Escolha sua máquina e acelere na roça!</div>
+    <div class="tag">Escolha sua máquina e acelere na roça!</div>${storageFeedback()}
     <div class="menuBtns">
       <button class="btn big orange" id="mPlay">▶ JOGAR</button>
       <button class="btn" id="mGarage">🔧 Garagem</button>
@@ -112,7 +147,7 @@ function buildMenu() {
       <button class="btn cream" id="mCredits">⭐ Créditos</button>
       <button class="btn cream" id="mIntro" style="grid-column: span 2">🎬 Ver abertura</button>
     </div>
-    <div class="stats">Corridas: ${profile.races} · Vitórias: ${profile.wins}</div>`;
+    <div class="stats">Corridas: ${profile.races} · Vitórias: ${profile.wins} · Troféus: ${Object.keys(profile.trophies).length}</div>`;
   click($('mPlay'), () => ui.show('tracks'));
   click($('mGarage'), () => { api.openGarage('menu'); ui.show('garage'); buildGarage('menu'); });
   click($('mShop'), () => { api.openGarage('shop'); ui.show('shop'); buildGarage('shop'); });
@@ -143,46 +178,56 @@ function drawTrack(canvas, t) {
   const [sx, sy] = P(t.ctrl[0]); g.fillStyle = '#fff'; g.fillRect(sx - 6, sy - 3, 12, 6);
 }
 function buildTracks() {
-  $('tracks').innerHTML = `<h2 class="title">Escolha a pista</h2>
-    <div class="cards">${TRACKS.map(t => `
-      <div class="card ${pickedTrack === t.id ? 'sel' : ''}" data-id="${t.id}">
+  const tracks=pickedMode==='cup'?TRACKS.filter(t=>api.CUP.tracks.includes(t.id)):TRACKS;
+  if(pickedMode==='cup') pickedTrack=api.CUP.tracks[0];
+  const records=pickedMode==='time'?profile.timeBest:pickedMode==='challenge'?Object.fromEntries(TRACKS.map(t=>[t.id,profile.challengeBest[t.id+':'+pickedChallenge]])):profile.best;
+  $('tracks').innerHTML = `<h2 class="title">Escolha sua aventura</h2>
+    <div class="raceModes" role="group" aria-label="Modo de corrida">${[['quick','Corrida rápida'],['cup','🏆 Copa'],['time','⏱ Contra o tempo'],['challenge','⭐ Desafios']].map(([id,label])=>`<button class="btn small ${pickedMode===id?'orange':'cream'}" data-race-mode="${id}">${label}</button>`).join('')}</div>
+    <div class="eventDescription panel">${pickedMode==='cup'?`${api.CUP.name}: Milharal → Girassóis → Cerrado. Some pontos nas três corridas e conquiste um troféu! A copa em andamento dura esta sessão; o troféu fica salvo.` : pickedMode==='time'?'Corra sozinho, sem itens nem habilidade, contra o fantasma do seu melhor tempo.':pickedMode==='challenge'?'Escolha uma missão e complete uma volta para ganhar a recompensa.':'Quatro pistas, quatro máquinas e caminhos alternativos para descobrir.'}</div>
+    ${pickedMode==='challenge'?`<div class="challengeChoices">${api.CHALLENGES.map(c=>`<button class="challengeChoice ${pickedChallenge===c.id?'on':''}" data-challenge="${c.id}"><b>${c.name}</b><span>${c.description}</span><small>🎁 ${c.reward}${profile.achievements.includes('challenge:'+c.id)?' · ✓ concluído':''}</small></button>`).join('')}</div>`:''}
+    <div class="cards">${tracks.map(t => `
+      <button type="button" class="card ${pickedTrack === t.id ? 'sel' : ''}" data-id="${t.id}" aria-pressed="${pickedTrack===t.id}" aria-label="${t.name}${pickedTrack===t.id?' selecionada':''}">
         <canvas width="260" height="170"></canvas>
         <b>${t.name}</b><small>${t.subtitle}</small>
         <div class="diff">${'🌽'.repeat(t.difficulty)}${'·'.repeat(3 - t.difficulty)}</div>
-        <div class="best">${profile.best[t.id] ? '🏅 Recorde ' + fmt(profile.best[t.id]) : 'Sem recorde ainda'}</div>
-      </div>`).join('')}</div>
+        <div class="best">${records[t.id] ? '🏅 Recorde ' + fmt(records[t.id]) : 'Sem recorde ainda'}</div>
+      </button>`).join('')}</div>
     <div class="backRow"><button class="btn small cream" id="tBack">◀ Voltar</button>
       <button class="btn orange" id="tNext">Escolher máquina ▶</button></div>`;
   $('tracks').querySelectorAll('.card').forEach(c => {
     drawTrack(c.querySelector('canvas'), TRACKS.find(t => t.id === c.dataset.id));
-    click(c, () => { pickedTrack = c.dataset.id; buildTracks(); });
+    click(c, () => { if(pickedMode!=='cup') pickedTrack = c.dataset.id; buildTracks();$('tracks').querySelector(`[data-id="${pickedTrack}"]`)?.focus(); });
     c.addEventListener('dblclick', () => goGarageForRace());
   });
   click($('tBack'), () => ui.show('menu'), 'back');
   click($('tNext'), () => goGarageForRace());
+  $('tracks').querySelectorAll('[data-race-mode]').forEach(b=>click(b,()=>{pickedMode=b.dataset.raceMode;buildTracks();}));
+  $('tracks').querySelectorAll('[data-challenge]').forEach(b=>click(b,()=>{pickedChallenge=b.dataset.challenge;buildTracks();}));
 }
-function goGarageForRace() { profile.sel.track = pickedTrack; save(); api.openGarage('race'); ui.show('garage'); buildGarage('race'); }
+function goGarageForRace() { profile.sel.track = api.prepareRace(pickedMode,pickedTrack,pickedChallenge); save(); api.openGarage('race'); ui.show('garage'); buildGarage('race'); }
 
 // ---------------------------------------------------------------- garage + shop (shared)
-let gTab = 'build', preview = null, buildTarget = 'machine', buildSection = 'parts', creationNotice = '';
+let gTab = 'build', preview = null, buildTarget = 'machine', buildSection = 'parts', creationNotice = '',garageNotice='';
 let sheetCollapsed = false, garageSaved = true;
-const TAB_NAMES = { machine: 'Máquina', build: '🛠 Montar', creations: 'Minhas criações', impl: 'Implemento', paint: 'Pintura', acc: 'Acessório', horn: 'Buzina' };
-const CAT = { paint: 'paints', acc: 'acc', horn: 'horns' };
+const TAB_NAMES = { machine: 'Máquina', build: '🛠 Montar', creations: 'Minhas criações', impl: 'Implemento', paint: 'Pintura', decal:'Adesivos', acc: 'Acessório', horn: 'Buzina' };
+const CAT = { paint: 'paints', decal:'decals', acc: 'acc', horn: 'horns' };
 function itemsFor(tab) {
   const { CHARACTERS, IMPLEMENTS, ABILITIES } = api;
-  if (tab === 'machine') return Object.entries(CHARACTERS).map(([id, c]) => ({ id, name: c.name, sub: c.machine, img: c.img, owned: true }));
+  if (tab === 'machine') return Object.entries(CHARACTERS).map(([id, c]) => ({ id, name: c.name, sub: c.machine+' · '+(c.personality??(id==='tatu'?'Equilibrado e parceiro de todas as corridas.':'Rápido nas retas, brincalhão com a água.')), img: c.img, owned: true }));
   if (tab === 'impl') return Object.entries(IMPLEMENTS).map(([id, m]) => ({ id, name: m.name, sub: ABILITIES[m.ability].icon + ' ' + ABILITIES[m.ability].name, img: m.img, owned: true }));
-  return CATALOG[CAT[tab]].map(i => ({ id: i.id, name: i.name, sw: i.color, ic: i.icon, price: i.price, owned: owns(CAT[tab], i.id) }));
+  return CATALOG[CAT[tab]].map(i => ({ id: i.id, name: i.name, sw: i.color, ic: i.icon, price: i.price, unlock:i.unlock, sub:i.unlock?({drift:'5 mini-turbos numa corrida',jumps:'3 manobras em saltos',corn:'20 moedas numa corrida',cup:'Pódio na Copa da Colheita'})[i.unlock]:null, owned: owns(CAT[tab], i.id) }));
 }
 const selKey = tab => ({ machine: 'char', impl: 'impl', paint: 'paint', acc: 'acc', horn: 'horn' }[tab]);
 function buildGarage(mode) {
   const shop = mode === 'shop', root = $(shop ? 'shop' : 'garage');
+  garageSaved=storageState.ok;
   $(shop ? 'garage' : 'shop').replaceChildren();
   root.classList.toggle('sheetCollapsed', sheetCollapsed);
-  const tabs = shop ? ['paint', 'acc', 'horn'] : ['machine', 'build', 'creations', 'impl', 'paint', 'acc', 'horn'];
+  const tabs = shop ? ['paint','decal', 'acc', 'horn'] : ['machine', 'build', 'creations', 'impl', 'paint','decal', 'acc', 'horn'];
   if (!tabs.includes(gTab)) gTab = tabs[0];
   const { CHARACTERS, IMPLEMENTS, ABILITIES } = api;
   const sel = { ...profile.sel, ...(preview ?? {}) };
+  sel.decal=cleanBuild(profile.builds[sel.char]).decal;
   const ch = CHARACTERS[sel.char], tows = ch.tows;
   const canBuildBroto = tows && sel.impl === 'broto';
   if (!canBuildBroto) buildTarget = 'machine';
@@ -193,7 +238,8 @@ function buildGarage(mode) {
   let buyBox = '';
   if (pv) {
     const [k, id] = pv, tab = Object.keys(TAB_NAMES).find(t => selKey(t) === k), item = CATALOG[CAT[tab]]?.find(i => i.id === id);
-    if (item && !owns(CAT[tab], id)) buyBox = `<div><b>${item.name}</b> · <span style="color:#b06a00;font-family:'Lilita One'">🌽 ${item.price}</span><br>
+    if(item?.unlock && !owns(CAT[tab],id)) buyBox=`<div>⭐ ${item.name}: conquiste a recompensa nas copas ou desafios.</div>`;
+    else if (item && !owns(CAT[tab], id)) buyBox = `<div><b>${item.name}</b> · <span style="color:#b06a00;font-family:'Lilita One'">🌽 ${item.price}</span><br>
       <button class="btn small orange" id="gBuy" ${profile.coins < item.price ? 'disabled style="opacity:.5"' : ''}>Comprar</button>
       ${profile.coins < item.price ? '<small> Faltam ' + (item.price - profile.coins) + ' 🌽 — corra para ganhar!</small>' : ''}</div>`;
   }
@@ -220,25 +266,26 @@ function buildGarage(mode) {
         ${canBuildBroto ? '' : '<small>Para montar o Broto, escolha Tatu e engate a plantadeira em Máquina e acessórios.</small>'}
       </div><div class="editorSections" role="group" aria-label="Etapas da montagem">${[['parts','Peças'],['proportions','Proporções'],['colors','Cores']].filter(([key]) => buildTarget !== 'broto' || key !== 'proportions').map(([key,label]) => `<button class="tab ${buildSection === key ? 'on' : ''}" data-section="${key}" aria-pressed="${buildSection === key}">${label}</button>`).join('')}</div>
       ${buildTarget === 'broto' ? buildImplementEditor() : buildEditor(sel.char)}` : gTab === 'creations' ? buildCreations() : `<div class="items">${itemsFor(gTab).map(i => `
-        <div class="it ${sel[selKey(gTab)] === i.id ? 'sel' : ''} ${i.owned ? '' : 'locked'}" data-id="${i.id}">
+        <button type="button" class="it ${(gTab==='decal'?sel.decal:sel[selKey(gTab)]) === i.id ? 'sel' : ''} ${i.owned ? '' : 'locked'}" data-id="${i.id}" aria-pressed="${(gTab==='decal'?sel.decal:sel[selKey(gTab)])===i.id}" aria-label="${i.name}${i.owned?'':i.unlock?' — recompensa de conquista':' — prévia, custa '+i.price+' moedas'}">
           ${i.img ? `<img src="${i.img}" alt="">` : i.sw ? `<div class="sw" style="background:${i.sw}"></div>` : `<div class="ic">${i.ic}</div>`}
           <div>${i.name}</div>${i.sub ? `<small>${i.sub}</small>` : ''}
-          ${i.owned ? (sel[selKey(gTab)] === i.id ? '<small>✔ equipado</small>' : '<small>tenho</small>') : `<div class="price">🌽 ${i.price}</div>`}
-        </div>`).join('')}</div>`}
+          ${i.owned ? ((gTab==='decal'?sel.decal:sel[selKey(gTab)]) === i.id ? '<small>✔ equipado</small>' : '<small>tenho</small>') : `<div class="price">${i.unlock?'⭐ Conquista':'🌽 '+i.price}</div>`}
+        </button>`).join('')}</div>`}
       <details class="gAttributes"><summary>Atributos e habilidade <span aria-hidden="true">›</span></summary><div class="gInfo">
         <div><b style="font-family:'Lilita One';font-size:22px">${ch.name}${im && sel.impl !== 'none' ? ' + ' + im.name : ''}</b><br>
           <span class="abilTag">${ab.icon} ${ab.name}</span> ${im ? `<small>${im.perk}</small>` : ''}</div>
         <div class="statsBox">${Object.entries(ch.stats).map(([k, v]) => `<span>${k}</span><em>${stars(v)}</em>`).join('')}</div>
       </div></details>
-      ${buyBox ? `<div class="gBuyBox">${buyBox}</div>` : ''}
+      ${buyBox ? `<div class="gBuyBox">${buyBox}<button class="btn small cream" id="gCancelPreview">Descartar prévia</button></div>` : ''}
+      <p class="garageNotice" role="status">${escapeHTML(gTab==='creations'?'':garageNotice)}</p>
       </div>
     </aside>
-    <footer class="gFooter"><span class="gSaveStatus" role="status">${preview ? 'Prévia · item não equipado' : garageSaved ? '✓ Salvo automaticamente' : 'Guardado nesta sessão'}</span>
+    <footer class="gFooter"><span class="gSaveStatus ${garageSaved?'':'saveFailed'}" role="status">${!garageSaved?'⚠ Não salvo no dispositivo · exporte suas criações':preview?'Prévia · item não equipado':'✓ Salvo automaticamente'}</span>
       <button class="btn cream" id="gSaveCreation" ${preview ? 'disabled' : ''}>▣ <span>Salvar criação</span></button>
       <button class="btn" id="gGo">CORRER ▶</button>
     </footer>`;
   click($('gBack'), () => { preview = null; api.leaveGarage(mode === 'race' ? 'tracks' : 'menu'); }, 'back');
-  root.querySelectorAll('.tabs [data-t]').forEach(b => click(b, () => { if (b.disabled) return; gTab = b.dataset.t; preview = null; api.refreshShowroom(); buildGarage(mode); }));
+  root.querySelectorAll('.tabs [data-t]').forEach(b => click(b, () => { if (b.disabled) return; gTab = b.dataset.t; preview = null; garageNotice='';api.refreshShowroom(); buildGarage(mode);root.querySelector(`[data-t="${gTab}"]`)?.focus(); }));
   root.querySelectorAll('[data-page]').forEach(button => click(button, () => {
     gTab = button.dataset.page; preview = null; sheetCollapsed = false;
     if (shop) { api.openGarage('menu'); ui.show('garage'); }
@@ -259,6 +306,11 @@ function buildGarage(mode) {
   });
   root.querySelectorAll('.it').forEach(el => click(el, () => {
     const id = el.dataset.id, k = selKey(gTab);
+    garageNotice='';
+    if(gTab==='decal') {
+      if(!owns('decals',id)){garageNotice=itemsFor('decal').find(i=>i.id===id)?.sub??'Conquiste este adesivo nas copas e nos desafios!';audio.sfx('deny');buildGarage(mode);root.querySelector(`[data-id="${id}"]`)?.focus();return;}
+      profile.builds[sel.char]={...cleanBuild(profile.builds[sel.char]),decal:id};saveGarage();api.refreshShowroom();buildGarage(mode);root.querySelector(`[data-id="${id}"]`)?.focus();return;
+    }
     if (gTab === 'horn') audio.horn(id);
     const cat = CAT[gTab];
     if (!cat || owns(cat, id)) {
@@ -269,7 +321,10 @@ function buildGarage(mode) {
     else preview = { [k]: id };
     api.refreshShowroom(preview ?? undefined);
     buildGarage(mode);
+    root.querySelector(`[data-id="${id}"]`)?.focus();
   }));
+  const cancelPreview=$('gCancelPreview');
+  if(cancelPreview) click(cancelPreview,()=>{preview=null;garageNotice='Prévia descartada. Sua montagem equipada foi mantida.';api.refreshShowroom();buildGarage(mode);},'back');
   const b = $('gBuy');
   if (b) click(b, () => {
     const [k, id] = Object.entries(preview)[0], tab = Object.keys(TAB_NAMES).find(t => selKey(t) === k);
@@ -278,10 +333,10 @@ function buildGarage(mode) {
       if (k === 'paint' && profile.builds[sel.char]) profile.builds[sel.char].bodyColor = null;
       saveGarage(); preview = null; api.refreshShowroom(); updateWallet(); buildGarage(mode);
     }
-    else audio.sfx('deny');
+    else {audio.sfx('deny');garageNotice='Compra não concluída. Confira o saldo e as condições de desbloqueio.';buildGarage(mode);}
   }, 'click');
   const go = $('gGo');
-  if (go) click(go, () => { preview = null; api.startRace(profile.sel.track); });
+  if (go) click(go, () => { if(preview) {garageNotice='Essa prévia não foi comprada. Escolha um item equipado ou compre antes de correr.';buildGarage(mode);return;} api.startRace(profile.sel.track); });
   if (gTab === 'build') {
     root.querySelectorAll('[data-section]').forEach(button => click(button, () => {
       buildSection = button.dataset.section; buildGarage(mode);
@@ -298,7 +353,7 @@ function buildGarage(mode) {
 
 function saveGarage() {
   garageSaved = save();
-  document.querySelectorAll('.gSaveStatus').forEach(el => { el.textContent = garageSaved ? '✓ Salvo automaticamente' : 'Guardado nesta sessão'; });
+  document.querySelectorAll('.gSaveStatus').forEach(el => { el.classList.toggle('saveFailed',!garageSaved);el.textContent = garageSaved ? '✓ Salvo automaticamente' : '⚠ Não salvo no dispositivo · exporte suas criações'; });
 }
 
 // Small vector drawings show each part's silhouette before it is fitted to the machine.
@@ -355,12 +410,12 @@ function buildEditor(char) {
   ] : [];
   const sliders = [
     ['frontSize','Rodas dianteiras'], ['rearSize','Rodas traseiras'], ['tireWidth','Largura dos pneus'], ['stance','Distância entre rodas'],
-    ...(char === 'tatu' ? [['hoodWidth','Largura do capô'],['hoodHeight','Altura do capô']] : [['tankSize','Tamanho do tanque'],['armSize','Braços de irrigação']]),
+    ...(char === 'tatu' ? [['hoodWidth','Largura do capô'],['hoodHeight','Altura do capô']] : char==='pingo'?[['tankSize','Tamanho do tanque'],['armSize','Braços de irrigação']]:[]),
   ];
   return `<div class="buildIntro">${buildSection === 'parts' ? 'Escolha pelo desenho e monte do seu jeito.' : buildSection === 'proportions' ? 'Ajuste os tamanhos da sua máquina.' : 'Escolha as cores da sua montagem.'}</div>
     ${buildSection === 'parts' ? choices.length ? `<div class="partGroups">${choices.map(([key,label,options]) => `<fieldset class="partGroup"><legend>${label}</legend><div class="partOptions">${options.map(([v,text]) => `
       <label class="partOption"><input type="radio" name="build-${key}" data-build="${key}" value="${v}" ${b[key] === v ? 'checked' : ''}>
-      <span class="partCard">${partDrawing(key,v)}<span class="partLabel">${text}</span><span class="partSelected">✓ Selecionado</span></span></label>`).join('')}</div></fieldset>`).join('')}</div>` : '<div class="gEditorTip">💧 O Pingo tem tanque e braços ajustáveis. Personalize os tamanhos em <b>Proporções</b> ou escolha uma nova combinação em <b>Cores</b>.</div>' : ''}
+      <span class="partCard">${partDrawing(key,v)}<span class="partLabel">${text}</span><span class="partSelected">✓ Selecionado</span></span></label>`).join('')}</div></fieldset>`).join('')}</div>` : `<div class="gEditorTip">${char==='pingo'?'💧 Ajuste o tanque e os braços em Proporções.':'🚜 Ajuste as rodas em Proporções.'} Escolha cores e adesivos em Máquina e acessórios para dar sua cara ao veículo.</div>` : ''}
     ${buildSection === 'proportions' ? `<div class="buildGrid">
     ${sliders.map(([key,label]) => `<label>${label} <output data-value="${key}">${Math.round(b[key]*100)}%</output><input aria-label="${label}" data-build="${key}" type="range" min="${BUILD_RANGES[key][0]}" max="${BUILD_RANGES[key][1]}" step=".01" value="${b[key]}"></label>`).join('')}
     </div>` : ''}
@@ -412,24 +467,33 @@ function buildCreations() {
   return `<form id="creationForm" class="creationForm">
       <label for="creationName">Salvar a montagem atual<input id="creationName" name="name" type="text" maxlength="40" required placeholder="Ex.: Tatu da Colheita" autocomplete="off"></label>
       <button class="btn small" type="submit">＋ Salvar criação</button>
-    </form><p class="creationNotice" role="status">${escapeHTML(creationNotice || 'Guarde a máquina, as peças, as cores e o Broto em uma combinação com nome.')}</p>
+    </form><label class="btn small cream creationImport" for="creationFile">↥ Importar criação</label><input id="creationFile" class="hidden" type="file" accept=".json,application/json">
+    <p class="creationNotice" role="status">${escapeHTML(creationNotice || 'Guarde a montagem, duplique variações e compartilhe arquivos com amigos.')}</p>${storageFeedback()}
     <div class="creationList">${profile.creations.length ? profile.creations.map(c => {
       const ch = api.CHARACTERS[c.sel.char];
       const hasBroto = ch.tows && c.sel.impl === 'broto';
       const b = cleanImplementBuild(c.implBuild);
-      return `<article class="creationCard"><img src="${ch.img}" alt="${ch.name}"><div class="creationDetails">
-        <b>${escapeHTML(c.name)}</b><small>${ch.name}${hasBroto ? ' + Broto' : ''}</small>
+      return `<article class="creationCard"><img class="${c.thumbnail?'creationThumbnail':''}" src="${c.thumbnail??ch.img}" alt="Montagem de ${ch.name}"><div class="creationDetails">
+        <label class="creationNameLabel">Nome<input data-rename-creation="${escapeHTML(c.id)}" maxlength="40" value="${escapeHTML(c.name)}" aria-label="Renomear criação"></label><small>${ch.name}${hasBroto ? ' + Broto' : ''}</small>
         ${hasBroto ? `<div class="creationParts">${partDrawing('hopper',b.hopper)}${partDrawing('wheels',b.wheels)}</div>` : ''}
         <div class="creationButtons"><button class="btn small" data-load-creation="${escapeHTML(c.id)}">Usar</button>
+        <button class="btn small cream" data-duplicate-creation="${escapeHTML(c.id)}">Duplicar</button>
+        <button class="btn small cream" data-export-creation="${escapeHTML(c.id)}">Exportar</button>
         <button class="btn small cream" data-remove-creation="${escapeHTML(c.id)}" aria-label="Excluir ${escapeHTML(c.name)}">Excluir</button></div>
       </div></article>`;
     }).join('') : '<p class="creationEmpty">Sua primeira criação começa na aba Montar. Depois, dê um nome e salve aqui!</p>'}</div>`;
 }
 function bindCreations(root, mode) {
-  $('creationForm').addEventListener('submit', e => {
+  $('creationForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const result = saveCreation($('creationName').value);
+    const form=e.currentTarget,name=$('creationName').value;
+    if(!name.trim()) {root.querySelector('.creationNotice').textContent='Digite um nome para sua criação.';return;}
+    form.querySelector('button').disabled=true;
+    const thumbnail=await api.captureCreationPreview();
+    if(!form.isConnected) return;
+    const result = saveCreation(name,thumbnail);
     if (!result) {
+      form.querySelector('button').disabled=false;
       root.querySelector('.creationNotice').textContent = 'Digite um nome para sua criação.';
       $('creationName').focus(); return;
     }
@@ -438,39 +502,63 @@ function bindCreations(root, mode) {
     audio.sfx('click'); buildGarage(mode);
   });
   root.querySelectorAll('[data-load-creation]').forEach(button => click(button, () => {
-    if (!loadCreation(button.dataset.loadCreation)) return;
+    if (!loadCreation(button.dataset.loadCreation)) {root.querySelector('.creationNotice').textContent='Criação não encontrada. Escolha outra montagem.';audio.sfx('deny');return;}
     preview = null; buildTarget = 'machine';
-    creationNotice = 'Criação aplicada! Você pode correr ou continuar montando.';
+    creationNotice = storageState.ok?'Criação aplicada! Você pode correr ou continuar montando.':'Montagem aplicada nesta sessão. Exporte a criação antes de fechar.';
     api.refreshShowroom(); buildGarage(mode);
   }));
   root.querySelectorAll('[data-remove-creation]').forEach(button => click(button, () => {
     removeCreation(button.dataset.removeCreation);
-    creationNotice = 'Criação excluída da coleção. A montagem equipada foi mantida.';
+    creationNotice = storageState.ok?'Criação excluída da coleção. A montagem equipada foi mantida.':'Excluída nesta sessão, mas não foi possível gravar a alteração no dispositivo.';
     buildGarage(mode);
   }));
+  root.querySelectorAll('[data-rename-creation]').forEach(input=>input.addEventListener('change',()=>{
+    if(renameCreation(input.dataset.renameCreation,input.value)) {creationNotice=storageState.ok?'Nome atualizado.':'Nome atualizado somente nesta sessão. Exporte a criação antes de fechar.';root.querySelector('.creationNotice').textContent=creationNotice;}
+    else {input.value=profile.creations.find(c=>c.id===input.dataset.renameCreation)?.name??'';root.querySelector('.creationNotice').textContent='O nome não pode ficar vazio. O nome anterior foi mantido.';}
+  }));
+  root.querySelectorAll('[data-duplicate-creation]').forEach(button=>click(button,()=>{duplicateCreation(button.dataset.duplicateCreation);creationNotice=storageState.ok?'Cópia criada! Edite o nome para organizar suas variações.':'Cópia criada somente nesta sessão. Exporte antes de fechar.';buildGarage(mode);}));
+  root.querySelectorAll('[data-export-creation]').forEach(button=>click(button,()=>{
+    try {
+    const text=exportCreation(button.dataset.exportCreation);if(!text)return;
+    const c=profile.creations.find(c=>c.id===button.dataset.exportCreation);
+    const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));
+    const link=document.createElement('a');link.href=url;link.download=(c.name.replace(/[^a-z\d_-]/gi,'_')||'criacao')+'.roca.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    root.querySelector('.creationNotice').textContent='Arquivo preparado para download. Guarde-o para importar a montagem depois.';
+    } catch {root.querySelector('.creationNotice').textContent='Não foi possível preparar o arquivo. Tente exportar novamente.';audio.sfx('deny');}
+  }));
+  $('creationFile').addEventListener('change',async e=>{
+    const file=e.target.files?.[0];if(!file)return;
+    try {if(file.size>250000)throw Error('Arquivo muito grande.');const result=importCreation(await file.text());creationNotice=result.persisted?'Criação importada! Clique em Usar para equipar.':'Importada nesta sessão; o navegador não permitiu salvar.';}
+    catch(error){creationNotice='Não foi possível importar: '+error.message;}
+    if(root.isConnected)buildGarage(mode);
+  });
 }
 
 // ---------------------------------------------------------------- options / credits / pause
 function buildOptions() {
   const o = profile.opts;
   $('options').innerHTML = `<h2 class="title">Opções</h2><div class="panel" style="width:min(520px,94vw)">
-    <div class="optRow">🎵 Música <input type="range" min="0" max="1" step="0.05" id="oMusic" value="${o.music}"></div>
-    <div class="optRow">🔊 Efeitos <input type="range" min="0" max="1" step="0.05" id="oSfx" value="${o.sfx}"></div>
-    <div class="optRow">🚜 Acelerar sozinho <input type="checkbox" id="oGas" ${o.autoGas ? 'checked' : ''}></div>
-    <div class="optRow">🧭 Direção assistida (crianças) <input type="checkbox" id="oAssist" ${o.assist ? 'checked' : ''}></div>
-    <div class="optRow">🖥️ Qualidade gráfica <select id="oQual"><option value="alta">Alta</option><option value="baixa">Baixa (celular simples)</option></select></div>
-    <div class="keys keysOnly"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> dirigir · <kbd>ESPAÇO</kbd> drift (e manobra no ar) · <kbd>E</kbd> item ·
+    <label class="optRow">🎵 Música <input type="range" min="0" max="1" step="0.05" id="oMusic" value="${o.music}"></label>
+    <label class="optRow">🔊 Efeitos <input type="range" min="0" max="1" step="0.05" id="oSfx" value="${o.sfx}"></label>
+    <label class="optRow">🚜 Acelerar sozinho <input type="checkbox" id="oGas" ${o.autoGas ? 'checked' : ''}></label>
+    <label class="optRow">🧭 Direção assistida <input type="checkbox" id="oAssist" ${o.assist ? 'checked' : ''}></label>
+    <label class="optRow">🖥️ Qualidade gráfica <select id="oQual"><option value="alta">Alta</option><option value="baixa">Baixa</option></select></label>
+    <div class="keys keysOnly"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> dirigir · 2 toques rápidos no mesmo lado e mantenha o segundo para drift · <kbd>ESPAÇO</kbd> manobra no ar · <kbd>E</kbd> item ·
       <kbd>Q</kbd> habilidade · <kbd>H</kbd> buzina · <kbd>C</kbd> câmera · <kbd>R</kbd> volta pra pista · <kbd>ESC</kbd> pausa</div>
-    <div class="backRow"><button class="btn small cream" id="oBack">◀ Voltar</button><button class="btn small" id="oReset" style="background:#C8372D">Apagar progresso</button></div>
+    <p class="gestureHelp">📱 Drift: toque duas vezes rapidamente em ◀ ou ▶ e mantenha o segundo toque. Solte para liberar o turbo. As manobras nos saltos são automáticas no celular.</p>
+    <div id="oSaveStatus" role="status">${storageFeedback()}</div>
+    <div class="backRow"><button class="btn small cream" id="oBack">◀ Voltar</button><button class="btn small cream" id="oGuide">Como pilotar</button><button class="btn small" id="oReset" style="background:#C8372D">Apagar progresso</button></div>
   </div>`;
   $('oQual').value = o.quality;
-  const apply = () => { save(); api.applyOptions(); };
+  const apply = () => { save(); api.applyOptions();$('oSaveStatus').innerHTML=storageState.ok?'✓ Preferências salvas.':storageFeedback(); };
   $('oMusic').oninput = e => { o.music = +e.target.value; apply(); };
-  $('oSfx').oninput = e => { o.sfx = +e.target.value; apply(); audio.sfx('coin'); };
+  $('oSfx').oninput = e => { o.sfx = +e.target.value; apply(); };
+  $('oSfx').onchange=()=>audio.sfx('driftGood');
   $('oGas').onchange = e => { o.autoGas = e.target.checked; apply(); };
   $('oAssist').onchange = e => { o.assist = e.target.checked; apply(); };
   $('oQual').onchange = e => { o.quality = e.target.value; apply(); };
   click($('oBack'), () => ui.show(optionsReturn), 'back');
+  click($('oGuide'),()=>ui.showDrivingGuide());
   let armed = false;
   click($('oReset'), () => {
     if (!armed) { armed = true; $('oReset').textContent = 'Tem certeza? Toque de novo'; return; }
@@ -480,7 +568,7 @@ function buildOptions() {
 function buildCredits() {
   $('credits').innerHTML = `<h2 class="title">Créditos</h2><div class="panel credits" style="width:min(560px,94vw)">
     <p style="font-family:'Lilita One';font-size:28px;color:var(--orange)">Roça Kart · demo jogável</p>
-    <p>Tatu, Pingo e Broto: máquinas inventadas na Oficina da Roça.</p>
+    <p>Tatu, Pingo, Pipoca, Bento e Broto: máquinas inventadas na Oficina da Roça.</p>
     <p>Modelos 3D originais construídos com formas geométricas no Blender.</p>
     <p>Jogo em Three.js · música e efeitos sonoros sintetizados ao vivo (baião com zabumba, triângulo e sanfona).</p>
     <p>Monte sua máquina, escolha suas cores e dispute o campeonato da roça!</p>
@@ -492,9 +580,11 @@ function buildPause() {
     <button class="btn orange" id="pResume">▶ Continuar</button>
     <button class="btn" id="pRestart">↻ Reiniciar corrida</button>
     <button class="btn cream" id="pOptions">⚙️ Opções</button>
-    <button class="btn cream" id="pQuit">🏠 Sair para o menu</button></div>`;
+    <button class="btn cream" id="pGuide">Como pilotar</button>
+    <button class="btn cream" id="pQuit">🏠 Sair para o menu</button><p class="pauseHint">Sair encerra a corrida e a copa em andamento. Troféus já conquistados permanecem salvos.</p></div>`;
   click($('pResume'), () => api.togglePause(false));
   click($('pRestart'), () => { api.togglePause(false); api.restart(); });
   click($('pOptions'), () => { optionsReturn = 'pause'; buildOptions(); ui.show('options'); });
+  click($('pGuide'),()=>ui.showDrivingGuide());
   click($('pQuit'), () => { api.togglePause(false); api.toMenu(); }, 'back');
 }

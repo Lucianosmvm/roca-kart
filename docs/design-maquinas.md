@@ -9,7 +9,9 @@ Geometria original construída com primitivas, sem importar modelos de engenhari
 |---|---|---|
 | Tatu | Capô em casco, cabine aberta, toldo creme e rodas traseiras enormes | Trator que puxa o Broto; sozinho tem Arrancada Turbo |
 | Pingo | Buggy com tanque em gota, quatro rodas iguais e braços curtos | Chuva de Pingo, jatos laterais |
-| Broto | Plantadeira rebocada com três reservatórios em forma de sementes | Plantio Relâmpago, fileira de girassóis |
+| Pipoca | Mini colheitadeira compacta, coletor exagerado e formas arredondadas | Ágil, boa arrancada e Arrancada Turbo |
+| Bento | Caminhão graneleiro curto, cabine gordinha e caçamba com milho | Pesado e estável, com Arrancada Turbo |
+| Broto | Plantadeira rebocada com três reservatórios em forma de sementes | Plantio Relâmpago, um girassol por uso |
 
 Azul Oficina `#216C79`, creme `#FFF0CF`, coral `#E87578`, palha `#E9C46A`.
 Contornos em azul escuro. Vegetação mantém suas cores naturais.
@@ -50,7 +52,7 @@ As coordenadas são relativas ao engate do Broto, com eixos de rodas independent
 o prompt está em `docs/art/oficina-prompt.txt`. Os retratos no jogo vêm das malhas reais.
 
 Rodas têm origem no eixo e rotação neutra para animação. O Broto tem origem no engate.
-O jogo carrega exclusivamente tatu.glb, pingo.glb e broto.glb para as máquinas.
+O jogo carrega tatu.glb, pingo.glb, pipoca.glb, bento.glb e broto.glb para as máquinas.
 Os arquivos anteriores permanecem como histórico e não são utilizados pelo jogo atual.
 
 ## Validação anterior à personalização do Broto
@@ -98,3 +100,9 @@ As regras de posição e tamanho respondem à largura/altura da tela e mantêm o
 Os retratos da classificação só são reconstruídos quando a ordem ou os participantes mudam.
 
 Não foram executados testes, verificações de sintaxe ou validação no navegador para esta alteração, conforme instrução do usuário. Não há novos modelos 3D nesta etapa.
+
+## Expansão de corridas e drift por gesto
+
+A implementação posterior com quatro circuitos elevados, atalhos, Pipoca, Bento, copas, desafios, fantasma pessoal, adesivos e coleção compartilhável está descrita em `docs/expansao-corridas.md`.
+O drift foi alterado para dois toques rápidos no mesmo lado, sustentando o segundo toque; não usa mais Space no chão nem botão separado no celular.
+Esta expansão também permanece sem testes executados, por orientação do usuário. Os novos modelos e circuitos foram efetivamente gerados e salvos em `.blend` e `.glb`.

@@ -9,7 +9,8 @@ process.chdir(path.resolve(__dirname, '..'));
   const T = await import(threeURL);
   const { GLTFLoader } = await import(pathToFileURL(path.join(libs, 'roca-GLTFLoader.mjs')).href);
   const source = fs.readFileSync('js/customize.js', 'utf8').replace("from 'three'", 'from ' + JSON.stringify(threeURL));
-  const { applyBuild, cleanBuild, applyImplementBuild, cleanImplementBuild } = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
+  const customizeURL='data:text/javascript;base64,' + Buffer.from(source).toString('base64');
+  const { applyBuild, cleanBuild, applyImplementBuild, cleanImplementBuild } = await import(customizeURL);
   const scenes = {};
   for (const name of ['tatu', 'pingo', 'broto', 'broto_hoppers_seed', 'broto_hoppers_barrel', 'broto_hoppers_crate', 'broto_wheels_small', 'broto_wheels_wide', 'broto_wheels_double']) {
     const b = fs.readFileSync('assets/' + name + '.glb');
@@ -73,7 +74,7 @@ process.chdir(path.resolve(__dirname, '..'));
   let saved = JSON.stringify({ coins: 777, owned: { paints: ['laranja', 'roxo'], acc: ['none', 'cap'], horns: ['classica'] },
     sel: { char: 'imperador', impl: 'absoluta', paint: 'laranja' }, best: { milharal: 99 }, builds: { tatu: { hood: 'box', frontSize: 1.2 } } });
   global.localStorage = { getItem: k => k === 'rocaKart.save.v1' ? saved : null, setItem: (k, v) => saved = v };
-  const saveSource = fs.readFileSync('js/save.js', 'utf8');
+  const saveSource = fs.readFileSync('js/save.js', 'utf8').replace("from './customize.js'",'from '+JSON.stringify(customizeURL));
   const mod = await import('data:text/javascript;base64,' + Buffer.from(saveSource).toString('base64'));
   assert.equal(mod.profile.sel.char, 'pingo'); assert.equal(mod.profile.sel.impl, 'broto');
   assert.equal(mod.profile.sel.paint, 'petroleo'); assert.equal(mod.profile.coins, 777);

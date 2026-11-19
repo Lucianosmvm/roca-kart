@@ -73,12 +73,17 @@ def finish(parts, extra, name, target, dist):
     # Export editable assemblies independently, retaining their transforms.
     categories = {'Hood': ['ShellHood','ShellRib'], 'Roof': ['SunCanopy','CanopyPost'],
                   'Bumper': ['CoralBumper','BumperBolt'], 'Tank': ['WaterDrop','TankStrap'],
-                  'Hoppers': ['SeedHopper','SeedTip','HopperBand','BandBolt']}
+                  'Hoppers': ['SeedHopper','SeedTip','HopperBand','BandBolt'],
+                  'Eyes': ['EyeRim','EyeWhite','Pupil','EyeShine']}
     assemblies=[]
     for label,prefixes in categories.items():
         selected=[o for o in parts if any(o.name.startswith(s) for s in prefixes)]
         if selected:
-            assemblies.append(join(selected,label))
+            assembly=join(selected,label)
+            if label=='Eyes':
+                bpy.context.view_layer.objects.active=assembly
+                bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY',center='BOUNDS')
+            assemblies.append(assembly)
             parts=[o for o in parts if o not in selected]
     body=join(parts,'Body')
     objects=[body]+assemblies+extra

@@ -3,6 +3,12 @@
 Corrida arcade 3D cartoon com máquinas inventadas numa oficina rural brasileira.
 Feito com Three.js para PC e celular.
 
+O foco da primeira versão comercial é **Windows, para um jogador, com compra única**. O conteúdo está fechado em quatro máquinas, quatro pistas e os quatro modos existentes; a prioridade agora é acabamento. Veja o [escopo da versão 1.0 e a ordem de trabalho](docs/escopo-v1.md). O aplicativo offline e o suporte a controle ainda estão pendentes.
+
+A primeira passagem de [acabamento da pilotagem](docs/acabamento-pilotagem.md) trata controles, drift, saltos, atalhos, progresso, colisões e câmera. As alterações não foram testadas; a avaliação jogável continua pendente.
+
+O [acabamento de apresentação](docs/acabamento-apresentacao.md) acrescenta placas de curva/salto/atalho, marcadores de borda, estados mais claros no HUD, ajuda antes da primeira corrida e avisos de salvamento. A ajuda pode ser reaberta em **Opções → Como pilotar** ou pela pausa. Os novos modelos de sinalização estão salvos em `.blend` e `.glb`, com gerador em `blender/race_signs.py`. Esta etapa também não foi testada.
+
 ## Jogar
 
 Dê dois cliques em `Jogar.bat`, ou execute `python -m http.server 8765` e abra http://localhost:8765.
@@ -10,7 +16,7 @@ Jogo publicado em https://lucianosmvm.github.io/roca-kart/ — o GitHub Pages at
 
 ## Monte sua máquina
 
-Entre em **Garagem → 🛠 Montar**. Escolha Tatu ou Pingo na aba Máquina.
+Entre em **Garagem → Montar**. Escolha Tatu, Pingo, Pipoca ou Bento em Máquina e acessórios.
 
 A oficina segue o layout aprovado: prévia 3D à esquerda e editor lateral no PC; no celular, a máquina fica acima de um painel inferior recolhível. **Salvar criação** e **Correr** ficam sempre visíveis.
 Use **Máquina e acessórios** para escolher máquina, implemento, pintura, acessórios e buzina.
@@ -19,11 +25,14 @@ Os atributos e a habilidade ficam numa área recolhível. A câmera usa apenas o
 
 - **Tatu:** troque capô, cabine e para-choque; ajuste altura e largura do capô.
 - **Pingo:** ajuste tanque em gota e braços de irrigação.
-- **Ambos:** ajuste rodas dianteiras/traseiras, largura dos pneus, distância lateral entre rodas e três cores livres.
+- **Pipoca:** mini colheitadeira ágil, com ajustes de rodas, cores e adesivos.
+- **Bento:** caminhão graneleiro estável, com ajustes de rodas, cores e adesivos.
+- **Todas as máquinas:** ajuste rodas dianteiras/traseiras, largura dos pneus, distância lateral entre rodas e três cores livres.
 - Gire a prévia arrastando o modelo. Alterações são salvas automaticamente por máquina e aparecem na corrida.
 - **Restaurar montagem** repõe o visual da máquina selecionada sem apagar o progresso.
 - **Broto:** com Tatu e Broto engatado, entre em **Montar → Broto**. Escolha reservatórios de sementes, barris ou caixotes e rodas pequenas, largas ou duplas. As quatro cores do implemento são independentes do trator.
 - **Minhas criações:** dê um nome à montagem atual para guardar máquina, peças, cores, implemento, acessório e buzina. Use **Usar** para reaplicar uma combinação. Excluir uma criação da coleção mantém a montagem equipada.
+- Criações novas recebem miniaturas da montagem 3D real. Edite o nome na coleção, duplique variações e use **Exportar** / **Importar criação** para compartilhar arquivos `.roca.json`.
 
 As criações ficam no armazenamento do navegador, no mesmo dispositivo e endereço do jogo. Apagar os dados do navegador ou o progresso do jogo também apaga a coleção.
 
@@ -31,12 +40,28 @@ As peças têm encaixes definidos e limites de proporção. A montagem é visual
 
 ## Conteúdo
 
-Tatu (trator), Pingo (buggy de irrigação) e Broto (plantadeira rebocada); três pistas rurais;
+Tatu (trator), Pingo (buggy de irrigação), Pipoca (mini colheitadeira), Bento (caminhão graneleiro) e Broto (plantadeira rebocada); quatro pistas rurais com desníveis, curvas inclinadas e caminhos alternativos;
 drift com mini-turbo, saltos e manobras; habilidades especiais; itens de corrida; garagem e loja;
 moedas de milho; acessórios e buzinas; trilha de baião sintetizada; controles por toque;
 progresso e recordes salvos no navegador.
 
-**Teclado:** W/↑ acelera · S/↓ freia · A/D vira · ESPAÇO drift/manobra · E item · Q habilidade · H buzina · C câmera · R volta à pista · ESC pausa.
+O Plantio Relâmpago do Broto planta **um único girassol por uso**, centralizado atrás da plantadeira, para deixar espaço de desvio na pista.
+
+**Drift:** dê dois toques rápidos (até 300 ms) no mesmo lado e mantenha o segundo toque. Solte para liberar o mini-turbo. Vale para A/D, setas e botões de direção no celular. O indicador mostra quando o drift está Bom ou Perfeito.
+
+**Teclado:** W/↑ acelera · S/↓ freia · A/D vira · ESPAÇO faz manobra no ar · E item · Q habilidade · H buzina · C câmera · R volta à pista · ESC pausa.
+No celular, as manobras em saltos são automáticas e não existe mais botão separado de drift.
+
+## Corridas e progressão
+
+- **Corrida rápida:** três voltas em qualquer uma das quatro pistas.
+- **Copa da Colheita:** Milharal → Girassóis → Cerrado, com pontuação acumulada, troféu e recompensa por pódio. A copa em andamento dura a sessão atual; o troféu conquistado é salvo.
+- **Contra o tempo:** três voltas sozinho, sem itens nem habilidade. O fantasma da melhor tentativa é salvo por pista e aparece na próxima corrida; nunca colide com o jogador. Os recordes são separados das corridas normais.
+- **Desafios:** uma volta com objetivos de drift, saltos ou coleta de milho. Objetivos alcançados liberam adesivos, pintura e moedas.
+- **Recompensas:** 5 mini-turbos numa corrida liberam Relâmpago; 3 manobras liberam Céu da Colheita; 20 moedas liberam Florada; um pódio na copa libera Número 07 e bônus. As condições também podem ser cumpridas em corridas normais.
+
+As peças e adesivos são cosméticos; os atributos continuam ligados à máquina-base.
+Detalhes técnicos e todos os arquivos reutilizáveis estão em `docs/expansao-corridas.md`.
 
 ## HUD da corrida
 

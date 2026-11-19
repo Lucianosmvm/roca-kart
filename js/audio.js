@@ -56,6 +56,8 @@ export const audio = {
       o.connect(f); o2.connect(g2).connect(f); f.connect(g).connect(this.sfxBus);
       o.start(); o2.start();
       Object.assign(this, { eng: o, eng2: o2, engGain: g, engFilt: f });
+      const drift=ctx.createOscillator(),driftGain=ctx.createGain();drift.type='triangle';driftGain.gain.value=0;
+      drift.connect(driftGain).connect(this.sfxBus);drift.start();this.driftTone=drift;this.driftGain=driftGain;
       if (this.pendingSong) { this.play(this.pendingSong); this.pendingSong = null; }
     } catch (e) { console.warn('audio off', e); }
   },
@@ -63,17 +65,21 @@ export const audio = {
     this.vol = { music, sfx };
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
+    this.musicBus.gain.cancelScheduledValues(t);this.duckUntil=0;
     this.musicBus.gain.setTargetAtTime(music * 0.55, t, 0.05);
     this.sfxBus.gain.setTargetAtTime(sfx, t, 0.05);
   },
 
   // ---------------------------------------------------------------- engine
-  engine(speed, boost, on) {
+  engine(speed, boost, on, driftCharge=0) {
     if (!this.ctx) return;
     const t = this.ctx.currentTime, f = 38 + Math.abs(speed) * 3.2 + (boost ? 25 : 0);
     this.eng.frequency.setTargetAtTime(f, t, 0.05); this.eng2.frequency.setTargetAtTime(f * 0.5, t, 0.05);
     this.engFilt.frequency.setTargetAtTime(350 + Math.abs(speed) * 25, t, 0.1);
-    this.engGain.gain.setTargetAtTime(on ? 0.06 : 0, t, 0.2);
+    this.engGain.gain.setTargetAtTime(on ? 0.045 : 0, t, 0.2);
+    const charge=Math.max(0,Math.min(1,driftCharge/2.1));
+    this.driftTone?.frequency.setTargetAtTime(140+charge*260,t,.08);
+    this.driftGain?.gain.setTargetAtTime(on && driftCharge > 0 ? .012 + charge*.012 : 0,t,.08);
   },
 
   // ---------------------------------------------------------------- music
@@ -171,6 +177,14 @@ export const audio = {
   },
 
   // ---------------------------------------------------------------- sfx
+  duckMusic(duration=.5) {
+    if(!this.ctx || !this.musicBus) return;
+    const t=this.ctx.currentTime,base=this.vol.music*.55;
+    this.duckUntil=Math.max(this.duckUntil??0,t+duration);
+    this.musicBus.gain.cancelScheduledValues(t);
+    this.musicBus.gain.setTargetAtTime(base*.55,t,.025);
+    this.musicBus.gain.setTargetAtTime(base,this.duckUntil,.12);
+  },
   tone(f, dur = 0.15, type = 'square', vol = 0.15, at = 0) {
     if (!this.ctx) return;
     const c = this.ctx, t = c.currentTime + at, o = c.createOscillator(), g = c.createGain();
@@ -195,7 +209,11 @@ export const audio = {
   },
   sfx(name) {
     if (!this.ctx) return;
+    if(['charged','driftGood','driftPerfect','finish','hit','go','fanfare'].includes(name)) this.duckMusic(name==='fanfare'?1.1:.45);
     switch (name) {
+      case 'driftGood': this.tone(784,.09,'sine',.12);this.tone(1046,.14,'triangle',.09,.08);break;
+      case 'driftPerfect': [1046,1318,1568].forEach((f,i)=>this.tone(f,.12,'triangle',.11,i*.065));break;
+      case 'finish': [784,1046,1568].forEach((f,i)=>this.tone(f,.16,'triangle',.13,i*.12));break;
       case 'click': this.tone(660, 0.06, 'triangle', 0.12); this.tone(990, 0.06, 'triangle', 0.08, 0.04); break;
       case 'hover': this.tone(880, 0.03, 'sine', 0.05); break;
       case 'back': this.tone(520, 0.07, 'triangle', 0.12); this.tone(390, 0.08, 'triangle', 0.1, 0.05); break;
@@ -207,9 +225,9 @@ export const audio = {
       case 'boost': this.noiseBurst(0.6, 400, 3000, 0.25); this.sweep(200, 900, 0.5, 0.08, 'sawtooth'); break;
       case 'miniturbo': this.noiseBurst(0.35, 800, 2500, 0.18); break;
       case 'hit': this.sweep(500, 90, 0.5, 0.18); this.noiseBurst(0.25, 2000, 300, 0.3, 'lowpass'); break;
-      case 'bump': this.noiseBurst(0.12, 400, 120, 0.3, 'lowpass'); this.tone(90, 0.12, 'sawtooth', 0.15); break;
+      case 'bump': this.noiseBurst(0.12, 400, 120, 0.18, 'lowpass'); this.tone(90, 0.12, 'sawtooth', 0.1); break;
       case 'jump': this.sweep(250, 700, 0.25, 0.14, 'square'); break;
-      case 'land': this.noiseBurst(0.18, 600, 100, 0.35, 'lowpass'); this.tone(70, 0.15, 'sine', 0.3); break;
+      case 'land': this.noiseBurst(0.18, 600, 100, 0.2, 'lowpass'); this.tone(70, 0.15, 'sine', 0.18); break;
       case 'trick': this.sweep(500, 1600, 0.2, 0.12, 'square'); this.tone(2093, 0.12, 'square', 0.08, 0.2); break;
       case 'splash': this.noiseBurst(0.5, 3000, 600, 0.22, 'highpass'); break;
       case 'plant': [523, 659, 784].forEach((f, i) => this.tone(f, 0.1, 'triangle', 0.12, i * 0.06)); this.noiseBurst(0.2, 300, 150, 0.2, 'lowpass'); break;

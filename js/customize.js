@@ -5,7 +5,7 @@ export const BUILD_DEFAULTS = Object.freeze({
   hood: 'shell', roof: 'canopy', bumper: 'bar',
   frontSize: 1, rearSize: 1, tireWidth: 1, stance: 1,
   hoodWidth: 1, hoodHeight: 1, tankSize: 1, armSize: 1,
-  bodyColor: null, accent: '#E87578', trim: '#FFF0CF',
+  bodyColor: null, accent: '#E87578', trim: '#FFF0CF', decal:'none',
 });
 
 export const BUILD_RANGES = {
@@ -17,6 +17,7 @@ export const IMPLEMENT_DEFAULTS = Object.freeze({
   hopperColor: '#E9C46A', accent: '#E87578', trim: '#FFF0CF',
 });
 export function cleanImplementBuild(raw = {}) {
+  raw=raw && typeof raw==='object' ? raw : {};
   const b = { ...IMPLEMENT_DEFAULTS };
   if (['seed', 'barrel', 'crate'].includes(raw.hopper)) b.hopper = raw.hopper;
   if (['small', 'wide', 'double'].includes(raw.wheels)) b.wheels = raw.wheels;
@@ -43,6 +44,7 @@ export function applyImplementBuild(model, raw, assets) {
   return { dispose: () => resources.forEach(r => r.dispose()) };
 }
 export function cleanBuild(raw = {}) {
+  raw=raw && typeof raw==='object' ? raw : {};
   const b = { ...BUILD_DEFAULTS };
   for (const [k, [lo, hi]] of Object.entries(BUILD_RANGES)) {
     const v = Number(raw[k] ?? b[k]); b[k] = Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : b[k];
@@ -51,6 +53,7 @@ export function cleanBuild(raw = {}) {
     if (values.includes(raw[k])) b[k] = raw[k];
   }
   for (const k of ['bodyColor', 'accent', 'trim']) if (/^#[\da-f]{6}$/i.test(raw[k] ?? '')) b[k] = raw[k];
+  if(['none','patch','flower','polka','lightning','flowers','number'].includes(raw.decal)) b.decal=raw.decal;
   return b;
 }
 
@@ -105,7 +108,7 @@ export function applyBuild(model, raw, char, paintMaterial) {
     const bumper = model.getObjectByName('Bumper');
     if (bumper) bumper.visible = b.bumper !== 'none';
     if (b.bumper === 'double') box(model, 'UpperBumper', [1.62, .12, .18], [0, .96, -2.05], accent);
-  } else {
+  } else if (char === 'pingo') {
     const tank = assembly('Tank', [0, 1.0, .85]);
     if (tank) tank.group.scale.set(b.tankSize, b.tankSize, b.tankSize);
     for (const name of ['BoomL', 'BoomR']) {
@@ -124,5 +127,17 @@ export function applyBuild(model, raw, char, paintMaterial) {
   const radius = char === 'tatu' ? [.58, .96] : [.68, .68];
   const lift = Math.max(radius[0] * (b.frontSize - 1), radius[1] * (b.rearSize - 1));
   for (const child of model.children) if (!child.name.startsWith('Wheel')) child.position.y += lift;
+  if(b.decal!=='none') {
+    const canvas=document.createElement('canvas'); canvas.width=canvas.height=128;
+    const g=canvas.getContext('2d'); g.textAlign='center'; g.textBaseline='middle';
+    if(b.decal==='patch') {g.fillStyle='#FFF0CF';g.fillRect(12,30,104,68);g.strokeStyle='#203B43';g.setLineDash([6,5]);g.lineWidth=4;g.strokeRect(18,36,92,56);}
+    else if(b.decal==='polka') {g.fillStyle=b.trim;for(let y=22;y<128;y+=40)for(let x=22;x<128;x+=40){g.beginPath();g.arc(x,y,12,0,7);g.fill();}}
+    else {g.font='bold 88px sans-serif';g.fillStyle=b.decal==='lightning'?'#E9C46A':'#FFF0CF';g.fillText(({flower:'🌻',flowers:'❀',number:'07',lightning:'ϟ'})[b.decal],64,68);}
+    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+    const mat=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4});
+    const geo=new THREE.PlaneGeometry(.65,.65);
+    for(const side of [-1,1]) {const sticker=new THREE.Mesh(geo,mat);sticker.name='Adesivo';sticker.position.set(side*(char==='bento' ? .86 : .81),1.4+lift,char==='pipoca' ? .05 : -.55);sticker.rotation.y=side*Math.PI/2;model.add(sticker);}
+    resources.push(texture,mat,geo);
+  }
   return { lift, build: b, dispose: () => resources.forEach(r => r.dispose()) };
 }

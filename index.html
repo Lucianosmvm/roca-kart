@@ -80,7 +80,6 @@
   .tbtn.on { background:#ffe08a; transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
   #tLeft { left:18px; bottom:110px; } #tRight { left:124px; bottom:110px; }
   #tBrake { right:18px; bottom:110px; width:74px; height:74px; font-size:16px; }
-  #tDrift { right:104px; bottom:96px; background:rgba(79,195,247,.85); font-size:18px; }
   #tItem { right:60px; bottom:200px; background:rgba(232,117,120,.9); font-size:18px; }
   #tAbil { right:150px; bottom:200px; background:rgba(33,108,121,.9); font-size:18px; }
   #tHorn { right:196px; bottom:110px; width:62px; height:62px; font-size:26px; }
@@ -330,7 +329,6 @@
   body.is-touch #abil { bottom:232px; }
   body.is-touch #tLeft, body.is-touch #tRight { bottom:max(22px,env(safe-area-inset-bottom)); }
   body.is-touch #tBrake { right:14px; bottom:160px; }
-  body.is-touch #tDrift { right:104px; bottom:158px; }
   body.is-touch #tItem { right:14px; bottom:250px; }
   body.is-touch #tAbil { right:104px; bottom:250px; }
   body.is-touch #tHorn { right:196px; bottom:164px; }
@@ -347,7 +345,7 @@
     body.is-touch #pos { bottom:102px; } body.is-touch #abil { bottom:188px; }
     body.is-touch .tbtn { width:58px; height:58px; border-width:3px; font-size:20px; }
     body.is-touch #tLeft { left:16px; bottom:16px; } body.is-touch #tRight { left:84px; bottom:16px; }
-    body.is-touch #tBrake { right:148px; bottom:16px; font-size:12px; } body.is-touch #tDrift { right:216px; bottom:16px; font-size:12px; }
+    body.is-touch #tBrake { right:148px; bottom:16px; font-size:12px; }
     body.is-touch #tItem { right:148px; bottom:86px; font-size:13px; } body.is-touch #tAbil { right:216px; bottom:86px; font-size:13px; }
     body.is-touch #tHorn { right:284px; bottom:16px; font-size:24px; }
   }
@@ -359,6 +357,74 @@
   }
   @media (max-height:600px) { .logo { font-size:64px; } .menuBtns { gap:8px; } .btn { font-size:20px; padding:8px 18px; } }
 </style>
+<style>
+  .raceModes {display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0 0 14px;}
+  .eventDescription {max-width:800px;text-align:center;font-size:14px;margin-bottom:16px;padding:12px 18px;}
+  .challengeChoices {display:flex;gap:10px;max-width:900px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;}
+  .challengeChoice {display:flex;flex-direction:column;gap:7px;flex:1 1 210px;max-width:290px;cursor:pointer;background:var(--cream);color:var(--ink);border:3px solid var(--ink);border-radius:14px;padding:14px;font:inherit;text-align:left;}
+  .challengeChoice.on {background:var(--gold);}.challengeChoice span,.challengeChoice small {font-size:12px;}
+  .earnedRewards {background:#E1F0E9;border:2px solid var(--green);border-radius:12px;padding:10px;margin-top:12px;font-weight:900;}
+  .cupStandings {border-top:2px solid var(--ink);margin-top:12px;padding-top:12px;font-size:13px;}
+  .cupStandings > div {display:flex;justify-content:space-between;gap:10px;padding:4px;}.cupStandings .isPlayer {background:var(--gold);border-radius:6px;}
+  .runStats,.eventResultTitle,.gestureHelp {font-size:12px;line-height:1.5;}.gestureHelp {background:#E1F0E9;border-radius:12px;padding:10px;}
+  #results .panel {max-height:90dvh;overflow-y:auto;}
+  .creationNameLabel {font-size:11px;font-weight:900;}.creationNameLabel input {display:block;width:100%;padding:5px 7px;border:2px solid #D5B98D;border-radius:7px;font:inherit;font-size:13px;background:#FFF9E9;color:var(--ink);user-select:text;touch-action:auto;}
+  .gPanel .creationCard {flex-direction:column;align-items:stretch;}.gPanel .creationCard>img.creationThumbnail {width:100%;height:140px;object-fit:contain;border-radius:10px;background:#D9AD76;}
+  .creationImport {display:inline-block;font-size:15px!important;cursor:pointer;}
+  #raceEvent {left:24px;top:73px;font-size:13px;max-width:260px;line-height:1.4;color:var(--cream);}
+  #driftStatus {left:50%;top:136px;transform:translateX(-50%);width:140px;text-align:center;opacity:0;transition:opacity .12s;font-size:13px;}
+  #driftStatus.active {opacity:1;}#driftStatus .driftTrack {display:block;height:9px;border:2px solid var(--cream);border-radius:5px;overflow:hidden;background:var(--ink);margin-top:5px;}#driftMeter {display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--gold),var(--orange));}
+  @media(max-width:720px){#raceEvent {left:12px;top:69px;max-width:122px;font-size:10px;}#driftStatus {top:110px;width:112px;font-size:10px;}.raceModes .btn {font-size:15px;padding:7px 10px;}.eventDescription{font-size:12px;}}
+  @media(max-height:500px) and (orientation:landscape){#driftStatus{top:106px;width:110px;font-size:10px;}#raceEvent{font-size:10px;top:70px;max-width:190px;}}
+</style>
+<style>
+  /* Finishing pass: readable cues in the approved workshop palette. */
+  button.card,button.it {color:var(--ink);font-family:inherit;}
+  button.card,button.it {display:flex;flex-direction:column;align-items:center;}
+  button.card:focus-visible,button.it:focus-visible,.challengeChoice:focus-visible,#abil:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible {outline:3px solid var(--orange);outline-offset:3px;}
+  .tab,.btn {min-height:44px;}
+  .storageWarning,.garageNotice {font-size:13px;line-height:1.5;font-weight:900;color:var(--ink);border-radius:10px;padding:10px 12px;background:var(--cream);border-left:5px solid var(--orange);max-width:540px;}
+  .garageNotice:empty {display:none;}
+  .storageWarning {box-shadow:0 2px 0 #203B4333;}
+  .gSaveStatus.saveFailed {color:var(--cream);font-size:12px;}
+  .gBuyBox .btn {margin-top:8px;margin-right:6px;}
+  .pauseHint,.guideHint {font-size:13px;font-weight:900;line-height:1.55;}
+  .pauseHint {color:var(--cream);margin:5px 0;text-shadow:0 1px 3px var(--ink);}
+  #options>.panel {max-height:85dvh;overflow-y:auto;}
+  .drivingGuide {width:min(740px,94vw);max-height:90dvh;overflow-y:auto;color:var(--ink);text-align:center;}
+  .drivingGuide h2 {font-family:'Lilita One';font-size:clamp(26px,4vw,40px);font-weight:400;margin:4px 0 12px;}
+  .guideEyebrow {text-transform:uppercase;font-size:11px;letter-spacing:2px;color:var(--green);font-weight:900;}
+  .gestureSteps {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;list-style:none;padding:0;margin:20px 0;}
+  .gestureSteps li {background:#FFFFFF88;border:2px solid var(--green);border-radius:16px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .gestureSteps small {font-size:12px;line-height:1.5;}
+  .gestureKey {width:52px;height:52px;display:grid;place-items:center;border:3px solid var(--ink);border-radius:14px;background:var(--cream);font-size:24px;box-shadow:0 4px 0 var(--ink);}
+  .gestureKey.released {border-style:dashed;opacity:.65;box-shadow:none;}
+  .gestureKey.held {background:var(--green);color:var(--cream);animation:holdCue 1.4s ease-in-out infinite;}
+  .gestureKey.turbo {background:var(--gold);}
+  .guideLegend {display:flex;justify-content:center;flex-wrap:wrap;gap:8px;font-size:12px;}
+  .guideLegend span {padding:5px 8px;background:#E9C46A55;border-radius:8px;}
+  @keyframes holdCue {50%{box-shadow:0 1px 0 var(--ink);transform:translateY(3px);}}
+  #item.ready {border-color:var(--gold);box-shadow:0 4px 0 var(--ink),0 0 0 2px var(--cream);}
+  #item.rolling {border-style:dashed;}
+  #itemName {font-family:'Nunito';font-size:13px;line-height:1.3;max-width:190px;background:#203B43d9;border-radius:9px;padding:4px 8px;text-shadow:none;}
+  #driftStatus {width:186px;background:#203B43e8;border:2px solid var(--cream);border-radius:12px;padding:9px 12px;text-shadow:none;font-family:'Nunito';font-size:12px;color:var(--cream);}
+  #driftStatus[data-tier='good'] {border-style:dashed;border-color:var(--gold);}
+  #driftStatus[data-tier='perfect'] {border:3px double var(--gold);box-shadow:0 0 12px #E9C46666;}
+  #driftStatus[data-tier='perfect'] #driftLabel {color:var(--gold);}
+  #driftStatus .driftTrack {height:10px;}
+  #raceEvent {background:#203B43cc;padding:4px 8px;border-radius:8px;text-shadow:none;font-family:'Nunito';}
+  #msg {font-size:clamp(28px,6vw,80px);left:12%;right:12%;line-height:1.08;text-wrap:balance;}
+  #sub {font-size:clamp(16px,2.8vw,30px);left:14%;right:14%;line-height:1.2;}
+  #abil .abilityStack {display:flex;flex-direction:column;gap:4px;}
+  #abilLabel {font-family:'Nunito';font-size:12px;line-height:1;color:var(--cream);background:var(--ink);border-radius:5px;padding:3px 7px;width:max-content;}
+  #abil.full #abilLabel {color:var(--ink);background:var(--gold);}
+  #abil .bar {display:block;}
+  .tbtn.unavailable {opacity:.63;box-shadow:1px 1px 0 var(--ink);}
+  #tAbil {font-size:21px;}
+  @media(max-width:720px){.gestureSteps{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0;}.gestureSteps li{padding:10px 7px;}.gestureKey{height:38px;width:38px;font-size:20px;}.drivingGuide{padding:16px;}.drivingGuide p{margin:8px 0;}#driftStatus{width:162px;top:118px;font-size:10px;padding:6px 9px;}#itemName{font-size:10px;max-width:148px;}#abilLabel{font-size:10px;}.storageWarning{font-size:12px;}}
+  @media(max-height:500px) and (orientation:landscape){.gestureSteps{grid-template-columns:repeat(4,minmax(0,1fr));margin:8px 0;}.drivingGuide h2{font-size:26px;}#driftStatus{top:auto;bottom:18px;width:166px;font-size:10px;padding:6px 9px;}#msg{top:32%;font-size:34px;}#sub{top:53%;font-size:18px;}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;}#driftStatus{transition:none;}#speedlines{display:none;}}
+</style>
 </head>
 <body>
 <div id="game"></div>
@@ -368,7 +434,9 @@
 <!-- HUD -->
 <div class="hud" id="item"></div>
 <div class="hud" id="itemName"></div>
-<div class="hud" id="abil"><span id="abilIcon"></span><div class="bar"><i id="abilFill"></i></div><kbd>Q</kbd></div>
+<div class="hud" id="raceEvent"></div>
+<div class="hud" id="driftStatus" aria-hidden="true"><span id="driftLabel">Carregando drift</span><span id="driftTrack" class="driftTrack" role="meter" aria-label="Carga do drift" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="driftMeter"></i></span></div>
+<div class="hud" id="abil" role="button" tabindex="0" aria-label="Habilidade"><span id="abilIcon"></span><span class="abilityStack"><span id="abilLabel">0%</span><span id="abilMeter" class="bar" role="meter" aria-label="Carga da habilidade" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="abilFill"></i></span></span><kbd>Q</kbd></div>
 <canvas class="hud" id="minimap" width="170" height="170"></canvas>
 <div class="hud" id="lap"><span class="hudLabel">Volta</span><span id="lapValue">1<small>/3</small></span></div>
 <div class="hud" id="time"><span class="hudClock" aria-hidden="true">⏱</span><span id="timeValue">0:00.00</span></div>
@@ -393,14 +461,13 @@
 </div>
 <div class="hud" id="msg"></div>
 <div class="hud" id="sub"></div>
-<div class="hud" id="help">W/↑ acelera · S/↓ freia · A/D vira · ESPAÇO drift/manobra · E item · Q habilidade · H buzina · ESC pausa</div>
+<div class="hud" id="help">W/↑ acelera · A/D vira · 2 toques no mesmo lado + segure = drift · ESPAÇO manobra · E item · Q habilidade · ESC pausa</div>
 <button id="pauseBtn" aria-label="Pausar">⏸</button>
 <div id="touch">
   <div class="tbtn" id="tLeft" data-k="ArrowLeft">◀</div>
   <div class="tbtn" id="tRight" data-k="ArrowRight">▶</div>
   <div class="tbtn" id="tItem" data-k="KeyE">ITEM</div>
   <div class="tbtn" id="tAbil" data-k="KeyQ">HAB</div>
-  <div class="tbtn" id="tDrift" data-k="Space">DRIFT</div>
   <div class="tbtn" id="tBrake" data-k="ArrowDown">FREIO</div>
   <div class="tbtn" id="tHorn" data-k="KeyH">📯</div>
 </div>
@@ -416,6 +483,7 @@
 <div class="screen dim hidden" id="pause"></div>
 <div class="screen hidden" id="results"></div>
 <div class="screen hidden" id="cutscene"></div>
+<div class="screen dim hidden" id="guide"></div>
 <div class="coinsBadge hidden" id="wallet"></div>
 <div id="fade"></div>
 

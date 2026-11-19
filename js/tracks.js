@@ -3,7 +3,7 @@
 
 export const TRACKS = [
   {
-    id: 'milharal', name: 'Fazenda Milharal', subtitle: 'Dia de sol no milho', difficulty: 1, seed: 1234,
+    id: 'milharal', name: 'Fazenda Milharal', subtitle: 'Celeiro, ponte e atalho no milho', difficulty: 1, seed: 1234,
     ctrl: [
       [0, -60], [0, 40], [10, 90], [45, 115], [90, 105], [110, 70], [100, 30], [120, -5], [165, -15], [195, 10],
       [200, 60], [185, 110], [200, 150], [240, 165], [275, 140], [270, 90], [255, 40], [260, -20], [240, -75],
@@ -21,7 +21,7 @@ export const TRACKS = [
     },
   },
   {
-    id: 'girassol', name: 'Vale dos Girassóis', subtitle: 'Pôr do sol e saltos', difficulty: 2, seed: 777,
+    id: 'girassol', name: 'Vale dos Girassóis', subtitle: 'Colinas, moinho gigante e saltos', difficulty: 2, seed: 777,
     ctrl: [
       [0, 0], [0, 90], [30, 150], [90, 170], [140, 140], [150, 90], [120, 50], [130, 10], [190, -10], [250, 20],
       [290, 80], [300, 150], [340, 190], [390, 160], [400, 90], [370, 20], [380, -50], [350, -120], [280, -150],
@@ -39,7 +39,7 @@ export const TRACKS = [
     },
   },
   {
-    id: 'cerrado', name: 'Cerrado da Soja', subtitle: 'Terra vermelha e curvas fechadas', difficulty: 3, seed: 4242,
+    id: 'cerrado', name: 'Cerrado da Soja', subtitle: 'Cânion, túnel e curvas inclinadas', difficulty: 3, seed: 4242,
     ctrl: [
       [0, 0], [0, 70], [25, 110], [70, 120], [95, 90], [80, 55], [110, 30], [160, 40], [185, 80], [230, 95],
       [270, 70], [275, 20], [245, -15], [260, -60], [230, -110], [170, -120], [130, -90], [90, -110], [45, -140],
@@ -57,4 +57,10 @@ export const TRACKS = [
     },
   },
 ];
+TRACKS.push({
+  id:'feira',name:'Feira da Colheita',subtitle:'Bandeirinhas, barracas e armazém',difficulty:2,seed:1911,
+  ctrl:[[0,-70],[0,20],[15,70],[65,95],[125,80],[140,25],[115,-10],[155,-40],[215,-10],[245,45],[290,70],[330,35],[325,-30],[350,-90],[310,-145],[245,-160],[195,-120],[145,-155],[80,-170],[20,-135]],
+  plots:{corn:2,wheat:2,pasture:5,sun:1},landmarks:[['barn',2,8],['hay',6,1],['silo',1,2.5]],
+  theme:{...TRACKS[0].theme,skyTop:'#4D538F',horizon:'#F4B88E',sun:'#FFD2A3',sunInt:2.1,hemiSky:'#FFE6C9',banner:'FEIRA DA COLHEITA',cloudTint:'#FFD6BD',road:'#B99074',curbA:'#FFF0CF',curbB:'#E87578'},
+});
 export const trackById = id => TRACKS.find(t => t.id === id) ?? TRACKS[0];
