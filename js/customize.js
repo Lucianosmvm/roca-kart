@@ -57,7 +57,7 @@ export function cleanBuild(raw = {}) {
   return b;
 }
 
-export function applyBuild(model, raw, char, paintMaterial) {
+export function applyBuild(model, raw, char, paintMaterial,assets) {
   const b = cleanBuild(raw);
   if (b.bodyColor) paintMaterial.color.set(b.bodyColor);
   const resources = [];
@@ -67,10 +67,17 @@ export function applyBuild(model, raw, char, paintMaterial) {
     const col = o.material.name === 'Coral' ? b.accent : o.material.name === 'Cream' ? b.trim : null;
     if (col) { o.material = o.material.clone(); o.material.color.set(col); resources.push(o.material); }
   });
-  const rubber = new THREE.MeshToonMaterial({ color: '#29353D' });
-  const trim = new THREE.MeshToonMaterial({ color: b.trim });
-  const accent = new THREE.MeshToonMaterial({ color: b.accent });
+  const rubber = new THREE.MeshStandardMaterial({ color: '#29353D',roughness:.8 });
+  const trim = new THREE.MeshStandardMaterial({ color: b.trim,roughness:.43 });
+  const accent = new THREE.MeshStandardMaterial({ color: b.accent,roughness:.43 });
   resources.push(rubber, trim, accent);
+  function fitted(asset,parent,anchor) {
+    if(!assets?.[asset])return false;
+    const part=assets[asset].clone(true);
+    part.traverse(o=>{if(o.isMesh){if(o.material.name.startsWith('Paint'))o.material=paintMaterial;else if(o.material.name==='Cream')o.material=trim;else if(o.material.name==='Coral')o.material=accent;o.castShadow=true;}});
+    if(anchor)part.position.sub(anchor);
+    parent.add(part);return true;
+  }
   function box(parent, name, size, pos, material) {
     const o = new THREE.Mesh(new THREE.BoxGeometry(...size), material);
     resources.push(o.geometry);
@@ -88,7 +95,9 @@ export function applyBuild(model, raw, char, paintMaterial) {
     if (hood) {
       if (b.hood !== 'shell') {
         hood.old.visible = false;
-        if (b.hood === 'box') {
+        if(fitted('tatu_hood_'+b.hood,hood.group,hood.group.position)) {
+          // Reuse the detailed editable assembly exported by Blender.
+        } else if (b.hood === 'box') {
           box(hood.group, 'WorkshopHood', [1.42, 1.0, 1.88], [0, 0, 0], paintMaterial);
           for (let i = -1; i <= 1; i++) box(hood.group, 'Vent', [.025, .36, .085], [.721, -.04, i * .3], rubber);
         } else {
@@ -102,12 +111,17 @@ export function applyBuild(model, raw, char, paintMaterial) {
     const roof = model.getObjectByName('Roof');
     if (roof) roof.visible = b.roof === 'canopy';
     if (b.roof === 'cage') {
-      for (const x of [-.63, .63]) box(model, 'Rollbar', [.1, 1.55, .1], [x, 1.94, .94], trim);
-      box(model, 'RollbarTop', [1.36, .1, .1], [0, 2.71, .94], trim);
+      if(!fitted('tatu_roof_cage',model)) {
+        for (const x of [-.63, .63]) box(model, 'Rollbar', [.1, 1.55, .1], [x, 1.94, .94], trim);
+        box(model, 'RollbarTop', [1.36, .1, .1], [0, 2.71, .94], trim);
+      }
     }
     const bumper = model.getObjectByName('Bumper');
     if (bumper) bumper.visible = b.bumper !== 'none';
-    if (b.bumper === 'double') box(model, 'UpperBumper', [1.62, .12, .18], [0, .96, -2.05], accent);
+    if (b.bumper === 'double') {
+      if(fitted('tatu_bumper_double',model)){if(bumper)bumper.visible=false;}
+      else box(model, 'UpperBumper', [1.62, .12, .18], [0, .96, -2.05], accent);
+    }
   } else if (char === 'pingo') {
     const tank = assembly('Tank', [0, 1.0, .85]);
     if (tank) tank.group.scale.set(b.tankSize, b.tankSize, b.tankSize);

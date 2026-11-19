@@ -3,6 +3,8 @@
 Corrida arcade 3D cartoon com máquinas inventadas numa oficina rural brasileira.
 Feito com Three.js para PC e celular.
 
+Os modelos ativos receberam [acabamento arredondado e detalhes de construção](docs/modelos-detalhados.md), incluindo máquinas, peças, acessórios e cenários. Fontes `.blend`, exportações `.glb` e retratos foram salvos. O gerador completo é `blender/quality_models.py`; os materiais importados usam rugosidade e metalicidade para exibir o novo acabamento.
+
 O foco da primeira versão comercial é **Windows, para um jogador, com compra única**. O conteúdo está fechado em quatro máquinas, quatro pistas e os quatro modos existentes; a prioridade agora é acabamento. Veja o [escopo da versão 1.0 e a ordem de trabalho](docs/escopo-v1.md). O aplicativo offline e o suporte a controle ainda estão pendentes.
 
 A primeira passagem de [acabamento da pilotagem](docs/acabamento-pilotagem.md) trata controles, drift, saltos, atalhos, progresso, colisões e câmera. As alterações não foram testadas; a avaliação jogável continua pendente.
@@ -92,10 +94,10 @@ Esta reorganização do HUD não foi testada neste PC, por orientação do usuá
 - `docs/design-maquinas.md`: direção de arte, limites e validação.
 - `docs/art/oficina-conceito.png`: prancha conceitual do elenco.
 
-Regerar os modelos e retratos (sobrescreve os arquivos do novo elenco):
+Regerar os modelos e retratos com o novo acabamento (sobrescreve os arquivos ativos):
 
 ```powershell
-& 'C:\Program Files\Blender Foundation\Blender 5.3\blender.exe' -b --factory-startup --python blender/oficina.py
+& 'C:\Program Files\Blender Foundation\Blender 5.3\blender.exe' -b --factory-startup --python-exit-code 1 --python blender/quality_models.py
 ```
 
 Os antigos modelos e geradores estão preservados como histórico e não são carregados pelo jogo.
@@ -111,7 +113,7 @@ Os conjuntos usam a origem do engate do Broto e podem ser reutilizados nos próx
 Para gerar e salvar os arquivos novamente:
 
 ```powershell
-& 'C:\Program Files\Blender Foundation\Blender 5.3\blender.exe' -b --factory-startup --python blender/broto_parts.py
+& 'C:\Program Files\Blender Foundation\Blender 5.3\blender.exe' -b --factory-startup --python-exit-code 1 --python blender/quality_models.py -- parts
 ```
 
 Esta etapa de personalização do Broto e Minhas criações não foi testada, a pedido do usuário. Não executar testes neste PC; as preferências estão em `AGENTS.md`.

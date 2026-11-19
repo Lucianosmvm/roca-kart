@@ -152,8 +152,9 @@ const gradMap = (() => {
 const toonCache = new Map();
 function toonOf(m) {
   if (toonCache.has(m)) return toonCache.get(m);
-  const t = new THREE.MeshToonMaterial({
-    name: m.name, color: m.color ? m.color.clone() : new THREE.Color('#fff'), gradientMap: gradMap, map: m.map || null,
+  const t = new THREE.MeshStandardMaterial({
+    name: m.name, color: m.color ? m.color.clone() : new THREE.Color('#fff'), map: m.map || null,
+    roughness:m.roughness??.65,metalness:m.metalness??0,
     emissive: m.emissive ? m.emissive.clone() : new THREE.Color(0), emissiveIntensity: m.emissiveIntensity ?? 1,
   });
   toonCache.set(m, t); return t;
@@ -169,7 +170,8 @@ const ASSETS = ['tatu', 'corn', 'wheat', 'sunflower', 'hay', 'haysq', 'barn', 's
   'broto_wheels_small', 'broto_wheels_wide', 'broto_wheels_double', 'pipoca','bento',
   'course_milharal','course_girassol','course_cerrado','course_feira',
   'race_barn','race_bridge','race_canyon','race_tunnel','race_stall','race_mill','race_shortcut',
-  'race_curve_left','race_curve_right','race_sign_jump','race_sign_route','race_edge_marker'];
+  'race_curve_left','race_curve_right','race_sign_jump','race_sign_route','race_edge_marker',
+  'tatu_hood_box','tatu_hood_round','tatu_roof_cage','tatu_bumper_double'];
 const A = {};
 let courseLayouts={};
 async function loadAssets(onProgress) {
@@ -791,14 +793,14 @@ function addAccessory(model, ch, accId) {
 function makeKartModel(def, parent = scene) {
   const ch = CHARACTERS[def.char];
   const model = A[ch.asset].clone(true);
-  const paint = toonColor(def.paint);
+  const paint = new THREE.MeshStandardMaterial({color:def.paint,roughness:.43,metalness:.06});
   model.traverse(o => {
     if (!o.isMesh) return;
     o.castShadow = true; o.receiveShadow = true;
     if (o.material.name.startsWith('Paint') && !def.keepPaint) o.material = paint;
     else if (o.material.name.startsWith('Headlight')) o.material = o.material.clone();
   });
-  const custom = applyBuild(model, def.build, def.char, paint);
+  const custom = applyBuild(model, def.build, def.char, paint,A);
   model.rotation.y = Math.PI;
   const tilt = new THREE.Group(); tilt.add(model);
   const root = new THREE.Group(); root.add(tilt); parent.add(root);
