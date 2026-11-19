@@ -43,12 +43,12 @@ export const ui = {
     const leave=()=>{closeGuide=null;this.show(previous);if(focus?.isConnected) focus.focus();};
     closeGuide=leave;
     $('guide').innerHTML=`<section class="panel drivingGuide" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
-      <span class="guideEyebrow">Oficina de pilotagem</span><h2 id="guideTitle">Curva com mini-turbo</h2>
-      <p>Ganhe velocidade, escolha um lado e faça o gesto:</p>
+      <h2 id="guideTitle">Tire um turbo da curva</h2>
+      <p>Já em movimento, dê dois toques rápidos para o mesmo lado. Segure o segundo.</p>
       <ol class="gestureSteps"><li><span class="gestureKey">◀</span><b>1. Toque</b><small>Aperte a direção.</small></li><li><span class="gestureKey released">◀</span><b>2. Solte</b><small>Solte rapidamente.</small></li><li><span class="gestureKey held">◀</span><b>3. Segure</b><small>Aperte de novo no mesmo lado, em até 0,3 s, e mantenha.</small></li><li><span class="gestureKey turbo">↗</span><b>4. Mini-turbo!</b><small>Espere BOM ou PERFEITO e solte.</small></li></ol>
       <p class="guideHint">Também funciona para a direita. No teclado, use A/D ou as setas; no celular, os botões ◀ e ▶. Faça o gesto já em movimento.</p>
       <div class="guideLegend"><span>➜ Placa amarela: curva</span><span>↗ SALTO: rampa adiante</span><span>↗ ATALHO: caminho alternativo</span></div>
-      <p class="guideHint">${IS_TOUCH()?'O veículo acelera sozinho. Toque em ITEM e HAB para usar o que estiver disponível. As rampas fazem saltos normais, sem acrobacias.':'W/↑ acelera · S/↓ freia · E usa item · Q usa habilidade · R volta à pista · ESC pausa. As rampas fazem saltos normais.'}</p>
+      <p class="guideHint">${IS_TOUCH()?'ITEM usa o que você pegou na caixa. HAB dispara a habilidade da máquina quando a barra enche.':'W/↑ acelera · S/↓ freia · E usa o item · Q usa a habilidade · R volta à pista · Esc pausa.'}</p>
       <div class="backRow"><button class="btn cream" id="guideBack">◀ Voltar</button><button class="btn orange" id="guideDone">${onStart?'Entendi, vamos correr!':'Entendi!'}</button></div>
     </section>`;
     this.show('guide');
@@ -93,8 +93,8 @@ export const ui = {
   showResults(d) {
     const medal = ['🥇', '🥈', '🥉'];
     $('results').innerHTML = `<div class="panel">
-      <h2 class="title" style="color:var(--orange);margin:0">${d.mode==='time'?(d.record?'Novo recorde!':'Tempo concluído!'):d.mode==='challenge'?'Desafio finalizado!':d.myPos === 1 ? 'Campeão da Roça!' : d.myPos <= 3 ? 'No pódio!' : 'Bora de novo!'}</h2>
-      <div style="font-weight:900;margin-bottom:6px">${d.track.name}${d.record ? ' · 🏅 Novo recorde!' : ''}</div>
+      <h2 class="title">${d.mode==='time'?(d.record?'Recorde na terra!':'Tempo na mão!'):d.mode==='challenge'?'Fim do desafio!':d.myPos === 1 ? 'A roça tem campeão!' : d.myPos <= 3 ? 'Deu pódio!' : 'Bandeirada!'}</h2>
+      <div style="font-weight:900;margin-bottom:6px">${d.track.name}${d.record && d.mode!=='time' ? ' · 🏅 Novo recorde!' : ''}</div>
       <div class="eventResultTitle">${escapeHTML(d.eventTitle??'Corrida rápida')}${d.cup?` · etapa ${d.cup.stage}/${d.cup.total}`:''}</div>
       <table class="res">${d.order.map((k, i) => `<tr class="${k.me ? 'me' : ''}"><td><b>${medal[i] ?? (i + 1) + 'º'}</b></td>
         <td><span class="dot" style="background:${k.paint}"></span> ${k.name}</td><td>${k.time}</td></tr>`).join('')}</table>
@@ -128,26 +128,29 @@ function updateWallet() {
 // ---------------------------------------------------------------- splash
 function buildSplash() {
   $('splash').innerHTML = `${logo()}
-    <div class="tag">Pista de terra, máquinas da roça e muita diversão!</div>
+    <div class="tag">Oficina da Roça</div>
     <div class="splashMachines"><img src="assets/ui/tatu.png" alt="Tatu"><img src="assets/ui/broto.png" alt="Broto"><img src="assets/ui/pingo.png" alt="Pingo"></div>
     <div class="bar"><i id="splashBar"></i></div>
-    <div class="tap hidden" id="splashTap"></div>
-    <div class="credit">Oficina da Roça · máquinas inventadas para correr</div>`;
+    <div class="tap hidden" id="splashTap"></div>`;
 }
 
 // ---------------------------------------------------------------- menu
 function buildMenu() {
-  $('menu').innerHTML = `${logo()}
-    <div class="tag">Escolha sua máquina e acelere na roça!</div>${storageFeedback()}
-    <div class="menuBtns">
-      <button class="btn big orange" id="mPlay">▶ JOGAR</button>
-      <button class="btn" id="mGarage">🔧 Garagem</button>
-      <button class="btn blue" id="mShop">🛒 Loja</button>
-      <button class="btn cream" id="mOptions">⚙️ Opções</button>
-      <button class="btn cream" id="mCredits">⭐ Créditos</button>
-      <button class="btn cream" id="mIntro" style="grid-column: span 2">🎬 Ver abertura</button>
+  const machine = api.CHARACTERS[profile.sel.char] ?? api.CHARACTERS.tatu;
+  $('menu').innerHTML = `<main class="startingGrid">
+    <div class="machinePoster">${logo()}
+      <figure><img src="${machine.img}" alt=""><figcaption>${machine.name}</figcaption></figure>
     </div>
-    <div class="stats">Corridas: ${profile.races} · Vitórias: ${profile.wins} · Troféus: ${Object.keys(profile.trophies).length}</div>`;
+    <nav class="dispatch" aria-label="Menu principal">
+      <button class="btn orange" id="mPlay">Escolher corrida <span aria-hidden="true">➜</span></button>
+      <button class="btn" id="mGarage">Garagem</button>
+      <button class="btn blue" id="mShop">Loja</button>
+      <button class="btn cream" id="mOptions">Opções</button>
+      <button class="btn cream" id="mCredits">Créditos</button>
+      <button class="openingLink" id="mIntro">▶ Ver abertura</button>
+    </nav>
+    <dl class="scoreStrip"><div><dt>Corridas</dt><dd>${profile.races}</dd></div><div><dt>Vitórias</dt><dd>${profile.wins}</dd></div><div><dt>Troféus</dt><dd>${Object.keys(profile.trophies).length}</dd></div></dl>
+    </main>${storageFeedback()}`;
   click($('mPlay'), () => ui.show('tracks'));
   click($('mGarage'), () => { api.openGarage('menu'); ui.show('garage'); buildGarage('menu'); });
   click($('mShop'), () => { api.openGarage('shop'); ui.show('shop'); buildGarage('shop'); });
@@ -181,7 +184,7 @@ function buildTracks() {
   const tracks=pickedMode==='cup'?TRACKS.filter(t=>api.CUP.tracks.includes(t.id)):TRACKS;
   if(pickedMode==='cup') pickedTrack=api.CUP.tracks[0];
   const records=pickedMode==='time'?profile.timeBest:pickedMode==='challenge'?Object.fromEntries(TRACKS.map(t=>[t.id,profile.challengeBest[t.id+':'+pickedChallenge]])):profile.best;
-  $('tracks').innerHTML = `<h2 class="title">Escolha sua aventura</h2>
+  $('tracks').innerHTML = `<h2 class="title">Onde vamos correr?</h2>
     <div class="raceModes" role="group" aria-label="Modo de corrida">${[['quick','Corrida rápida'],['cup','🏆 Copa'],['time','⏱ Contra o tempo'],['challenge','⭐ Desafios']].map(([id,label])=>`<button class="btn small ${pickedMode===id?'orange':'cream'}" data-race-mode="${id}">${label}</button>`).join('')}</div>
     <div class="eventDescription panel">${pickedMode==='cup'?`${api.CUP.name}: Milharal → Girassóis → Cerrado. Some pontos nas três corridas e conquiste um troféu! A copa em andamento dura esta sessão; o troféu fica salvo.` : pickedMode==='time'?'Corra sozinho, sem itens nem habilidade, contra o fantasma do seu melhor tempo.':pickedMode==='challenge'?'Escolha uma missão e complete uma volta para ganhar a recompensa.':'Quatro pistas, quatro máquinas e caminhos alternativos para descobrir.'}</div>
     ${pickedMode==='challenge'?`<div class="challengeChoices">${api.CHALLENGES.map(c=>`<button class="challengeChoice ${pickedChallenge===c.id?'on':''}" data-challenge="${c.id}"><b>${c.name}</b><span>${c.description}</span><small>🎁 ${c.reward}${profile.achievements.includes('challenge:'+c.id)?' · ✓ concluído':''}</small></button>`).join('')}</div>`:''}
@@ -265,7 +268,7 @@ function buildGarage(mode) {
       <button class="gSheetToggle" id="gSheetToggle" aria-expanded="${!sheetCollapsed}" aria-controls="gEditorBody"><span class="gSheetHandle"></span><span class="gSheetCaption">${sheetCollapsed ? 'Abrir edição' : 'Recolher edição'}</span><span aria-hidden="true">${sheetCollapsed ? '⌃' : '⌄'}</span></button>
       <div class="gEditorBody" id="gEditorBody">
       <h3 class="gEditingTitle">${gTab === 'creations' ? 'Minhas criações' : shop ? 'Escolha seu estilo' : page==='machine'?'Escolha sua máquina':'Personalize '+(buildTarget === 'broto' && gTab === 'build' ? 'o Broto' : ch.name)}</h3>
-      ${gTab==='machine'?'<p class="garageIntro">Escolha uma máquina. Depois, abra Personalizar para dar seu estilo.</p>':''}
+      ${gTab==='machine'?'<p class="garageIntro">Cada máquina tem um truque. Escolha a sua para ver a habilidade.</p>':''}
       ${gTab === 'creations' || gTab==='machine' ? '' : catalog}
       ${gTab === 'build' ? `${canBuildBroto?`<div class="buildTargets" role="group" aria-label="Escolher o que montar">
         <button class="tab ${buildTarget === 'machine' ? 'on' : ''}" data-target="machine" aria-pressed="${buildTarget === 'machine'}"><img src="${ch.img}" alt="">${ch.name}</button>
@@ -289,7 +292,7 @@ function buildGarage(mode) {
     </aside>
     <footer class="gFooter"><span class="gSaveStatus ${garageSaved?'':'saveFailed'}" role="status">${!garageSaved?'⚠ Não salvo no dispositivo · exporte suas criações':preview?'Prévia · item não equipado':'✓ Salvo automaticamente'}</span>
       <button class="btn cream" id="gSaveCreation" ${preview ? 'disabled' : ''}>▣ <span>Salvar criação</span></button>
-      <button class="btn" id="gGo">CORRER ▶</button>
+      <button class="btn" id="gGo">Pra pista! ▶</button>
     </footer>`;
   click($('gBack'), () => { preview = null; api.leaveGarage(mode === 'race' ? 'tracks' : 'menu'); }, 'back');
   root.querySelectorAll('.tabs [data-t]').forEach(b => click(b, () => { if (b.disabled) return; gTab = b.dataset.t; preview = null; garageNotice='';api.refreshShowroom(); buildGarage(mode);root.querySelector(`[data-t="${gTab}"]`)?.focus(); }));
@@ -603,7 +606,7 @@ function buildOptions() {
     <label class="optRow">🖥️ Qualidade gráfica <select id="oQual"><option value="alta">${IS_TOUCH()?'Nítida (celular)':'Alta'}</option><option value="baixa">${IS_TOUCH()?'Econômica':'Baixa'}</option></select></label>
     <div class="keys keysOnly"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> dirigir · 2 toques rápidos no mesmo lado e mantenha o segundo para drift · <kbd>E</kbd> item ·
       <kbd>Q</kbd> habilidade · <kbd>H</kbd> buzina · <kbd>C</kbd> câmera · <kbd>R</kbd> volta pra pista · <kbd>ESC</kbd> pausa</div>
-    <p class="gestureHelp">📱 Drift: toque duas vezes rapidamente em ◀ ou ▶ e mantenha o segundo toque. Solte para liberar o turbo. As rampas fazem saltos normais, sem acrobacias. No celular, modelos leves e efeitos reduzidos são usados automaticamente.</p>
+    <p class="gestureHelp">Na curva, dê dois toques rápidos para o mesmo lado. Segure o segundo até aparecer BOM ou PERFEITO. Solte e sinta o mini-turbo!</p>
     <details class="itemHelp"><summary>Itens das caixas — como usar</summary><p>Use E no teclado ou ITEM no celular. Guarde para o momento certo. As chances variam conforme sua posição.</p><dl>${api.BOX_ITEMS.map(item=>`<dt>${item.icon} ${item.name}</dt><dd>${item.description}</dd>`).join('')}</dl></details>
     <div id="oSaveStatus" role="status">${storageFeedback()}</div>
     <div class="backRow"><button class="btn small cream" id="oBack">◀ Voltar</button><button class="btn small cream" id="oGuide">Como pilotar</button><button class="btn small" id="oReset" style="background:#C8372D">Apagar progresso</button></div>
@@ -630,13 +633,12 @@ function buildCredits() {
     <p>Tatu, Pingo, Pipoca, Bento e Broto: máquinas inventadas na Oficina da Roça.</p>
     <p>Modelos 3D originais construídos com formas geométricas no Blender.</p>
     <p>Jogo em Three.js · música e efeitos sonoros sintetizados ao vivo (baião com zabumba, triângulo e sanfona).</p>
-    <p>Monte sua máquina, escolha suas cores e dispute o campeonato da roça!</p>
     <div class="backRow"><button class="btn small cream" id="cBack">◀ Voltar</button></div></div>`;
   click($('cBack'), () => ui.show('menu'), 'back');
 }
 function buildPause() {
-  $('pause').innerHTML = `<h2 class="title">Pausa</h2><div class="menuBtns" style="grid-template-columns:minmax(220px,300px)">
-    <button class="btn orange" id="pResume">▶ Continuar</button>
+  $('pause').innerHTML = `<h2 class="title">Corrida em pausa</h2><div class="menuBtns" style="grid-template-columns:minmax(220px,300px)">
+    <button class="btn orange" id="pResume">▶ Voltar à pista</button>
     <button class="btn" id="pRestart">↻ Reiniciar corrida</button>
     <button class="btn cream" id="pOptions">⚙️ Opções</button>
     <button class="btn cream" id="pGuide">Como pilotar</button>

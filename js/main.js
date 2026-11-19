@@ -1647,7 +1647,7 @@ function updateHUD() {
   $('item').textContent = p.rolling > 0 ? icons[Math.floor(performance.now() / 80) % icons.length] : p.item ? ITEMS[p.item].icon : '';
   $('item').setAttribute('aria-label', p.rolling > 0 ? 'Sorteando item' : p.item ? ITEMS[p.item].name : 'Sem item');
   $('item').title=p.item?ITEMS[p.item].description??ITEMS[p.item].name:'Colete uma caixa para ganhar um item.';
-  $('itemName').textContent = p.item && p.rolling <= 0 ? `${IS_TOUCH?'ITEM':'E'} · ${ITEMS[p.item].name}` : p.rolling>0?'Sorteando…':p.guide > 0 ? '🛰️ Piloto Guia' : 'Caixas dão itens';
+  $('itemName').textContent = p.item && p.rolling <= 0 ? `${IS_TOUCH?'ITEM':'E'} · ${ITEMS[p.item].name}` : p.rolling>0?'O que vem aí?':p.guide > 0 ? '🛰️ Piloto Guia' : 'Pegue uma caixa';
   $('item').classList.toggle('ready',!!p.item && p.rolling<=0);
   $('item').classList.toggle('rolling',p.rolling>0);
   $('tItem').classList.toggle('unavailable',!p.item || p.rolling>0);
@@ -1673,7 +1673,7 @@ function updateHUD() {
   $('driftMeter').style.width=`${clamp(p.driftCharge/2.1,0,1)*100}%`;
   $('driftStatus').dataset.tier=p.driftCharge>2.1?'perfect':p.driftCharge>1?'good':'charging';
   $('driftTrack').setAttribute('aria-valuenow',String(Math.round(clamp(p.driftCharge/2.1,0,1)*100)));
-  $('driftLabel').textContent=p.driftCharge>2.1?'PERFEITO — solte':p.driftCharge>1?'BOM — solte':'Carregando drift';
+  $('driftLabel').textContent=p.driftCharge>2.1?'PERFEITO! Solte!':p.driftCharge>1?'BOM! Pode soltar':'Segure a curva…';
   const challenge=CHALLENGES.find(c=>c.id===racePlan.challenge);
   $('raceEvent').textContent=racePlan.mode==='cup'?`${CUP.name} · ${racePlan.stage+1}/${CUP.tracks.length}`:racePlan.mode==='time'?`Contra o tempo${profile.timeBest[TRACK.id]?' · melhor '+fmt(profile.timeBest[TRACK.id]):' · grave seu primeiro fantasma'}`:racePlan.mode==='challenge'&&challenge?`${challenge.name}: ${challenge.metric==='drift'?runMetrics.drift+runMetrics.perfect:runMetrics[challenge.metric]}/${challenge.target}`:TRACK.name;
   mini.draw();
