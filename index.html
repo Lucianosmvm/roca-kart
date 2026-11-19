@@ -425,6 +425,38 @@
   @media(max-height:500px) and (orientation:landscape){.gestureSteps{grid-template-columns:repeat(4,minmax(0,1fr));margin:8px 0;}.drivingGuide h2{font-size:26px;}#driftStatus{top:auto;bottom:18px;width:166px;font-size:10px;padding:6px 9px;}#msg{top:32%;font-size:34px;}#sub{top:53%;font-size:18px;}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;}#driftStatus{transition:none;}#speedlines{display:none;}}
 </style>
+<style>
+  /* A single path through the workshop: machine, customization, creations. */
+  .garageSections {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 16px;}
+  .garageSections .tab {font-size:13px;line-height:1.2;padding:9px 6px;white-space:normal;border-width:2px;}
+  .garageIntro {font-size:13px;line-height:1.5;color:var(--ink);margin:0 0 14px;}
+  .garagePreviewName {position:absolute;left:18px;top:18px;display:flex;flex-direction:column;gap:3px;color:var(--cream);background:#203B43d9;border:2px solid var(--cream);border-radius:14px;padding:9px 14px;max-width:calc(100% - 36px);}
+  .garagePreviewName b {font-family:'Lilita One';font-size:24px;font-weight:400;}
+  .garagePreviewName span {font-size:11px;}
+  .garageImplement,.quickStyles {border:2px solid #216C7944;border-radius:14px;padding:12px;margin:14px 0;color:var(--ink);min-width:0;}
+  .garageImplement legend,.quickStyles legend {font-weight:900;font-size:14px;padding:0 6px;}
+  .garageImplement>div {display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;}
+  .garageImplement small,.quickStyles small {display:block;font-size:11px;line-height:1.5;margin-top:8px;}
+  .garagePersonalize {width:100%;font-size:21px;margin:8px 0 4px;}
+  .quickStyleGrid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}
+  .quickStyle {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-width:0;padding:9px 4px;border:2px solid #216C7955;border-radius:12px;background:#FFFFFF99;color:var(--ink);font:inherit;cursor:pointer;}
+  .quickStyle.selected {background:#E9C46A55;border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green);}
+  .quickStyle b {font-size:11px;line-height:1.25;}
+  .quickStyle .partDrawing {width:100%;height:58px;}
+  .quickStyle[data-wheel-style='big'] .partDrawing {transform:scale(1.09);}
+  .paletteChips {display:flex;justify-content:center;gap:0;padding:4px 0;}
+  .paletteChips i {display:block;width:23px;height:30px;border:1px solid #203B4344;}
+  .paletteChips i:first-child {border-radius:8px 0 0 8px;}.paletteChips i:last-child {border-radius:0 8px 8px 0;}
+  .quickStyle:focus-visible {outline:3px solid var(--orange);outline-offset:3px;}
+  .buildActions {border-top:1px solid #216C7933;padding-top:14px;margin-top:18px;}
+  #garage[data-page='machine'] .items {grid-template-columns:repeat(2,minmax(0,1fr));}
+  #garage[data-page='machine'] .it img {height:94px;}
+  #garage[data-page='machine'] .it small {font-size:11px;line-height:1.4;}
+  .gMainNav .tab {font-size:15px;padding:7px 12px;}
+  @media(max-width:1100px){.gGameName{display:none;}.gBrand h2{font-size:22px;}}
+  @media(max-width:760px){.gMainNav{width:100%;min-width:0;gap:5px;}.gMainNav .tab{font-size:12px;padding:6px 8px;flex:1;}.garagePreviewName{left:10px;top:8px;padding:6px 10px;}.garagePreviewName b{font-size:19px;}.garagePreviewName span{font-size:10px;}.garageSections{margin-bottom:10px;}.garageSections .tab{font-size:12px;min-height:42px;}#garage[data-page='machine'] .it img{height:76px;}}
+  @media(max-height:500px) and (max-width:900px) and (orientation:landscape){.gMainNav{width:auto;}.gMainNav .tab{font-size:11px;padding:5px 7px;}.garageSections .tab{min-height:36px;font-size:11px;}.garagePreviewName b{font-size:18px;}}
+</style>
 </head>
 <body>
 <div id="game"></div>

@@ -16,12 +16,12 @@ Jogo publicado em https://lucianosmvm.github.io/roca-kart/ — o GitHub Pages at
 
 ## Monte sua máquina
 
-Entre em **Garagem → Montar**. Escolha Tatu, Pingo, Pipoca ou Bento em Máquina e acessórios.
+Entre em **Garagem → Máquina**. Escolha Tatu, Pingo, Pipoca ou Bento e abra **Personalizar**. A oficina tem três áreas diretas: **Máquina**, **Personalizar** e **Minhas criações**.
 
 A oficina segue o layout aprovado: prévia 3D à esquerda e editor lateral no PC; no celular, a máquina fica acima de um painel inferior recolhível. **Salvar criação** e **Correr** ficam sempre visíveis.
-Use **Máquina e acessórios** para escolher máquina, implemento, pintura, acessórios e buzina.
-Dentro de **Montar**, os controles estão separados em **Peças**, **Proporções** e **Cores** (o Broto tem Peças e Cores).
-Os atributos e a habilidade ficam numa área recolhível. A câmera usa apenas o espaço livre da prévia, incluindo quando o painel é recolhido.
+Em **Máquina**, escolha se o Tatu leva o Broto. Em **Personalizar**, use **Peças**, **Rodas e tamanho**, **Cores**, **Adesivos**, **Acessórios** e **Buzina**; categorias sem opções para a máquina não são exibidas.
+Os atributos e a habilidade aparecem na escolha da máquina e podem ser recolhidos. A câmera usa apenas o espaço livre da prévia, incluindo quando o painel é recolhido.
+Os conjuntos **Compacto**, **Trilha** e **Robusto** aplicam proporções de rodas prontas; os controles individuais permitem refinar o resultado. Em **Cores**, escolha **Oficina**, **Terra e sol** ou **Noite na roça**, ou ajuste cada cor. As pinturas da loja continuam disponíveis a partir dessa área.
 
 - **Tatu:** troque capô, cabine e para-choque; ajuste altura e largura do capô.
 - **Pingo:** ajuste tanque em gota e braços de irrigação.
@@ -30,13 +30,14 @@ Os atributos e a habilidade ficam numa área recolhível. A câmera usa apenas o
 - **Todas as máquinas:** ajuste rodas dianteiras/traseiras, largura dos pneus, distância lateral entre rodas e três cores livres.
 - Gire a prévia arrastando o modelo. Alterações são salvas automaticamente por máquina e aparecem na corrida.
 - **Restaurar montagem** repõe o visual da máquina selecionada sem apagar o progresso.
-- **Broto:** com Tatu e Broto engatado, entre em **Montar → Broto**. Escolha reservatórios de sementes, barris ou caixotes e rodas pequenas, largas ou duplas. As quatro cores do implemento são independentes do trator.
+- **Broto:** com Tatu e Broto engatado, entre em **Personalizar → Broto** em Peças ou Cores. Escolha reservatórios de sementes, barris ou caixotes e rodas pequenas, largas ou duplas. As quatro cores do implemento são independentes do trator.
 - **Minhas criações:** dê um nome à montagem atual para guardar máquina, peças, cores, implemento, acessório e buzina. Use **Usar** para reaplicar uma combinação. Excluir uma criação da coleção mantém a montagem equipada.
 - Criações novas recebem miniaturas da montagem 3D real. Edite o nome na coleção, duplique variações e use **Exportar** / **Importar criação** para compartilhar arquivos `.roca.json`.
 
 As criações ficam no armazenamento do navegador, no mesmo dispositivo e endereço do jogo. Apagar os dados do navegador ou o progresso do jogo também apaga a coleção.
 
 As peças têm encaixes definidos e limites de proporção. A montagem é visual e preserva os atributos da máquina-base.
+Detalhes da reorganização em [docs/garagem-simplificada.md](docs/garagem-simplificada.md). Esta etapa não foi testada neste PC.
 
 ## Conteúdo
 

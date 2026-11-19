@@ -207,7 +207,7 @@ function buildTracks() {
 function goGarageForRace() { profile.sel.track = api.prepareRace(pickedMode,pickedTrack,pickedChallenge); save(); api.openGarage('race'); ui.show('garage'); buildGarage('race'); }
 
 // ---------------------------------------------------------------- garage + shop (shared)
-let gTab = 'build', preview = null, buildTarget = 'machine', buildSection = 'parts', creationNotice = '',garageNotice='';
+let gTab = 'machine', preview = null, buildTarget = 'machine', buildSection = 'parts', creationNotice = '',garageNotice='';
 let sheetCollapsed = false, garageSaved = true;
 const TAB_NAMES = { machine: 'Máquina', build: '🛠 Montar', creations: 'Minhas criações', impl: 'Implemento', paint: 'Pintura', decal:'Adesivos', acc: 'Acessório', horn: 'Buzina' };
 const CAT = { paint: 'paints', decal:'decals', acc: 'acc', horn: 'horns' };
@@ -225,6 +225,9 @@ function buildGarage(mode) {
   root.classList.toggle('sheetCollapsed', sheetCollapsed);
   const tabs = shop ? ['paint','decal', 'acc', 'horn'] : ['machine', 'build', 'creations', 'impl', 'paint','decal', 'acc', 'horn'];
   if (!tabs.includes(gTab)) gTab = tabs[0];
+  if(!shop && gTab==='impl') gTab='machine';
+  const page=gTab==='machine'?'machine':gTab==='creations'?'creations':'customize';
+  root.dataset.page=page;
   const { CHARACTERS, IMPLEMENTS, ABILITIES } = api;
   const sel = { ...profile.sel, ...(preview ?? {}) };
   sel.decal=cleanBuild(profile.builds[sel.char]).decal;
@@ -232,6 +235,7 @@ function buildGarage(mode) {
   const canBuildBroto = tows && sel.impl === 'broto';
   if (!canBuildBroto) buildTarget = 'machine';
   if (buildTarget === 'broto' && buildSection === 'proportions') buildSection = 'parts';
+  if(gTab==='build' && buildTarget==='machine' && sel.char!=='tatu' && buildSection==='parts') buildSection='proportions';
   const im = tows ? IMPLEMENTS[sel.impl] : null;
   const ab = ABILITIES[tows ? im.ability : ch.ability];
   const pv = preview && Object.entries(preview)[0];
@@ -244,34 +248,37 @@ function buildGarage(mode) {
       ${profile.coins < item.price ? '<small> Faltam ' + (item.price - profile.coins) + ' 🌽 — corra para ganhar!</small>' : ''}</div>`;
   }
   const catalogTabs = tabs.filter(t => !['build','creations'].includes(t));
-  const catalog = `<div class="tabs">${catalogTabs.map(t => `<button class="tab ${gTab === t ? 'on' : ''}" data-t="${t}" ${t === 'impl' && !tows ? 'disabled' : ''}>${TAB_NAMES[t]}</button>`).join('')}</div>`;
+  const sections=[['build:parts','Peças'],['build:proportions','Rodas e tamanho'],['build:colors','Cores'],['decal','Adesivos'],['acc','Acessórios'],['horn','Buzina']];
+  const catalog = shop ? `<div class="tabs">${catalogTabs.map(t => `<button class="tab ${gTab === t ? 'on' : ''}" data-t="${t}">${TAB_NAMES[t]}</button>`).join('')}</div>` : `<nav class="garageSections" aria-label="Personalização">${sections.filter(([id])=>!(buildTarget==='broto' && id==='build:proportions') && !(sel.char!=='tatu' && id==='build:parts')).map(([id,label])=>`<button class="tab ${(gTab==='build'?id==='build:'+buildSection:id===gTab || (id==='build:colors' && gTab==='paint'))?'on':''}" data-custom-section="${id}" aria-pressed="${gTab==='build'?id==='build:'+buildSection:id===gTab || (id==='build:colors' && gTab==='paint')}">${label}</button>`).join('')}</nav>`;
   root.innerHTML = `
     <header class="gHeader">
       <button class="btn small cream" id="gBack" aria-label="Voltar">‹ <span>Voltar</span></button>
       <div class="gBrand"><span class="gGameName">🌽 Roça Kart</span><h2>${shop ? 'Loja da Roça' : 'Oficina da Roça'}</h2></div>
       <nav class="gMainNav" aria-label="Seções da oficina">
-        <button class="tab ${!shop && gTab !== 'creations' ? 'on' : ''}" data-page="build">Montar</button>
-        <button class="tab ${gTab === 'creations' ? 'on' : ''}" data-page="creations">Minhas criações</button>
+        <button class="tab ${!shop && page==='machine'?'on':''}" data-page="machine" aria-pressed="${!shop && page==='machine'}">Máquina</button>
+        <button class="tab ${!shop && page==='customize' ? 'on' : ''}" data-page="build" aria-pressed="${!shop && page==='customize'}">Personalizar</button>
+        <button class="tab ${gTab === 'creations' ? 'on' : ''}" data-page="creations" aria-pressed="${gTab==='creations'}">Minhas criações</button>
       </nav><div class="gWallet" aria-label="Moedas de milho">🌽 ${profile.coins}</div>
     </header>
-    <div class="gPreview" aria-label="Prévia 3D da sua máquina"><span class="gRotateHint">⟳ Arraste para girar</span></div>
+    <div class="gPreview" aria-label="Prévia 3D da sua máquina"><div class="garagePreviewName"><b>${ch.name}${im && sel.impl!=='none'?' + '+im.name:''}</b><span>${preview?'Prévia de item não equipado':'Sua montagem atual'}</span></div><span class="gRotateHint">⟳ Arraste para girar</span></div>
     <aside class="panel gPanel" aria-label="Editor da oficina">
       <button class="gSheetToggle" id="gSheetToggle" aria-expanded="${!sheetCollapsed}" aria-controls="gEditorBody"><span class="gSheetHandle"></span><span class="gSheetCaption">${sheetCollapsed ? 'Abrir edição' : 'Recolher edição'}</span><span aria-hidden="true">${sheetCollapsed ? '⌃' : '⌄'}</span></button>
       <div class="gEditorBody" id="gEditorBody">
-      <h3 class="gEditingTitle">${gTab === 'creations' ? 'Minhas criações' : shop ? 'Escolha seu estilo' : 'Editando: ' + (buildTarget === 'broto' && gTab === 'build' ? 'Broto' : ch.name)}</h3>
-      ${gTab === 'creations' ? '' : shop ? catalog : `<details class="gCatalog" ${catalogTabs.includes(gTab) ? 'open' : ''}><summary>Máquina e acessórios <span aria-hidden="true">⚙</span></summary>${catalog}</details>`}
-      ${gTab === 'build' ? `<div class="buildTargets" role="group" aria-label="Escolher o que montar">
+      <h3 class="gEditingTitle">${gTab === 'creations' ? 'Minhas criações' : shop ? 'Escolha seu estilo' : page==='machine'?'Escolha sua máquina':'Personalize '+(buildTarget === 'broto' && gTab === 'build' ? 'o Broto' : ch.name)}</h3>
+      ${gTab==='machine'?'<p class="garageIntro">Escolha uma máquina. Depois, abra Personalizar para dar seu estilo.</p>':''}
+      ${gTab === 'creations' || gTab==='machine' ? '' : catalog}
+      ${gTab === 'build' ? `${canBuildBroto?`<div class="buildTargets" role="group" aria-label="Escolher o que montar">
         <button class="tab ${buildTarget === 'machine' ? 'on' : ''}" data-target="machine" aria-pressed="${buildTarget === 'machine'}"><img src="${ch.img}" alt="">${ch.name}</button>
         <button class="tab ${buildTarget === 'broto' ? 'on' : ''}" data-target="broto" aria-pressed="${buildTarget === 'broto'}" ${canBuildBroto ? '' : 'disabled'}><img src="assets/ui/broto.png" alt="">Broto</button>
-        ${canBuildBroto ? '' : '<small>Para montar o Broto, escolha Tatu e engate a plantadeira em Máquina e acessórios.</small>'}
-      </div><div class="editorSections" role="group" aria-label="Etapas da montagem">${[['parts','Peças'],['proportions','Proporções'],['colors','Cores']].filter(([key]) => buildTarget !== 'broto' || key !== 'proportions').map(([key,label]) => `<button class="tab ${buildSection === key ? 'on' : ''}" data-section="${key}" aria-pressed="${buildSection === key}">${label}</button>`).join('')}</div>
+      </div>`:''}
       ${buildTarget === 'broto' ? buildImplementEditor() : buildEditor(sel.char)}` : gTab === 'creations' ? buildCreations() : `<div class="items">${itemsFor(gTab).map(i => `
         <button type="button" class="it ${(gTab==='decal'?sel.decal:sel[selKey(gTab)]) === i.id ? 'sel' : ''} ${i.owned ? '' : 'locked'}" data-id="${i.id}" aria-pressed="${(gTab==='decal'?sel.decal:sel[selKey(gTab)])===i.id}" aria-label="${i.name}${i.owned?'':i.unlock?' — recompensa de conquista':' — prévia, custa '+i.price+' moedas'}">
           ${i.img ? `<img src="${i.img}" alt="">` : i.sw ? `<div class="sw" style="background:${i.sw}"></div>` : `<div class="ic">${i.ic}</div>`}
           <div>${i.name}</div>${i.sub ? `<small>${i.sub}</small>` : ''}
-          ${i.owned ? ((gTab==='decal'?sel.decal:sel[selKey(gTab)]) === i.id ? '<small>✔ equipado</small>' : '<small>tenho</small>') : `<div class="price">${i.unlock?'⭐ Conquista':'🌽 '+i.price}</div>`}
+          ${i.owned ? ((gTab==='decal'?sel.decal:sel[selKey(gTab)]) === i.id ? '<small>✔ Em uso</small>' : '<small>Selecionar</small>') : `<div class="price">${i.unlock?'⭐ Conquista':'🌽 '+i.price}</div>`}
         </button>`).join('')}</div>`}
-      <details class="gAttributes"><summary>Atributos e habilidade <span aria-hidden="true">›</span></summary><div class="gInfo">
+      ${gTab==='machine'?`${tows?`<fieldset class="garageImplement"><legend>Levar o Broto?</legend><div>${itemsFor('impl').map(i=>`<button class="tab ${sel.impl===i.id?'on':''}" data-implement="${i.id}" aria-pressed="${sel.impl===i.id}">${i.id==='none'?'Só o Tatu':'Tatu + Broto'}</button>`).join('')}</div><small>${im.perk}</small></fieldset>`:''}<button class="btn garagePersonalize" id="gPersonalize">Personalizar ${ch.name} →</button>`:''}
+      <details class="gAttributes" ${gTab==='machine'?'open':''}><summary>Atributos e habilidade <span aria-hidden="true">›</span></summary><div class="gInfo">
         <div><b style="font-family:'Lilita One';font-size:22px">${ch.name}${im && sel.impl !== 'none' ? ' + ' + im.name : ''}</b><br>
           <span class="abilTag">${ab.icon} ${ab.name}</span> ${im ? `<small>${im.perk}</small>` : ''}</div>
         <div class="statsBox">${Object.entries(ch.stats).map(([k, v]) => `<span>${k}</span><em>${stars(v)}</em>`).join('')}</div>
@@ -287,11 +294,19 @@ function buildGarage(mode) {
   click($('gBack'), () => { preview = null; api.leaveGarage(mode === 'race' ? 'tracks' : 'menu'); }, 'back');
   root.querySelectorAll('.tabs [data-t]').forEach(b => click(b, () => { if (b.disabled) return; gTab = b.dataset.t; preview = null; garageNotice='';api.refreshShowroom(); buildGarage(mode);root.querySelector(`[data-t="${gTab}"]`)?.focus(); }));
   root.querySelectorAll('[data-page]').forEach(button => click(button, () => {
-    gTab = button.dataset.page; preview = null; sheetCollapsed = false;
+    gTab = button.dataset.page; preview = null; garageNotice='';sheetCollapsed = false;
     if (shop) { api.openGarage('menu'); ui.show('garage'); }
     else api.refreshShowroom();
     buildGarage(shop ? 'menu' : mode);
+    (shop?$('garage'):root).querySelector(`[data-page="${button.dataset.page}"]`)?.focus();
   }));
+  root.querySelectorAll('[data-custom-section]').forEach(button=>click(button,()=>{
+    const [tab,section]=button.dataset.customSection.split(':');gTab=tab;if(section)buildSection=section;if(tab!=='build')buildTarget='machine';
+    preview=null;garageNotice='';api.refreshShowroom();buildGarage(mode);
+    root.querySelector(`[data-custom-section="${button.dataset.customSection}"]`)?.focus();
+  }));
+  root.querySelectorAll('[data-implement]').forEach(button=>click(button,()=>{profile.sel.impl=button.dataset.implement;saveGarage();api.refreshShowroom();buildGarage(mode);root.querySelector(`[data-implement="${profile.sel.impl}"]`)?.focus();}));
+  if($('gPersonalize')) click($('gPersonalize'),()=>{gTab='build';buildTarget='machine';buildSection=sel.char==='tatu'?'parts':'proportions';buildGarage(mode);root.querySelector('.garageSections .on')?.focus();});
   click($('gSheetToggle'), () => {
     sheetCollapsed = !sheetCollapsed;
     root.classList.toggle('sheetCollapsed', sheetCollapsed);
@@ -338,12 +353,10 @@ function buildGarage(mode) {
   const go = $('gGo');
   if (go) click(go, () => { if(preview) {garageNotice='Essa prévia não foi comprada. Escolha um item equipado ou compre antes de correr.';buildGarage(mode);return;} api.startRace(profile.sel.track); });
   if (gTab === 'build') {
-    root.querySelectorAll('[data-section]').forEach(button => click(button, () => {
-      buildSection = button.dataset.section; buildGarage(mode);
-    }));
     root.querySelectorAll('[data-target]').forEach(button => click(button, () => {
       if (button.disabled) return;
       buildTarget = button.dataset.target; buildGarage(mode);
+      root.querySelector(`[data-target="${buildTarget}"]`)?.focus();
     }));
     if (buildTarget === 'broto') bindImplementEditor(root, mode);
     else bindEditor(root, sel.char, mode);
@@ -401,6 +414,44 @@ function partDrawing(key, value) {
   return `<svg class="partDrawing" viewBox="0 0 128 80" aria-hidden="true" focusable="false"><ellipse cx="64" cy="71" rx="46" ry="4" fill="#203B43" opacity=".09"/>${drawings[key + ':' + value] ?? ''}</svg>`;
 }
 
+const WHEEL_PRESETS=[
+  {id:'compact',name:'Compacto',drawing:'small',values:{frontSize:.85,rearSize:.9,tireWidth:.8,stance:.98}},
+  {id:'trail',name:'Trilha',drawing:'wide',values:{frontSize:1,rearSize:1.05,tireWidth:1.2,stance:1.12}},
+  {id:'big',name:'Robusto',drawing:'wide',values:{frontSize:1.2,rearSize:1.18,tireWidth:1.45,stance:1.25}},
+];
+const COLOR_STYLES=[
+  {id:'oficina',name:'Oficina',colors:['#216C79','#E9C46A','#E87578','#FFF0CF']},
+  {id:'barro',name:'Terra e sol',colors:['#B85A33','#E9C46A','#216C79','#FFF0CF']},
+  {id:'noite',name:'Noite na roça',colors:['#364968','#76CADB','#E9C46A','#FFF0CF']},
+];
+function colorStyles(implement=false) {
+  const b=implement?cleanImplementBuild(profile.implementBuilds.broto):cleanBuild(profile.builds[profile.sel.char]);
+  return `<fieldset class="quickStyles"><legend>Combinações de cores</legend><div class="quickStyleGrid">${COLOR_STYLES.map(style=>{
+    const [body,hopper,accent,trim]=style.colors;
+    const selected=(b.bodyColor??paintColor(profile.sel.paint))===body && b.accent===accent && b.trim===trim && (!implement || b.hopperColor===hopper);
+    return `<button type="button" class="quickStyle ${selected?'selected':''}" data-color-style="${style.id}" aria-pressed="${selected}"><span class="paletteChips">${(implement?style.colors:[body,accent,trim]).map(color=>`<i style="background:${color}"></i>`).join('')}</span><b>${style.name}</b></button>`;
+  }).join('')}</div><small>Use uma combinação ou escolha cada cor abaixo.</small></fieldset>`;
+}
+function bindColorStyles(root,mode,implement=false) {
+  root.querySelectorAll('[data-color-style]').forEach(button=>click(button,()=>{
+    const style=COLOR_STYLES.find(s=>s.id===button.dataset.colorStyle);if(!style)return;
+    const [bodyColor,hopperColor,accent,trim]=style.colors;
+    if(implement) profile.implementBuilds.broto=cleanImplementBuild({...profile.implementBuilds.broto,bodyColor,hopperColor,accent,trim});
+    else profile.builds[profile.sel.char]=cleanBuild({...profile.builds[profile.sel.char],bodyColor,accent,trim});
+    saveGarage();api.refreshShowroom();buildGarage(mode);root.querySelector(`[data-color-style="${style.id}"]`)?.focus();
+  }));
+}
+function refreshQuickStyles(root,b,implement=false) {
+  root.querySelectorAll('[data-wheel-style]').forEach(button=>{
+    const p=WHEEL_PRESETS.find(p=>p.id===button.dataset.wheelStyle),selected=Object.entries(p.values).every(([k,v])=>Math.abs(b[k]-v)<.001);
+    button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));
+  });
+  root.querySelectorAll('[data-color-style]').forEach(button=>{
+    const [body,hopper,accent,trim]=COLOR_STYLES.find(s=>s.id===button.dataset.colorStyle).colors;
+    const selected=(b.bodyColor??paintColor(profile.sel.paint))===body && b.accent===accent && b.trim===trim && (!implement || b.hopperColor===hopper);
+    button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));
+  });
+}
 function buildEditor(char) {
   const b = cleanBuild(profile.builds[char]);
   const choices = char === 'tatu' ? [
@@ -415,22 +466,28 @@ function buildEditor(char) {
   return `<div class="buildIntro">${buildSection === 'parts' ? 'Escolha pelo desenho e monte do seu jeito.' : buildSection === 'proportions' ? 'Ajuste os tamanhos da sua máquina.' : 'Escolha as cores da sua montagem.'}</div>
     ${buildSection === 'parts' ? choices.length ? `<div class="partGroups">${choices.map(([key,label,options]) => `<fieldset class="partGroup"><legend>${label}</legend><div class="partOptions">${options.map(([v,text]) => `
       <label class="partOption"><input type="radio" name="build-${key}" data-build="${key}" value="${v}" ${b[key] === v ? 'checked' : ''}>
-      <span class="partCard">${partDrawing(key,v)}<span class="partLabel">${text}</span><span class="partSelected">✓ Selecionado</span></span></label>`).join('')}</div></fieldset>`).join('')}</div>` : `<div class="gEditorTip">${char==='pingo'?'💧 Ajuste o tanque e os braços em Proporções.':'🚜 Ajuste as rodas em Proporções.'} Escolha cores e adesivos em Máquina e acessórios para dar sua cara ao veículo.</div>` : ''}
-    ${buildSection === 'proportions' ? `<div class="buildGrid">
+      <span class="partCard">${partDrawing(key,v)}<span class="partLabel">${text}</span><span class="partSelected">✓ Selecionado</span></span></label>`).join('')}</div></fieldset>`).join('')}</div>` : `<div class="gEditorTip">${char==='pingo'?'💧 Ajuste o tanque e os braços em Rodas e tamanho.':'🚜 Ajuste as rodas em Rodas e tamanho.'} Use Cores, Adesivos e Acessórios para completar seu visual. Esta máquina mantém sua carroceria original.</div>` : ''}
+    ${buildSection === 'proportions' ? `<fieldset class="quickStyles"><legend>Conjuntos de rodas</legend><div class="quickStyleGrid">${WHEEL_PRESETS.map(p=>`<button class="quickStyle ${Object.entries(p.values).every(([k,v])=>Math.abs(b[k]-v)<.001)?'selected':''}" data-wheel-style="${p.id}" aria-pressed="${Object.entries(p.values).every(([k,v])=>Math.abs(b[k]-v)<.001)}">${partDrawing('wheels',p.drawing)}<b>${p.name}</b></button>`).join('')}</div><small>Os conjuntos ajustam as proporções. Refine cada medida abaixo.</small></fieldset><div class="buildGrid">
     ${sliders.map(([key,label]) => `<label>${label} <output data-value="${key}">${Math.round(b[key]*100)}%</output><input aria-label="${label}" data-build="${key}" type="range" min="${BUILD_RANGES[key][0]}" max="${BUILD_RANGES[key][1]}" step=".01" value="${b[key]}"></label>`).join('')}
     </div>` : ''}
-    ${buildSection === 'colors' ? `<div class="buildGrid">
+    ${buildSection === 'colors' ? `${colorStyles()}<div class="buildGrid">
     ${[['bodyColor','Carroceria',b.bodyColor ?? paintColor(profile.sel.paint)],['accent','Detalhes',b.accent],['trim','Acabamento',b.trim]].map(([key,label,value]) => `<label class="buildColor">${label}<input aria-label="${label}" data-build="${key}" type="color" value="${value}"></label>`).join('')}
-    </div>` : ''}<div class="buildActions"><small>Visual livre, corrida equilibrada.</small><button class="btn small cream" id="buildReset">Restaurar montagem</button></div>`;
+    </div><button class="btn small cream" id="gPaints">Ver pinturas da loja →</button>` : ''}<div class="buildActions"><small>Estas mudanças são visuais; os atributos da máquina continuam iguais.</small><button class="btn small cream" id="buildReset">Restaurar montagem</button></div>`;
 }
 function bindEditor(root, char, mode) {
+  bindColorStyles(root,mode);
+  root.querySelectorAll('[data-wheel-style]').forEach(button=>click(button,()=>{
+    const preset=WHEEL_PRESETS.find(p=>p.id===button.dataset.wheelStyle);if(!preset)return;
+    profile.builds[char]=cleanBuild({...profile.builds[char],...preset.values});saveGarage();api.refreshShowroom();buildGarage(mode);root.querySelector(`[data-wheel-style="${preset.id}"]`)?.focus();
+  }));
+  if($('gPaints'))click($('gPaints'),()=>{gTab='paint';buildGarage(mode);});
   root.querySelectorAll('[data-build]').forEach(input => input.addEventListener('input', () => {
     const b = cleanBuild(profile.builds[char]);
     b[input.dataset.build] = input.type === 'range' ? Number(input.value) : input.value;
     profile.builds[char] = cleanBuild(b);
     const out = root.querySelector(`[data-value="${input.dataset.build}"]`);
     if (out) out.value = Math.round(Number(input.value)*100) + '%';
-    saveGarage(); api.refreshShowroom();
+    refreshQuickStyles(root,profile.builds[char]);saveGarage(); api.refreshShowroom();
   }));
   click($('buildReset'), () => { profile.builds[char] = { ...BUILD_DEFAULTS }; saveGarage(); api.refreshShowroom(); buildGarage(mode); });
 }
@@ -445,16 +502,17 @@ function buildImplementEditor() {
     ${buildSection === 'parts' ? `<div class="partGroups brotoParts">${choices.map(([key,label,options]) => `<fieldset class="partGroup"><legend>${label}</legend><div class="partOptions">${options.map(([v,text]) => `
       <label class="partOption"><input type="radio" name="broto-${key}" data-impl-build="${key}" value="${v}" ${b[key] === v ? 'checked' : ''}>
       <span class="partCard">${partDrawing(key,v)}<span class="partLabel">${text}</span><span class="partSelected">✓ Selecionado</span></span></label>`).join('')}</div></fieldset>`).join('')}</div>` : ''}
-    ${buildSection === 'colors' ? `<div class="buildGrid">${[['bodyColor','Chassi'],['hopperColor','Reservatórios'],['accent','Detalhes'],['trim','Acabamento']].map(([key,label]) => `
+    ${buildSection === 'colors' ? `${colorStyles(true)}<div class="buildGrid">${[['bodyColor','Chassi'],['hopperColor','Reservatórios'],['accent','Detalhes'],['trim','Acabamento']].map(([key,label]) => `
       <label class="buildColor">${label}<input aria-label="Cor do ${label}" data-impl-build="${key}" type="color" value="${b[key]}"></label>`).join('')}</div>` : ''}
     <div class="buildActions"><small>Peças visuais: a habilidade de plantio continua a mesma.</small><button class="btn small cream" id="implBuildReset">Restaurar Broto</button></div>`;
 }
 function bindImplementEditor(root, mode) {
+  bindColorStyles(root,mode,true);
   root.querySelectorAll('[data-impl-build]').forEach(input => input.addEventListener('input', () => {
     const b = cleanImplementBuild(profile.implementBuilds.broto);
     b[input.dataset.implBuild] = input.value;
     profile.implementBuilds.broto = cleanImplementBuild(b);
-    saveGarage(); api.refreshShowroom();
+    refreshQuickStyles(root,profile.implementBuilds.broto,true);saveGarage(); api.refreshShowroom();
   }));
   click($('implBuildReset'), () => {
     profile.implementBuilds.broto = { ...IMPLEMENT_DEFAULTS };
