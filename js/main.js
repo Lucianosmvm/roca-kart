@@ -1259,7 +1259,7 @@ const mini = (() => {
     draw() {
       if (!P) return;
       g.clearRect(0, 0, 170, 170); g.lineJoin = 'round';
-      g.strokeStyle = '#2b1a0e'; g.lineWidth = 9; g.stroke(path); g.strokeStyle = '#D9AE72'; g.lineWidth = 5; g.stroke(path);
+      g.strokeStyle = '#203B43dd'; g.lineWidth = 12; g.stroke(path); g.strokeStyle = '#FFF0CF'; g.lineWidth = 8; g.stroke(path);
       const [sx, sz] = P(S[0].p.x, S[0].p.z); g.fillStyle = '#fff'; g.fillRect(sx - 4, sz - 2, 8, 4);
       for (const k of [...karts].reverse()) {
         const [a, b] = P(k.pos.x, k.pos.z);
@@ -1269,16 +1269,47 @@ const mini = (() => {
     },
   };
 })();
+let standingsSignature = '';
+function updateStandings() {
+  const leaders = [...karts].sort((a, b) => a.place - b.place).slice(0, 4);
+  const signature = leaders.map(k => `${k.place}:${k.def.name}:${k.def.char}:${k.def.paint}:${k.isPlayer}`).join('|');
+  if (signature === standingsSignature) return;
+  standingsSignature = signature;
+  const entries = leaders.map(k => {
+    const entry = document.createElement('li');
+    entry.className = 'standing' + (k.isPlayer ? ' is-player' : '');
+    entry.value = k.place;
+    entry.setAttribute('aria-label', `${k.place}º lugar: ${k.def.name}`);
+    const portrait = document.createElement('span'); portrait.className = 'standingPortrait';
+    portrait.style.setProperty('--racer-color', k.def.paint);
+    const image = document.createElement('img'); image.src = CHARACTERS[k.def.char].img; image.alt = '';
+    const rank = document.createElement('span'); rank.className = 'standingRank'; rank.textContent = k.place;
+    portrait.append(image, rank);
+    const name = document.createElement('span'); name.className = 'standingName'; name.textContent = k.def.name;
+    entry.append(portrait, name); return entry;
+  });
+  $('standings').replaceChildren(...entries);
+}
 function updateHUD() {
   const p = player;
-  $('pos').innerHTML = `${p.place}<small>º/${karts.length}</small>`;
-  $('lap').textContent = `Volta ${clamp(p.lap, 1, CFG.laps)}/${CFG.laps}`;
-  $('time').textContent = fmt(p.finished ? p.finishTime : state.raceTime);
-  $('speed').innerHTML = `${Math.round(Math.abs(p.speed) * 3.6)}<small> km/h</small>`;
-  $('coins').innerHTML = `🌽 <b>${p.coins}</b><small>/10</small>`;
+  $('pos').innerHTML = `${p.place}<small>º</small><span class="posTotal">de ${karts.length}</span>`;
+  $('lapValue').innerHTML = `${clamp(p.lap, 1, CFG.laps)}<small>/${CFG.laps}</small>`;
+  $('timeValue').textContent = fmt(p.finished ? p.finishTime : state.raceTime);
+  const speed = Math.round(Math.abs(p.speed) * 3.6);
+  $('speedValue').textContent = speed;
+  $('speed').setAttribute('aria-label', `Velocidade: ${speed} quilômetros por hora`);
+  $('speedNeedle').setAttribute('transform', `rotate(${clamp(Math.abs(p.speed) / CFG.boostSpeed, 0, 1) * 180} 100 115)`);
+  const turbo = Math.round(clamp(p.boost / 3, 0, 1) * 100);
+  $('boostFill').style.width = `${turbo}%`;
+  $('boostFill').parentElement.setAttribute('aria-valuenow', turbo);
+  $('speed').classList.toggle('boosting', p.boost > 0);
+  $('coinValue').textContent = `×${p.coins}`;
+  $('coins').setAttribute('aria-label', `${p.coins} moedas de milho coletadas`);
+  updateStandings();
   const icons = ['⛽', '🛰️', '⚡'];
   $('item').textContent = p.rolling > 0 ? icons[Math.floor(performance.now() / 80) % icons.length] : p.item ? ITEMS[p.item].icon : '';
-  $('itemName').innerHTML = p.item && p.rolling <= 0 ? `${ITEMS[p.item].name}` : p.guide > 0 ? '🛰️ Piloto Guia' : '';
+  $('item').setAttribute('aria-label', p.rolling > 0 ? 'Sorteando item' : p.item ? ITEMS[p.item].name : 'Sem item');
+  $('itemName').textContent = p.item && p.rolling <= 0 ? ITEMS[p.item].name : p.guide > 0 ? '🛰️ Piloto Guia' : '';
   const ab = ABILITIES[p.ability];
   $('abilIcon').textContent = ab.icon;
   $('abilFill').style.width = `${Math.round(p.charge * 100)}%`;

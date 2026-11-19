@@ -7,7 +7,7 @@ import { TRACKS } from './tracks.js';
 
 const $ = id => document.getElementById(id);
 const SCREENS = ['splash', 'menu', 'tracks', 'garage', 'shop', 'options', 'credits', 'pause', 'results', 'cutscene'];
-const HUD = ['item', 'itemName', 'abil', 'minimap', 'lap', 'time', 'coins', 'pos', 'speed', 'msg', 'sub', 'help', 'pauseBtn', 'touch'];
+const HUD = ['item', 'itemName', 'abil', 'minimap', 'lap', 'time', 'coins', 'pos', 'standings', 'speed', 'msg', 'sub', 'help', 'pauseBtn', 'touch'];
 const fmt = t => { const m = Math.floor(t / 60), s = t % 60; return `${m}:${s.toFixed(2).padStart(5, '0')}`; };
 const stars = n => '★'.repeat(n) + '☆'.repeat(5 - n);
 let api = null;

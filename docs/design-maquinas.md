@@ -86,3 +86,15 @@ O Blender foi usado apenas em segundo plano para produzir e salvar os arquivos 3
 - O gerador `blender/props_demo.py -- garage` permite regerar somente esse cenário.
 
 Este layout e o enquadramento não foram executados ou testados no PC do usuário. A instrução de não testar permanece em vigor.
+
+## HUD de corrida
+
+A organização segue a imagem de referência enviada pelo usuário, preservando cores, retratos e ícones próprios do jogo.
+Cronômetro à esquerda no alto; item ao centro; milho e voltas à direita no alto.
+A lateral esquerda mostra os quatro primeiros colocados, com nomes e retratos do elenco; a colocação do jogador permanece destacada no canto inferior esquerdo.
+O minimapa ocupa a lateral direita sem painel opaco. O velocímetro no canto inferior direito tem ponteiro, leitura numérica em km/h e uma barra de turbo ativo (normalizada para três segundos).
+A habilidade continua separada, com sua barra de carga e o atalho Q.
+As regras de posição e tamanho respondem à largura/altura da tela e mantêm os controles por toque separados dos principais indicadores.
+Os retratos da classificação só são reconstruídos quando a ordem ou os participantes mudam.
+
+Não foram executados testes, verificações de sintaxe ou validação no navegador para esta alteração, conforme instrução do usuário. Não há novos modelos 3D nesta etapa.

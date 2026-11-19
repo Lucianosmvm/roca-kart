@@ -38,6 +38,20 @@ progresso e recordes salvos no navegador.
 
 **Teclado:** W/↑ acelera · S/↓ freia · A/D vira · ESPAÇO drift/manobra · E item · Q habilidade · H buzina · C câmera · R volta à pista · ESC pausa.
 
+## HUD da corrida
+
+Organização inspirada na referência visual fornecida pelo usuário, com os elementos próprios do Roça Kart:
+
+- Cronômetro no alto à esquerda; item equipado centralizado no alto.
+- Moedas de milho e voltas no alto à direita.
+- Retratos dos quatro primeiros colocados na lateral esquerda e posição do jogador em destaque embaixo.
+- Minimapa transparente à direita, com o traçado em creme e marcadores dos corredores.
+- Velocímetro com ponteiro, leitura em km/h e indicação de turbo no canto inferior direito.
+- Habilidade separada no canto esquerdo e botão de pausa abaixo das voltas.
+- Adaptações para celular e telas baixas, com os controles de toque afastados do velocímetro.
+
+Esta reorganização do HUD não foi testada neste PC, por orientação do usuário. Não houve alteração de modelos 3D.
+
 ## Arquivos principais
 
 - `blender/oficina.py`: gera os três modelos originais e retratos, sem geometria importada.
