@@ -48,7 +48,7 @@ export const ui = {
       <ol class="gestureSteps"><li><span class="gestureKey">◀</span><b>1. Toque</b><small>Aperte a direção.</small></li><li><span class="gestureKey released">◀</span><b>2. Solte</b><small>Solte rapidamente.</small></li><li><span class="gestureKey held">◀</span><b>3. Segure</b><small>Aperte de novo no mesmo lado, em até 0,3 s, e mantenha.</small></li><li><span class="gestureKey turbo">↗</span><b>4. Mini-turbo!</b><small>Espere BOM ou PERFEITO e solte.</small></li></ol>
       <p class="guideHint">Também funciona para a direita. No teclado, use A/D ou as setas; no celular, os botões ◀ e ▶. Faça o gesto já em movimento.</p>
       <div class="guideLegend"><span>➜ Placa amarela: curva</span><span>↗ SALTO: rampa adiante</span><span>↗ ATALHO: caminho alternativo</span></div>
-      <p class="guideHint">${IS_TOUCH()?'O veículo acelera sozinho. Toque em ITEM e HAB para usar o que estiver disponível. As manobras no ar são automáticas.':'W/↑ acelera · S/↓ freia · E usa item · Q usa habilidade · ESPAÇO faz manobra no ar · R volta à pista · ESC pausa.'}</p>
+      <p class="guideHint">${IS_TOUCH()?'O veículo acelera sozinho. Toque em ITEM e HAB para usar o que estiver disponível. As rampas fazem saltos normais, sem acrobacias.':'W/↑ acelera · S/↓ freia · E usa item · Q usa habilidade · R volta à pista · ESC pausa. As rampas fazem saltos normais.'}</p>
       <div class="backRow"><button class="btn cream" id="guideBack">◀ Voltar</button><button class="btn orange" id="guideDone">${onStart?'Entendi, vamos correr!':'Entendi!'}</button></div>
     </section>`;
     this.show('guide');
@@ -215,7 +215,7 @@ function itemsFor(tab) {
   const { CHARACTERS, IMPLEMENTS, ABILITIES } = api;
   if (tab === 'machine') return Object.entries(CHARACTERS).map(([id, c]) => ({ id, name: c.name, sub: c.machine+' · '+(c.personality??(id==='tatu'?'Equilibrado e parceiro de todas as corridas.':'Rápido nas retas, brincalhão com a água.')), img: c.img, owned: true }));
   if (tab === 'impl') return Object.entries(IMPLEMENTS).map(([id, m]) => ({ id, name: m.name, sub: ABILITIES[m.ability].icon + ' ' + ABILITIES[m.ability].name, img: m.img, owned: true }));
-  return CATALOG[CAT[tab]].map(i => ({ id: i.id, name: i.name, sw: i.color, ic: i.icon, price: i.price, unlock:i.unlock, sub:i.unlock?({drift:'5 mini-turbos numa corrida',jumps:'3 manobras em saltos',corn:'20 moedas numa corrida',cup:'Pódio na Copa da Colheita'})[i.unlock]:null, owned: owns(CAT[tab], i.id) }));
+  return CATALOG[CAT[tab]].map(i => ({ id: i.id, name: i.name, sw: i.color, ic: i.icon, price: i.price, unlock:i.unlock, sub:i.unlock?({drift:'5 mini-turbos numa corrida',jumps:'3 saltos com aterrissagem',corn:'20 moedas numa corrida',cup:'Pódio na Copa da Colheita'})[i.unlock]:null, owned: owns(CAT[tab], i.id) }));
 }
 const selKey = tab => ({ machine: 'char', impl: 'impl', paint: 'paint', acc: 'acc', horn: 'horn' }[tab]);
 function buildGarage(mode) {
@@ -600,10 +600,10 @@ function buildOptions() {
     <label class="optRow">🔊 Efeitos <input type="range" min="0" max="1" step="0.05" id="oSfx" value="${o.sfx}"></label>
     <label class="optRow">🚜 Acelerar sozinho <input type="checkbox" id="oGas" ${o.autoGas ? 'checked' : ''}></label>
     <label class="optRow">🧭 Direção assistida <input type="checkbox" id="oAssist" ${o.assist ? 'checked' : ''}></label>
-    <label class="optRow">🖥️ Qualidade gráfica <select id="oQual"><option value="alta">Alta</option><option value="baixa">Baixa</option></select></label>
-    <div class="keys keysOnly"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> dirigir · 2 toques rápidos no mesmo lado e mantenha o segundo para drift · <kbd>ESPAÇO</kbd> manobra no ar · <kbd>E</kbd> item ·
+    <label class="optRow">🖥️ Qualidade gráfica <select id="oQual"><option value="alta">${IS_TOUCH()?'Leve (celular)':'Alta'}</option><option value="baixa">${IS_TOUCH()?'Econômica':'Baixa'}</option></select></label>
+    <div class="keys keysOnly"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> dirigir · 2 toques rápidos no mesmo lado e mantenha o segundo para drift · <kbd>E</kbd> item ·
       <kbd>Q</kbd> habilidade · <kbd>H</kbd> buzina · <kbd>C</kbd> câmera · <kbd>R</kbd> volta pra pista · <kbd>ESC</kbd> pausa</div>
-    <p class="gestureHelp">📱 Drift: toque duas vezes rapidamente em ◀ ou ▶ e mantenha o segundo toque. Solte para liberar o turbo. As manobras nos saltos são automáticas no celular.</p>
+    <p class="gestureHelp">📱 Drift: toque duas vezes rapidamente em ◀ ou ▶ e mantenha o segundo toque. Solte para liberar o turbo. As rampas fazem saltos normais, sem acrobacias. No celular, modelos leves e efeitos reduzidos são usados automaticamente.</p>
     <div id="oSaveStatus" role="status">${storageFeedback()}</div>
     <div class="backRow"><button class="btn small cream" id="oBack">◀ Voltar</button><button class="btn small cream" id="oGuide">Como pilotar</button><button class="btn small" id="oReset" style="background:#C8372D">Apagar progresso</button></div>
   </div>`;

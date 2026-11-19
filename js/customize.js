@@ -67,9 +67,10 @@ export function applyBuild(model, raw, char, paintMaterial,assets) {
     const col = o.material.name === 'Coral' ? b.accent : o.material.name === 'Cream' ? b.trim : null;
     if (col) { o.material = o.material.clone(); o.material.color.set(col); resources.push(o.material); }
   });
-  const rubber = new THREE.MeshStandardMaterial({ color: '#29353D',roughness:.8 });
-  const trim = new THREE.MeshStandardMaterial({ color: b.trim,roughness:.43 });
-  const accent = new THREE.MeshStandardMaterial({ color: b.accent,roughness:.43 });
+  const Material=paintMaterial.isMeshLambertMaterial?THREE.MeshLambertMaterial:THREE.MeshStandardMaterial;
+  const rubber = new Material({ color: '#29353D',...(paintMaterial.isMeshLambertMaterial?{}:{roughness:.8}) });
+  const trim = new Material({ color: b.trim,...(paintMaterial.isMeshLambertMaterial?{}:{roughness:.43}) });
+  const accent = new Material({ color: b.accent,...(paintMaterial.isMeshLambertMaterial?{}:{roughness:.43}) });
   resources.push(rubber, trim, accent);
   function fitted(asset,parent,anchor) {
     if(!assets?.[asset])return false;

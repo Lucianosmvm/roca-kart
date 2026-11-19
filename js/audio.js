@@ -228,7 +228,6 @@ export const audio = {
       case 'bump': this.noiseBurst(0.12, 400, 120, 0.18, 'lowpass'); this.tone(90, 0.12, 'sawtooth', 0.1); break;
       case 'jump': this.sweep(250, 700, 0.25, 0.14, 'square'); break;
       case 'land': this.noiseBurst(0.18, 600, 100, 0.2, 'lowpass'); this.tone(70, 0.15, 'sine', 0.18); break;
-      case 'trick': this.sweep(500, 1600, 0.2, 0.12, 'square'); this.tone(2093, 0.12, 'square', 0.08, 0.2); break;
       case 'splash': this.noiseBurst(0.5, 3000, 600, 0.22, 'highpass'); break;
       case 'plant': [523, 659, 784].forEach((f, i) => this.tone(f, 0.1, 'triangle', 0.12, i * 0.06)); this.noiseBurst(0.2, 300, 150, 0.2, 'lowpass'); break;
       case 'sneeze': this.sweep(900, 300, 0.12, 0.12, 'sawtooth'); this.noiseBurst(0.3, 3000, 800, 0.3, 'bandpass', 0.15); break;

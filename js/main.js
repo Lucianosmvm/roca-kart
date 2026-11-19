@@ -86,18 +86,19 @@ if (profile.opts.assist === null) profile.opts.assist = IS_TOUCH;
 if (profile.opts.autoGas === null) profile.opts.autoGas = IS_TOUCH;
 
 // ================================================================== renderer / scenes
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: !IS_TOUCH,powerPreference:'high-performance' });
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 $('game').appendChild(renderer.domElement);
 function applyQuality() {
-  const hi = profile.opts.quality !== 'baixa';
-  renderer.setPixelRatio(hi ? Math.min(devicePixelRatio, 2) : 1);
+  const hi = !IS_TOUCH && profile.opts.quality !== 'baixa';
+  renderer.setPixelRatio(IS_TOUCH ? (profile.opts.quality==='baixa' ? .75 : .9) : hi ? Math.min(devicePixelRatio, 2) : 1);
   renderer.shadowMap.enabled = hi;
   renderer.setSize(innerWidth, innerHeight);
 }
 applyQuality();
 const effect = new OutlineEffect(renderer, { defaultThickness: 0.0032, defaultColor: [0.12, 0.07, 0.03] });
+const renderScene=(scene,camera)=>(IS_TOUCH || profile.opts.quality==='baixa'?renderer:effect).render(scene,camera);
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog('#D6F0FF', 260, 820);
@@ -152,9 +153,10 @@ const gradMap = (() => {
 const toonCache = new Map();
 function toonOf(m) {
   if (toonCache.has(m)) return toonCache.get(m);
-  const t = new THREE.MeshStandardMaterial({
+  const Material=IS_TOUCH?THREE.MeshLambertMaterial:THREE.MeshStandardMaterial;
+  const t = new Material({
     name: m.name, color: m.color ? m.color.clone() : new THREE.Color('#fff'), map: m.map || null,
-    roughness:m.roughness??.65,metalness:m.metalness??0,
+    ...(IS_TOUCH?{}:{roughness:m.roughness??.65,metalness:m.metalness??0}),
     emissive: m.emissive ? m.emissive.clone() : new THREE.Color(0), emissiveIntensity: m.emissiveIntensity ?? 1,
   });
   toonCache.set(m, t); return t;
@@ -173,12 +175,14 @@ const ASSETS = ['tatu', 'corn', 'wheat', 'sunflower', 'hay', 'haysq', 'barn', 's
   'race_curve_left','race_curve_right','race_sign_jump','race_sign_route','race_edge_marker',
   'tatu_hood_box','tatu_hood_round','tatu_roof_cage','tatu_bumper_double'];
 const A = {};
+const assetGeometries=new Set(),assetMaterials=new Set(),assetTextures=new Set();
 let courseLayouts={};
 async function loadAssets(onProgress) {
   const loader = new GLTFLoader();
   let done = 0;
-  await Promise.all(ASSETS.map(n => loader.loadAsync(`assets/${n}.glb`).then(g => {
+  await Promise.all(ASSETS.map(n => loader.loadAsync(`assets/${n}${IS_TOUCH&&!n.startsWith('course_')?'_mobile':''}.glb`).then(g => {
     A[n] = toonify(g.scene); onProgress?.(++done / ASSETS.length);
+    A[n].traverse(o=>{if(!o.isMesh)return;assetGeometries.add(o.geometry);assetMaterials.add(o.material);for(const value of Object.values(o.material))if(value?.isTexture)assetTextures.add(value);});
   })));
   const response=await fetch('assets/course-layouts.json');
   if(!response.ok) throw Error('Não foi possível carregar os traçados das pistas.');
@@ -188,7 +192,7 @@ async function loadAssets(onProgress) {
 // ================================================================== world (rebuilt per track)
 let world = new THREE.Group(); scene.add(world);
 let TRACK = TRACKS[0], THEME = TRACK.theme;
-let S = [], TRACK_LEN = 1, SPACING = 1, grid = new Map(), WB = { x0: 0, z0: 0, size: 600 };
+let S = [], TRACK_LEN = 1, SPACING = 1, grid = new Map(), branchGrid=new Map(), WB = { x0: 0, z0: 0, size: 600 };
 let plots = [], colliders = [], animated = [], clouds = [], cows = [];
 let itemBoxes = [], pads = [], muds = [], ramps = [], coinsOnTrack = [], podiumSpot = null;
 const sIdx = i => ((i % CFG.N) + CFG.N) % CFG.N;
@@ -220,6 +224,14 @@ function computeTrack(def) {
     const k = `${Math.floor(s.p.x / GRID)},${Math.floor(s.p.z / GRID)}`;
     if (!grid.has(k)) grid.set(k, []); grid.get(k).push(i);
   });
+  branchGrid=new Map();
+  for(const route of layout?.branches??[])for(let i=0;i<route.samples.length-1;i++){
+    const a=route.samples[i],b=route.samples[i+1],pad=route.width+13;
+    for(let x=Math.floor((Math.min(a[0],b[0])-pad)/GRID);x<=Math.floor((Math.max(a[0],b[0])+pad)/GRID);x++)
+      for(let z=Math.floor((Math.min(a[2],b[2])-pad)/GRID);z<=Math.floor((Math.max(a[2],b[2])+pad)/GRID);z++){
+        const key=`${x},${z}`;if(!branchGrid.has(key))branchGrid.set(key,[]);branchGrid.get(key).push({route,i});
+      }
+  }
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
   S.forEach(s => { x0 = Math.min(x0, s.p.x); x1 = Math.max(x1, s.p.x); z0 = Math.min(z0, s.p.z); z1 = Math.max(z1, s.p.z); });
   const size = Math.ceil((Math.max(x1 - x0, z1 - z0) + 380) / 40) * 40;
@@ -242,7 +254,7 @@ function courseSurface(pos) {
     const i=sIdx(raw),j=sIdx(i+1),a=S[i],b=S[j];
     segment([a.p.x,a.p.y,a.p.z,a.bank],[b.p.x,b.p.y,b.p.z,b.bank],i,i+1,CFG.halfW);
   }
-  for(const route of courseLayouts[TRACK.id]?.branches??[]) for(let i=0;i<route.samples.length-1;i++) {
+  for(const {route,i} of branchGrid.get(`${Math.floor(pos.x/GRID)},${Math.floor(pos.z/GRID)}`)??[]) {
     segment(route.samples[i],route.samples[i+1],route.start*CFG.N+(route.end-route.start)*CFG.N*i/100,route.start*CFG.N+(route.end-route.start)*CFG.N*(i+1)/100,route.width,route,i/100,(i+1)/100);
   }
   best.height=best.p.y+Math.tan(best.bank)*best.lat;
@@ -344,9 +356,19 @@ function applyTheme(t) {
   hemi.color.set(t.hemiSky); hemi.groundColor.set(t.hemiGround); hemi.intensity = t.hemiInt;
 }
 
+function disposeTrack() {
+  const geometries=new Set(),materials=new Set(),textures=new Set();
+  world.traverse(o=>{if(!o.isMesh)return;geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])materials.add(m);});
+  for(const geometry of geometries)if(!assetGeometries.has(geometry))geometry.dispose();
+  for(const material of materials)if(!assetMaterials.has(material)){
+    for(const value of Object.values(material))if(value?.isTexture&&!assetTextures.has(value))textures.add(value);
+    material.dispose();
+  }
+  textures.forEach(texture=>texture.dispose());
+}
 function loadTrack(id) {
   TRACK = trackById(id); THEME = TRACK.theme; seed = TRACK.seed;
-  scene.remove(world); world = new THREE.Group(); scene.add(world);
+  disposeTrack();scene.remove(world); world = new THREE.Group(); scene.add(world);
   plots = []; colliders = []; animated = []; clouds = []; cows = [];
   itemBoxes = []; pads = []; muds = []; ramps = []; coinsOnTrack = [];
   computeTrack(TRACK);
@@ -360,7 +382,7 @@ function loadTrack(id) {
 }
 
 function buildGround() {
-  const R = 2048, k = R / WB.size, PL = 40, PC = THEME.plotCols;
+  const R = IS_TOUCH?1024:2048, k = R / WB.size, PL = 40, PC = THEME.plotCols;
   const tex = canvasTex(R, R, g => {
     g.fillStyle = THEME.grass; g.fillRect(0, 0, R, R);
     speckle(g, R, R, 9000, THEME.grassSpeck, 3, 8);
@@ -449,7 +471,7 @@ function buildRoad() {
 }
 
 function buildScenery() {
-  const density = profile.opts.quality === 'baixa' ? 1.6 : 1;
+  const density = IS_TOUCH ? 3 : profile.opts.quality === 'baixa' ? 1.6 : 1;
   // fences
   const fenceM = [], step = Math.max(1, Math.round(3.2 / SPACING));
   for (let i = 0; i < CFG.N; i += step) for (const side of [-1, 1]) {
@@ -705,7 +727,7 @@ function buildPickups() {
 
 // ================================================================== particles
 const particles = (() => {
-  const MAX = 1400;
+  const MAX = IS_TOUCH?350:1400;
   const geo = new THREE.BufferGeometry();
   const pos = new Float32Array(MAX * 3), col = new Float32Array(MAX * 3), size = new Float32Array(MAX), alpha = new Float32Array(MAX);
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -724,10 +746,11 @@ const particles = (() => {
   });
   const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; scene.add(pts);
   const P = Array.from({ length: MAX }, () => ({ life: 0 }));
-  let head = 0;
+  let head = 0,emitted=0;
   const c = new THREE.Color();
   return {
     emit(x, y, z, vx, vy, vz, color, s, life, grow = 1.5, grav = 0) {
+      if(IS_TOUCH && ++emitted%3!==0)return;
       // Particle heights follow the nearest racer on raised roads.
       if(y<8 && state.mode!=='podium') {
         let nearest=null,best=400;
@@ -793,7 +816,7 @@ function addAccessory(model, ch, accId) {
 function makeKartModel(def, parent = scene) {
   const ch = CHARACTERS[def.char];
   const model = A[ch.asset].clone(true);
-  const paint = new THREE.MeshStandardMaterial({color:def.paint,roughness:.43,metalness:.06});
+  const paint = IS_TOUCH?new THREE.MeshLambertMaterial({color:def.paint}):new THREE.MeshStandardMaterial({color:def.paint,roughness:.43,metalness:.06});
   model.traverse(o => {
     if (!o.isMesh) return;
     o.castShadow = true; o.receiveShadow = true;
@@ -838,7 +861,7 @@ function createKart(def, gridPos, isPlayer) {
     drifting: false, driftDir: 0, driftCharge: 0, driftVis: 0, hop: 0, boost: 0, spin: 0, spinAng: 0,
     item: null, rolling: 0, wheelRot: 0, wrongWay: 0, offroad: false, inMud: false, bumpCd: 0,
     slow: 0, guide: 0, spraying: 0, sprayMode: 'front', plow: 0, plowT: 0, clean: 0, boomAng: 0, sprout: 0,
-    y: 0, vy: 0, airT: 0, trick: false, trickAng: 0, coins: 0, lastLap: 0,
+    y: 0, vy: 0, airT: 0, coins: 0, lastLap: 0,
     charge: 0, ability: v.ch.tows ? (im.ability ?? 'arrancada') : v.ch.ability,
     mods: { speed: v.ch.speedMul, accel: v.ch.accelMul * im.accelMul, turn: v.ch.turnMul * im.turnMul },
     ai: { skill: 0.9 + gridPos * 0.012 + rr(-0.01, 0.015), lane: rr(-4, 4), laneT: rr(0, 9), itemDelay: rr(1, 4), driftT: 0 },
@@ -1123,7 +1146,6 @@ const playerInput = () => {
   return {
     throttle: keys.KeyW || keys.ArrowUp || ((profile.opts.autoGas || IS_TOUCH) && state.mode === 'race' && !brake) ? 1 : 0,
     brake, steer, drift: driftGesture.active && Math.sign(steer) === driftGesture.side,
-    trick: !!keys.Space || (IS_TOUCH && player.y > 0.35),
   };
 };
 function respawn(k) {
@@ -1133,7 +1155,7 @@ function respawn(k) {
   k.pos.copy(trackPoint(i, 0)).setY(0); k.groundY=S[i].p.y;k.route=null;k.routeU=0;k.idx=k.prevIdx=i;
   k.heading=k.moveDir=headingOf(S[i].t);k.speed=0;k.steer=0;k.lastSpeed=0;k.spin=0;k.spinAng=0;
   k.drifting=false;k.driftCharge=0;k.driftVis=0;k.hop=0;k.boost=0;k.guide=0;
-  k.trAxle=null;k.y=0;k.vy=0;k.airT=0;k.trick=false;k.trickAng=0;k.rampSfx=false;k.wrongWay=0;
+  k.trAxle=null;k.y=0;k.vy=0;k.airT=0;k.rampSfx=false;k.wrongWay=0;
   if(k.isPlayer) {clearDrivingInput();state.cameraSnap=true;}
 }
 
@@ -1166,7 +1188,7 @@ function aiInput(k, dt) {
   const nearEdge = Math.abs(k.lat) > width - 1.5;
   if (cornerSharp > 0.12 && Math.abs(diff) > 0.12 && k.speed > 18 && !nearEdge) ai.driftT = 0.9;
   if (nearEdge || (k.drifting && input.steer * k.driftDir < -0.3)) ai.driftT = 0;
-  ai.driftT -= dt; input.drift = ai.driftT > 0 || (k.y > 0.5 && !k.trick && Math.random() < 0.05);
+  ai.driftT -= dt; input.drift = ai.driftT > 0;
   ai.stuckT = (ai.stuckT ?? 0) + dt;
   if (ai.stuckT > 3) {
     const prog = progOf(k);
@@ -1231,12 +1253,11 @@ function updateKart(k, input, dt, frozen) {
   if (!input.throttle && !input.brake) k.speed -= Math.sign(k.speed) * Math.min(Math.abs(k.speed), 7 * dt);
   if (k.speed > max && !air) k.speed = Math.max(max, k.speed - (k.offroad || k.inMud ? 40 : 18) * dt);
 
-  // drifting (on the ground) / tricks (in the air)
+  // Drift stays on the ground; ramps only launch and land the vehicle.
   const absV = Math.abs(k.speed);
   if (!air && input.drift && !k.drifting && Math.abs(input.steer) > 0.25 && k.speed > 13 && k.spin <= 0) {
     k.drifting = true; k.driftDir = Math.sign(input.steer); k.driftCharge = 0; k.hop = 0.22;
   }
-  if (air && !k.rampSfx && (input.trick ?? input.drift) && !k.trick && k.spin <= 0) { k.trick = true; k.trickAng = 0; playerSfx(k, 'trick'); }
   k.prevDrift = input.drift;
   if (k.drifting && (!input.drift || air || k.speed < 9 || k.spin > 0 || frozen)) {
     k.drifting = false;
@@ -1305,13 +1326,12 @@ function updateKart(k, input, dt, frozen) {
           playerSfx(k, 'land');
           for (let n = 0; n < 14; n++) particles.emit(k.pos.x + rr(-1.5, 1.5), 0.3, k.pos.z + rr(-1.5, 1.5), rr(-4, 4), rr(1, 3), rr(-4, 4), THEME.road, 0.7, 0.7, 1.2);
           if (k.isPlayer) state.shake = Math.max(state.shake, 0.25);
-          if (k.trick && k.spin <= 0) { k.boost = Math.max(k.boost, 1.0); addCharge(k, 0.15); if (k.isPlayer) { runMetrics.jumps++; flash('Manobra! ⭐', 800); audio.sfx('boost'); } }
+          if (k.isPlayer && !k.finished && state.mode==='race') runMetrics.jumps++;
         }
-        k.y = 0; k.vy = 0; k.airT = 0; k.trick = false;
+        k.y = 0; k.vy = 0; k.airT = 0;
       }
     }
   }
-  if (k.trick) k.trickAng = Math.min(Math.PI * 2, k.trickAng + dt * 14);
 
   // pickups
   for (const b of itemBoxes) if (!k.finished && racePlan.mode!=='time' && b.active && Math.abs(k.groundY+k.y-b.p.y)<2.5 && (k.pos.x - b.p.x) ** 2 + (k.pos.z - b.p.z) ** 2 < 2.4 ** 2) {
@@ -1357,7 +1377,7 @@ function updateKart(k, input, dt, frozen) {
   v.tilt.rotation.y = k.driftVis + k.spinAng;
   updateTrailer(k);
   v.tilt.position.y = Math.sin(clamp(k.hop / 0.22, 0, 1) * Math.PI) * 0.45 + Math.sin(state.t*(4+absV*.22))*.018 + (k.offroad ? Math.sin(state.t * 40 + k.def.paint.length) * 0.03 : 0);
-  v.tilt.rotation.z = -k.steer * clamp(absV / 30, 0, 1) * 0.06 - k.driftVis * 0.1 + (k.trick ? k.trickAng : 0);
+  v.tilt.rotation.z = -k.steer * clamp(absV / 30, 0, 1) * 0.06 - k.driftVis * 0.1;
   v.tilt.rotation.z+=surface.bank;
   if(v.eyes) {
     const other=karts.find(o=>o!==k && o.pos.distanceTo(k.pos)<9);
@@ -1839,7 +1859,7 @@ function renderGarage() {
   renderer.setViewport(rect.left, innerHeight - rect.bottom, rect.width, rect.height);
   renderer.setScissor(rect.left, innerHeight - rect.bottom, rect.width, rect.height);
   renderer.setScissorTest(true);
-  effect.render(showScene, showCam);
+  renderScene(showScene, showCam);
   if(previewRequests.length) {
     let thumbnail=null;
     try {
@@ -1881,7 +1901,7 @@ function frame() {
   const dt = Math.min(clock.getDelta(), 1 / 30);
   if (!state.paused && !window.__game?.paused) update(dt);
   if (state.mode === 'garage') renderGarage();
-  else if (S.length) {effect.render(scene, camera);previewRequests.splice(0).forEach(resolve=>resolve(null));}
+  else if (S.length) {renderScene(scene, camera);previewRequests.splice(0).forEach(resolve=>resolve(null));}
   requestAnimationFrame(frame);
 }
 function update(dt) {
@@ -2007,7 +2027,7 @@ const api = {
   });
   window.__game = {
     camera, hazards, state, karts, CFG, keys, profile, api, sun, hemi, scene, get ramps() { return ramps; }, get coins() { return coinsOnTrack; }, get pads() { return pads; }, loadTrack, get player() { return player; }, get S() { return S; },
-    sim: sec => { for (let i = 0; i < sec * 60; i++) update(1 / 60); if (state.mode === 'garage') renderGarage(); else effect.render(scene, camera); },
+    sim: sec => { for (let i = 0; i < sec * 60; i++) update(1 / 60); if (state.mode === 'garage') renderGarage(); else renderScene(scene, camera); },
   };
   frame();
 })();

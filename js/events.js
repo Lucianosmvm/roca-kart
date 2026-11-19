@@ -3,7 +3,7 @@ import { profile, save } from './save.js';
 export const CUP = { id: 'colheita', name: 'Copa da Colheita', tracks: ['milharal','girassol','cerrado'], points: [10,7,5,3,2,1] };
 export const CHALLENGES = [
   { id:'drift', name:'Dança na terra', description:'Complete uma volta com 5 mini-turbos de drift.', metric:'drift', target:5, reward:'Adesivo Relâmpago' },
-  { id:'jumps', name:'Asas da roça', description:'Complete uma volta com 3 manobras em saltos.', metric:'jumps', target:3, reward:'Pintura Céu da Colheita' },
+  { id:'jumps', name:'Asas da roça', description:'Complete uma volta com 3 saltos e aterrissagens.', metric:'jumps', target:3, reward:'Pintura Céu da Colheita' },
   { id:'corn', name:'Cesta cheia', description:'Complete uma volta e colete 20 moedas de milho.', metric:'corn', target:20, reward:'Estampa Florada' },
 ];
 export const freshMetrics = () => ({ drift:0, perfect:0, jumps:0, corn:0, shortcuts:0 });

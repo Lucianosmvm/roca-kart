@@ -44,7 +44,7 @@ Detalhes da reorganização em [docs/garagem-simplificada.md](docs/garagem-simpl
 ## Conteúdo
 
 Tatu (trator), Pingo (buggy de irrigação), Pipoca (mini colheitadeira), Bento (caminhão graneleiro) e Broto (plantadeira rebocada); quatro pistas rurais com desníveis, curvas inclinadas e caminhos alternativos;
-drift com mini-turbo, saltos e manobras; habilidades especiais; itens de corrida; garagem e loja;
+drift com mini-turbo e saltos normais; habilidades especiais; itens de corrida; garagem e loja;
 moedas de milho; acessórios e buzinas; trilha de baião sintetizada; controles por toque;
 progresso e recordes salvos no navegador.
 
@@ -52,8 +52,9 @@ O Plantio Relâmpago do Broto planta **um único girassol por uso**, centralizad
 
 **Drift:** dê dois toques rápidos (até 300 ms) no mesmo lado e mantenha o segundo toque. Solte para liberar o mini-turbo. Vale para A/D, setas e botões de direção no celular. O indicador mostra quando o drift está Bom ou Perfeito.
 
-**Teclado:** W/↑ acelera · S/↓ freia · A/D vira · ESPAÇO faz manobra no ar · E item · Q habilidade · H buzina · C câmera · R volta à pista · ESC pausa.
-No celular, as manobras em saltos são automáticas e não existe mais botão separado de drift.
+**Teclado:** W/↑ acelera · S/↓ freia · A/D vira · E item · Q habilidade · H buzina · C câmera · R volta à pista · ESC pausa.
+As rampas fazem saltos normais, sem acrobacias ou bônus de manobra. No celular não há botão separado de drift.
+Celulares carregam modelos `_mobile.glb` com menos geometria, materiais simples, menos vegetação e partículas, sem sombras ou passe extra de contornos. O modo Econômica reduz mais a resolução. As fontes `_mobile.blend` e o gerador estão preservados; veja [a correção de desempenho](docs/desempenho-mobile.md).
 
 ## Corridas e progressão
 
@@ -61,7 +62,7 @@ No celular, as manobras em saltos são automáticas e não existe mais botão se
 - **Copa da Colheita:** Milharal → Girassóis → Cerrado, com pontuação acumulada, troféu e recompensa por pódio. A copa em andamento dura a sessão atual; o troféu conquistado é salvo.
 - **Contra o tempo:** três voltas sozinho, sem itens nem habilidade. O fantasma da melhor tentativa é salvo por pista e aparece na próxima corrida; nunca colide com o jogador. Os recordes são separados das corridas normais.
 - **Desafios:** uma volta com objetivos de drift, saltos ou coleta de milho. Objetivos alcançados liberam adesivos, pintura e moedas.
-- **Recompensas:** 5 mini-turbos numa corrida liberam Relâmpago; 3 manobras liberam Céu da Colheita; 20 moedas liberam Florada; um pódio na copa libera Número 07 e bônus. As condições também podem ser cumpridas em corridas normais.
+- **Recompensas:** 5 mini-turbos numa corrida liberam Relâmpago; 3 saltos com aterrissagem liberam Céu da Colheita; 20 moedas liberam Florada; um pódio na copa libera Número 07 e bônus. As condições também podem ser cumpridas em corridas normais.
 
 As peças e adesivos são cosméticos; os atributos continuam ligados à máquina-base.
 Detalhes técnicos e todos os arquivos reutilizáveis estão em `docs/expansao-corridas.md`.
