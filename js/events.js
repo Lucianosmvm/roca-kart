@@ -7,6 +7,7 @@ export const CHALLENGES = [
   { id:'corn', name:'Cesta cheia', description:'Complete uma volta e colete 20 moedas de milho.', metric:'corn', target:20, reward:'Estampa Florada' },
 ];
 export const freshMetrics = () => ({ drift:0, perfect:0, jumps:0, corn:0, shortcuts:0 });
+export const challengeCount = (challenge,metrics) => challenge.metric==='drift' ? metrics.drift+metrics.perfect : metrics[challenge.metric];
 export function awardProgress(metrics, { finished=false, cupPlace=null, challenge=null } = {}) {
   const earned=[];
   const unlock=(id,label,action) => {
@@ -21,7 +22,7 @@ export function awardProgress(metrics, { finished=false, cupPlace=null, challeng
     unlock('cup','Adesivo Número 07',()=>{ profile.owned.decals.push('number'); profile.coins+=150; });
   }
   const selected=CHALLENGES.find(c=>c.id===challenge);
-  if (finished && selected && (selected.metric==='drift' ? metrics.drift+metrics.perfect : metrics[selected.metric]) >= selected.target) {
+  if (finished && selected && challengeCount(selected,metrics) >= selected.target) {
     unlock('challenge:'+selected.id,'Desafio concluído: '+selected.name,()=>{profile.coins+=80;});
   }
   for (const key of ['paints','decals']) profile.owned[key]=[...new Set(profile.owned[key])];

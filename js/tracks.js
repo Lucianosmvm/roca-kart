@@ -3,7 +3,7 @@
 
 export const TRACKS = [
   {
-    id: 'milharal', name: 'Fazenda Milharal', subtitle: 'Celeiro, ponte e atalho no milho', difficulty: 1, seed: 1234,
+    id: 'milharal', name: 'Fazenda Milharal', subtitle: 'No celeiro, siga o milho na curva ou corte por dentro.', difficulty: 1, seed: 1234,
     ctrl: [
       [0, -60], [0, 40], [10, 90], [45, 115], [90, 105], [110, 70], [100, 30], [120, -5], [165, -15], [195, 10],
       [200, 60], [185, 110], [200, 150], [240, 165], [275, 140], [270, 90], [255, 40], [260, -20], [240, -75],

@@ -620,6 +620,7 @@ function buildCourseFeatures() {
   for(const route of courseLayouts[TRACK.id]?.branches??[]) {
     const p=route.samples[8],q=route.samples[12],heading=Math.atan2(q[0]-p[0],q[2]-p[2]);
     const sign=place('race_shortcut',p[0],p[2],heading+Math.PI,.8);sign.position.y=p[1];
+    if(route.ramp===false) continue;
     const sample=route.samples[45],next=route.samples[48],h=Math.atan2(next[0]-sample[0],next[2]-sample[2]);
     const ramp=place('ramp',sample[0],sample[2],h+Math.PI,1);ramp.position.y=sample[1];
     ramps.push({p:new THREE.Vector3(sample[0],sample[1],sample[2]),h,hw:2.5,hd:2,H:1.2});
@@ -676,7 +677,8 @@ function buildPickups() {
     g.lineWidth = 10; g.strokeStyle = '#2b1a0e'; g.strokeText('?', w / 2, h / 2 + 6); g.fillStyle = '#fff'; g.fillText('?', w / 2, h / 2 + 6);
   });
   const coreMat = toonColor('#fff', { map: qTex, transparent: true, opacity: 0.92, emissive: '#553300', emissiveIntensity: 0.4 });
-  const boxRows = [0.15, 0.4, 0.63, 0.86].map(r => Math.floor(r * CFG.N));
+  const barnCurve=TRACK.id==='milharal';
+  const boxRows = [barnCurve ? 0.09 : 0.15, 0.4, 0.63, 0.86].map(r => Math.floor(r * CFG.N));
   for (const i of boxRows) for (const lat of [-5.5, -1.8, 1.8, 5.5]) {
     const p = trackPoint(i, lat), g = new THREE.Group();
     const frame = A.itembox.getObjectByName('ItemFrame').clone(true);
@@ -687,7 +689,8 @@ function buildPickups() {
     itemBoxes.push({ g, p, active: true, timer: 0, phase: rr(0, 6) });
   }
   // ramps first (they need the longest straights), then pads and coin lines
-  const rampIdx = straights(300, boxRows, 0.92).slice(0, TRACK.id === 'girassol' ? 3 : 2);
+  const reserved=barnCurve ? [...boxRows, Math.round(.15*CFG.N), Math.round(.20*CFG.N)] : boxRows;
+  const rampIdx = straights(300, reserved, 0.92).slice(0, TRACK.id === 'girassol' ? 3 : 2);
   for (const i of rampIdx) {
     const h = headingOf(S[i].t), p = trackPoint(i, 0);
     const o = place('ramp', p.x, p.z, h + Math.PI, 1); o.scale.set(1.4, 1, 1);
@@ -701,7 +704,7 @@ function buildPickups() {
     g.strokeStyle = '#2b1a0e'; g.lineWidth = 8; g.strokeRect(4, 4, w - 8, h - 8);
   });
   const padMat = toonColor('#fff', { map: padTex, emissive: '#1a3b66', emissiveIntensity: 0.6, userData: NO_OUTLINE });
-  const padIdx = straights(220, [...boxRows, ...rampIdx], 0.82).slice(0, 4);
+  const padIdx = straights(220, [...reserved, ...rampIdx], 0.82).slice(0, 4);
   padIdx.forEach((i, n) => {
     const lat = [0, 3.5, -3.5, 0][n % 4], p = trackPoint(i, lat);
     const m = new THREE.Mesh(new THREE.PlaneGeometry(3, 6), padMat);
@@ -717,13 +720,21 @@ function buildPickups() {
     world.add(m, m2); muds.push({ p, rx: 3.2, rz: 4.3, h: headingOf(S[i].t) });
   }
   // corn coin lines
-  const coinIdx = straights(150, [...boxRows, ...rampIdx, ...padIdx], 0.7).slice(0, 7);
+  function placeCoin(p) {
+    const o = A.coin.clone(true); o.position.copy(p).add(new THREE.Vector3(0,1.1,0)); o.scale.setScalar(1.3);
+    world.add(o); coinsOnTrack.push({ o, p, active: true, timer: 0 });
+  }
+  if(barnCurve) {
+    for(const [fraction,lat] of [[.142,-3],[.151,-1],[.160,2],[.169,3.5],[.178,2],[.187,-1],[.196,-3]]) {
+      placeCoin(trackPoint(Math.round(fraction*CFG.N),lat));
+    }
+  }
+  const coinIdx = straights(150, [...reserved, ...rampIdx, ...padIdx], 0.7).slice(0, barnCurve ? 6 : 7);
   for (const i of coinIdx) {
     const lat = rr(-5, 5);
     for (let n = 0; n < 5; n++) {
       const p = trackPoint(i + Math.round(n * 3.2 / SPACING), lat);
-      const o = A.coin.clone(true); o.position.copy(p).add(new THREE.Vector3(0,1.1,0)); o.scale.setScalar(1.3);
-      world.add(o); coinsOnTrack.push({ o, p, active: true, timer: 0 });
+      placeCoin(p);
     }
   }
 }
@@ -858,7 +869,14 @@ function makeKartModel(def, parent = scene) {
     trailer = { root: tRoot, wheels: tw, len: im.len };
   }
   const visualCh = { ...ch, hitch: ch.hitch ? { ...ch.hitch, y: ch.hitch.y + custom.lift } : undefined };
-  return { root, tilt, model, eyes:model.getObjectByName('Eyes'), wheels, wheelR: { F: radiusOf(wheels.FL), R: radiusOf(wheels.RL) }, beaconMat, ch: visualCh, booms, trailer,
+  let chassis=null;
+  if(def.char==='bento') {
+    chassis=new THREE.Group();
+    const mounted=model.children.filter(child=>!Object.values(wheels).includes(child));
+    model.add(chassis);
+    for(const child of mounted) chassis.add(child);
+  }
+  return { root, tilt, model, chassis, tank:model.getObjectByName('TankMount'), eyes:model.getObjectByName('Eyes'), wheels, wheelR: { F: radiusOf(wheels.FL), R: radiusOf(wheels.RL) }, beaconMat, ch: visualCh, booms, trailer,
     dispose: () => { custom.dispose(); customTrailer?.dispose(); paint.dispose(); } };
 }
 
@@ -874,7 +892,7 @@ function createKart(def, gridPos, isPlayer) {
     drifting: false, driftDir: 0, driftCharge: 0, driftVis: 0, hop: 0, boost: 0, spin: 0, spinAng: 0,
     item: null, rolling: 0, wheelRot: 0, wrongWay: 0, offroad: false, inMud: false, bumpCd: 0,
     slow: 0, guide: 0, spraying: 0, sprayMode: 'front', plow: 0, plowT: 0, clean: 0, boomAng: BOOM_FOLDED, sprout: 0,
-    y: 0, vy: 0, airT: 0, coins: 0, lastLap: 0,
+    y: 0, vy: 0, airT: 0, tankSettle:0, coins: 0, lastLap: 0,
     shield:0,magnet:0,itemGuard:0,powerFxT:0,sprayBlocked:new Set(),
     charge: 0, ability: v.ch.tows ? (im.ability ?? 'arrancada') : v.ch.ability,
     mods: { speed: v.ch.speedMul, accel: v.ch.accelMul * im.accelMul, turn: v.ch.turnMul * im.turnMul },
@@ -1216,7 +1234,7 @@ function respawn(k) {
   const i=sIdx(k.idx);
   k.pos.copy(trackPoint(i, 0)).setY(0); k.groundY=S[i].p.y;k.route=null;k.routeU=0;k.idx=k.prevIdx=i;
   k.heading=k.moveDir=headingOf(S[i].t);k.speed=0;k.steer=0;k.lastSpeed=0;k.spin=0;k.spinAng=0;
-  k.drifting=false;k.driftCharge=0;k.driftVis=0;k.hop=0;k.boost=0;k.guide=0;
+  k.drifting=false;k.driftCharge=0;k.driftVis=0;k.hop=0;k.boost=0;k.guide=0;k.tankSettle=0;
   k.trAxle=null;k.y=0;k.vy=0;k.airT=0;k.rampSfx=false;k.wrongWay=0;
   if(k.isPlayer) {clearDrivingInput();state.cameraSnap=true;}
 }
@@ -1324,11 +1342,16 @@ function updateKart(k, input, dt, frozen) {
   const absV = Math.abs(k.speed);
   if (!air && input.drift && !k.drifting && Math.abs(input.steer) > 0.25 && k.speed > 13 && k.spin <= 0) {
     k.drifting = true; k.driftDir = Math.sign(input.steer); k.driftCharge = 0; k.hop = 0.22;
+    playerSfx(k,'driftEntry');
   }
   k.prevDrift = input.drift;
   if (k.drifting && (!input.drift || air || k.speed < 9 || k.spin > 0 || frozen)) {
     k.drifting = false;
     if (!input.drift && !air && k.speed>=9 && k.spin <= 0 && !frozen) {
+      if(k.driftCharge>1) {
+        const kick=k.driftCharge>2.1 ? 4 : 2;
+        k.speed+=clamp(CFG.boostSpeed*(k.inMud ? .8 : 1)-k.speed,0,kick);
+      }
       if (k.driftCharge > 2.1) { k.boost = Math.max(k.boost, 1.25); addCharge(k, 0.2); playerSfx(k, 'boost'); if (k.isPlayer) { runMetrics.perfect++; flash('DRIFT PERFEITO!', 650); } }
       else if (k.driftCharge > 1.0) { k.boost = Math.max(k.boost, 0.65); addCharge(k, 0.12); playerSfx(k, 'miniturbo'); if (k.isPlayer) { runMetrics.drift++; flash('BOM DRIFT!', 600); } }
     }
@@ -1338,7 +1361,9 @@ function updateKart(k, input, dt, frozen) {
   const sf = clamp(absV / 6, 0, 1) * (1 - 0.32 * Math.min(1, absV / 40)) * (air ? 0.5 : 1);
   let turn = k.steer * 1.9 * k.mods.turn * sf * (k.speed < 0 ? -1 : 1);
   if (k.drifting) {
-    turn = (k.driftDir * 1.05 + k.steer * 0.75) * sf;
+    // Start with a broad arc and tighten it as the driver holds the slide.
+    const tighten=clamp(k.driftCharge/2.1,0,1);
+    turn = (k.driftDir * (.52+.53*tighten) + k.steer * .75) * sf;
     const before=k.driftCharge;k.driftCharge += dt * (k.steer * k.driftDir > 0.2 ? 1.5 : 0.8);
     if(k.isPlayer && !k.finished) {
       if(before<=2.1 && k.driftCharge>2.1) playerSfx(k,'driftPerfect');
@@ -1391,6 +1416,7 @@ function updateKart(k, input, dt, frozen) {
       if (k.y <= 0) {
         if (k.airT > 0.3) {
           playerSfx(k, 'land');
+          if(k.v.tank) k.tankSettle=.52;
           for (let n = 0; n < 14; n++) particles.emit(k.pos.x + rr(-1.5, 1.5), 0.3, k.pos.z + rr(-1.5, 1.5), rr(-4, 4), rr(1, 3), rr(-4, 4), THEME.road, 0.7, 0.7, 1.2);
           if (k.isPlayer) state.shake = Math.max(state.shake, 0.25);
           if (k.isPlayer && !k.finished && state.mode==='race') runMetrics.jumps++;
@@ -1444,7 +1470,7 @@ function updateKart(k, input, dt, frozen) {
   v.tilt.rotation.y = k.driftVis + k.spinAng;
   updateTrailer(k);
   v.tilt.position.y = Math.sin(clamp(k.hop / 0.22, 0, 1) * Math.PI) * 0.45 + Math.sin(state.t*(4+absV*.22))*.018 + (k.offroad ? Math.sin(state.t * 40 + k.def.paint.length) * 0.03 : 0);
-  v.tilt.rotation.z = -k.steer * clamp(absV / 30, 0, 1) * 0.06 - k.driftVis * 0.1;
+  v.tilt.rotation.z = -k.steer * clamp(absV / 30, 0, 1) * 0.06 - k.driftVis * 0.24;
   v.tilt.rotation.z+=surface.bank;
   if(v.eyes) {
     const other=karts.find(o=>o!==k && o.pos.distanceTo(k.pos)<9);
@@ -1453,6 +1479,14 @@ function updateKart(k, input, dt, frozen) {
   }
   v.tilt.rotation.x = air ? clamp(-k.vy * 0.02, -0.25, 0.25) : clamp(-(k.speed - (k.lastSpeed ?? k.speed)) / dt * 0.004, -0.06, 0.06);
   if(!air) v.tilt.rotation.x-=Math.atan2(drivingTarget(k,3,k.lat).y-k.groundY,3);
+  if(v.tank) {
+    k.tankSettle=Math.max(0,k.tankSettle-dt);
+    v.tank.rotation.x=.11*Math.sin((.52-k.tankSettle)*21)*(k.tankSettle/.52)**2;
+  }
+  if(v.chassis) {
+    const launch=!air && input.throttle && k.speed>(k.lastSpeed??0) ? clamp(1-absV/15,0,1) : 0;
+    v.chassis.rotation.x=lerp(v.chassis.rotation.x,.075*launch,damp(9,dt));
+  }
   k.lastSpeed = k.speed;
   k.wheelRot -= k.speed * dt;
   v.wheels.RL.rotation.x = v.wheels.RR.rotation.x = k.wheelRot / v.wheelR.R;
@@ -1762,6 +1796,8 @@ function finishRace() {
       const [lx, h] = steps[i], c = Math.cos(podiumSpot.rot), s = Math.sin(podiumSpot.rot);
       k.v.root.visible = true; k.v.root.position.set(podiumSpot.x + lx * c, h, podiumSpot.z - lx * s);
       k.v.root.rotation.y = podiumSpot.rot; k.v.tilt.rotation.set(0, 0, 0); k.v.tilt.position.y = 0;
+      if(k.v.tank) k.v.tank.rotation.x=0;
+      if(k.v.chassis) k.v.chassis.rotation.x=0;
     });
   }
   audio.play('podium'); audio.sfx('fanfare');
@@ -2015,7 +2051,7 @@ function update(dt) {
   updateCows(dt, state.t);
   clouds.forEach(c => { c.position.x += dt * 2; if (c.position.x > WB.x0 + WB.size) c.position.x = WB.x0; });
   particles.update(dt);
-  audio.engine(player.speed, player.boost > 0, state.mode === 'race' || state.mode === 'countdown',player.drifting?player.driftCharge:0);
+  audio.engine(player.speed, player.boost > 0, state.mode === 'race' || state.mode === 'countdown',player.drifting?player.driftCharge:0,player.def.char==='bento');
 
   // cameras
   const P = player;

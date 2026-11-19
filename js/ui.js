@@ -4,6 +4,7 @@ import { audio } from './audio.js';
 import { profile, save, storageState, CATALOG, buy, owns, resetProfile, paintColor, saveCreation, loadCreation, removeCreation, renameCreation, duplicateCreation, exportCreation, importCreation } from './save.js';
 import { BUILD_DEFAULTS, BUILD_RANGES, cleanBuild, IMPLEMENT_DEFAULTS, cleanImplementBuild } from './customize.js';
 import { TRACKS } from './tracks.js';
+import { challengeCount } from './events.js';
 
 const $ = id => document.getElementById(id);
 const SCREENS = ['splash', 'menu', 'tracks', 'garage', 'shop', 'options', 'credits', 'pause', 'results', 'cutscene','guide'];
@@ -92,6 +93,18 @@ export const ui = {
   },
   showResults(d) {
     const medal = ['🥇', '🥈', '🥉'];
+    const goal=d.challenge ?? api.CHALLENGES
+      .filter(c=>!profile.achievements.includes(c.id))
+      .sort((a,b)=>challengeCount(b,d.metrics)/b.target-challengeCount(a,d.metrics)/a.target)[0];
+    const count=goal ? challengeCount(goal,d.metrics) : 0;
+    const cosmetic=goal && [...CATALOG.paints,...CATALOG.decals].find(item=>item.unlock===goal.id);
+    const unit=goal && {drift:'mini-turbos',jumps:'aterrissagens',corn:'moedas de milho'}[goal.metric];
+    const card=cosmetic ? `<section class="finishGoal">
+      <span class="finishSample" aria-hidden="true" style="background:${cosmetic.color??'var(--gold)'}">${cosmetic.icon??'🎨'}</span>
+      <div><strong>${goal.reward}</strong><p>${count} de ${goal.target} ${unit} nesta corrida</p>
+      <progress value="${count}" max="${goal.target}" aria-label="${unit} nesta corrida"></progress>
+      <small>${d.earned.includes(goal.reward)?'Liberado na garagem!':profile.achievements.includes(goal.id)?'Já está na sua garagem':`Faça ${goal.target} em uma corrida para liberar.`}</small></div>
+    </section>` : '';
     $('results').innerHTML = `<div class="panel">
       <h2 class="title">${d.mode==='time'?(d.record?'Recorde na terra!':'Tempo na mão!'):d.mode==='challenge'?'Fim do desafio!':d.myPos === 1 ? 'A roça tem campeão!' : d.myPos <= 3 ? 'Deu pódio!' : 'Bandeirada!'}</h2>
       <div style="font-weight:900;margin-bottom:6px">${d.track.name}${d.record && d.mode!=='time' ? ' · 🏅 Novo recorde!' : ''}</div>
@@ -104,10 +117,10 @@ export const ui = {
       ${storageFeedback()}
       ${d.cup?`<div class="cupStandings"><b>Pontuação da copa</b>${d.cup.standings.map((row,i)=>`<div class="${row.me?'isPlayer':''}">${i+1}º ${escapeHTML(row.name)} <strong>${row.points} pontos</strong></div>`).join('')}</div>`:''}
       ${d.earned?.length?`<div class="earnedRewards">${d.earned.map(label=>`<div>🎁 ${escapeHTML(label)}</div>`).join('')}</div>`:''}
-      ${d.challenge?`<p class="challengeResult">${(d.challenge.metric==='drift'?d.metrics.drift+d.metrics.perfect:d.metrics[d.challenge.metric])>=d.challenge.target?'✓ Objetivo alcançado!':'Continue praticando!'} · ${d.challenge.metric==='drift'?d.metrics.drift+d.metrics.perfect:d.metrics[d.challenge.metric]}/${d.challenge.target}</p>`:''}
+      ${card}
       ${d.metrics?`<p class="runStats">Drifts: ${d.metrics.drift+d.metrics.perfect} · Perfeitos: ${d.metrics.perfect} · Saltos: ${d.metrics.jumps} · Atalhos: ${d.metrics.shortcuts}</p>`:''}
       <div class="backRow">
-        <button class="btn small" id="rAgain">Correr de novo</button>
+        <button class="btn small" id="rAgain">${goal && count<goal.target?'Tentar de novo':'Correr de novo'}</button>
         <button class="btn small orange" id="rNext">${d.cup?(d.cup.stage<d.cup.total?'Próxima etapa ▶':'Concluir copa 🏆'):'Próxima pista ▶'}</button>
         <button class="btn small cream" id="rGarage">Garagem</button>
         <button class="btn small cream" id="rMenu">Menu</button>

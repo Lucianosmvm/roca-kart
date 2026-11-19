@@ -54,8 +54,13 @@ def embankment(samples,material,closed=True,inner=10.4,outer=18,name='EarthSlope
     return objects
 
 with open(os.path.join(os.path.dirname(__file__),'course_designs.json'),encoding='utf8') as f: designs=json.load(f)
+requested=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
+layout_path=os.path.join(OUT,'course-layouts.json')
 layouts={}
+if requested:
+    with open(layout_path,encoding='utf8') as f: layouts=json.load(f)
 for name,d in designs.items():
+    if requested and name not in requested: continue
     reset(); control=d['ctrl']
     dense=[catmull(control,i/2400) for i in range(2401)]
     lengths=[0]
@@ -86,5 +91,5 @@ for name,d in designs.items():
         branches.append({**branch,'samples':route})
     export(objects,'course_'+name+'.glb');save_blend('course_'+name)
     layouts[name]={'samples':samples,'branches':branches,'features':d['features'],'length':lengths[-1]}
-with open(os.path.join(OUT,'course-layouts.json'),'w',encoding='utf8') as f:json.dump(layouts,f,separators=(',',':'))
+with open(layout_path,'w',encoding='utf8') as f:json.dump(layouts,f,separators=(',',':'))
 print('SAVED courses and navigation data')

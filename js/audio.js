@@ -71,9 +71,9 @@ export const audio = {
   },
 
   // ---------------------------------------------------------------- engine
-  engine(speed, boost, on, driftCharge=0) {
+  engine(speed, boost, on, driftCharge=0, heavy=false) {
     if (!this.ctx) return;
-    const t = this.ctx.currentTime, f = 38 + Math.abs(speed) * 3.2 + (boost ? 25 : 0);
+    const t = this.ctx.currentTime, f = (38 + Math.abs(speed) * 3.2 + (boost ? 25 : 0))*(heavy ? .76 : 1);
     this.eng.frequency.setTargetAtTime(f, t, 0.05); this.eng2.frequency.setTargetAtTime(f * 0.5, t, 0.05);
     this.engFilt.frequency.setTargetAtTime(350 + Math.abs(speed) * 25, t, 0.1);
     this.engGain.gain.setTargetAtTime(on ? 0.045 : 0, t, 0.2);
@@ -227,7 +227,8 @@ export const audio = {
       case 'itembox': this.sweep(600, 1400, 0.18, 0.1, 'square'); break;
       case 'itemget': this.tone(1320, 0.1, 'square', 0.1); this.tone(1760, 0.14, 'square', 0.1, 0.08); break;
       case 'boost': this.noiseBurst(0.6, 400, 3000, 0.25); this.sweep(200, 900, 0.5, 0.08, 'sawtooth'); break;
-      case 'miniturbo': this.noiseBurst(0.35, 800, 2500, 0.18); break;
+      case 'driftEntry': this.noiseBurst(.19,1000,2300,.11);this.sweep(390,580,.16,.045);break;
+      case 'miniturbo': this.noiseBurst(0.35, 800, 2500, 0.18); this.sweep(90,210,.22,.08,'triangle');break;
       case 'hit': this.sweep(500, 90, 0.5, 0.18); this.noiseBurst(0.25, 2000, 300, 0.3, 'lowpass'); break;
       case 'bump': this.noiseBurst(0.12, 400, 120, 0.18, 'lowpass'); this.tone(90, 0.12, 'sawtooth', 0.1); break;
       case 'jump': this.sweep(250, 700, 0.25, 0.14, 'square'); break;

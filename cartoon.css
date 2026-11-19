@@ -111,3 +111,7 @@
   #time, #lap {padding: 1px 4px;}
   .optRow input[type=range] {width: min(40vw,200px);}
 }
+.finishGoal {display:flex; align-items:center; gap:12px; margin:14px 0; padding:12px; background:#fff0cf; border:2px solid #203b43; border-radius:6px 16px 6px 12px; color:#203b43;}
+.finishSample {width:48px; height:48px; flex:none; display:grid; place-items:center; border:2px solid currentColor; border-radius:10px; font:32px var(--display); transform:rotate(-5deg);}
+.finishGoal p {margin:3px 0; font-size:14px;}
+.finishGoal progress {display:block; width:100%; height:10px; accent-color:var(--green);}
