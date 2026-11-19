@@ -785,15 +785,23 @@ function confetti(at, n = 40) {
 
 // ================================================================== karts
 const ITEMS = {
-  turbo: { icon: '⛽', name: 'Biodiesel', src: 'Turbo' },
-  trovoada: { icon: '⚡', name: 'Trovoada', src: 'Raio no 1º' },
-  calcario: { icon: '🌫️', name: 'Calcário', src: 'Hércules' },
-  jato: { icon: '💦', name: 'Jato d’água', src: 'Corisco' },
-  girassol: { icon: '🌻', name: 'Girassóis', src: 'Broto' },
-  sulco: { icon: '🚜', name: 'Sulco Turbo', src: 'Cultivador' },
-  guia: { icon: '🛰️', name: 'Piloto Guia', src: 'Guia' },
+  turbo: { icon: '⛽', name: 'Biodiesel', description:'Uma arrancada curta de velocidade.' },
+  trovoada: { icon: '⚡', name: 'Trovoada', description:'Atinge um adversário à frente. Rara, para quem está atrás.' },
+  calcario: { icon: '🌫️', name: 'Calcário' },
+  jato: { icon: '💦', name: 'Jato d’água', description:'Jato frontal que empurra e desacelera quem estiver perto.' },
+  girassol: { icon: '🌻', name: 'Girassóis' },
+  sulco: { icon: '🚜', name: 'Sulco Turbo' },
+  guia: { icon: '🛰️', name: 'Piloto Guia', description:'Ajuda a seguir o caminho por alguns segundos.' },
+  escudo:{icon:'🛡️',name:'Escudo de bolha',description:'Protege de um ataque por até 6 segundos. Não evita colisões.'},
+  disco:{icon:'🌽',name:'Disco de milho',description:'Lança um disco em linha reta. Acerte um adversário à frente.'},
+  ima:{icon:'🧲',name:'Ímã de milho',description:'Coleta milho próximo por 6 segundos, sem sair da sua linha.'},
 };
-const ITEM_ODDS = [{ turbo: 100 }, { turbo: 55, guia: 30, trovoada: 15 }, { turbo: 35, guia: 40, trovoada: 25 }];
+const ITEM_ODDS = [
+  {turbo:30,escudo:30,ima:20,jato:15,disco:5},
+  {turbo:25,escudo:20,disco:25,jato:15,ima:10,guia:5},
+  {turbo:25,guia:20,disco:20,ima:15,escudo:10,jato:5,trovoada:5},
+];
+const BOX_ITEMS=[...new Set(ITEM_ODDS.flatMap(odds=>Object.keys(odds)))].map(id=>({id,...ITEMS[id]}));
 function rollItem(place) {
   const odds = ITEM_ODDS[place === 1 ? 0 : place <= 3 ? 1 : 2];
   let r = Math.random() * Object.values(odds).reduce((a, b) => a + b, 0);
@@ -865,6 +873,7 @@ function createKart(def, gridPos, isPlayer) {
     item: null, rolling: 0, wheelRot: 0, wrongWay: 0, offroad: false, inMud: false, bumpCd: 0,
     slow: 0, guide: 0, spraying: 0, sprayMode: 'front', plow: 0, plowT: 0, clean: 0, boomAng: BOOM_FOLDED, sprout: 0,
     y: 0, vy: 0, airT: 0, coins: 0, lastLap: 0,
+    shield:0,magnet:0,itemGuard:0,powerFxT:0,sprayBlocked:new Set(),
     charge: 0, ability: v.ch.tows ? (im.ability ?? 'arrancada') : v.ch.ability,
     mods: { speed: v.ch.speedMul, accel: v.ch.accelMul * im.accelMul, turn: v.ch.turnMul * im.turnMul },
     ai: { skill: 0.9 + gridPos * 0.012 + rr(-0.01, 0.015), lane: rr(-4, 4), laneT: rr(0, 9), itemDelay: rr(1, 4), driftT: 0 },
@@ -886,6 +895,7 @@ function useItem(k) {
   if (!k || k.finished || state.mode!=='race' || state.paused || racePlan.mode==='time' || !k.item || k.rolling > 0) return;
   const it = k.item; k.item = null;
   doEffect(k, it);
+  if(k.isPlayer) flash(`${ITEMS[it].icon} ${ITEMS[it].name}`,850);
 }
 function addCharge(k, amt) {
   if (state.mode !== 'race' || k.finished) return;
@@ -915,25 +925,34 @@ function plantRow(k, origin, dir, offsets, r, scale) {
 function doEffect(k, it) {
   const fwd = fwdOf(k);
   if (it === 'turbo' || it === 'arrancada') { k.boost = Math.max(k.boost, it === 'turbo' ? 1.6 : 2.2); playerSfx(k, 'boost'); }
+  else if(it==='escudo'){k.shield=6;playerSfx(k,'shield');}
+  else if(it==='ima'){k.magnet=6;playerSfx(k,'magnet');}
+  else if(it==='disco'){
+    const pos=k.pos.clone().addScaledVector(fwd,3.3),ground=courseSurface(pos).height;
+    pos.y=ground+1.1;
+    const o=A.coin.clone(true);o.scale.setScalar(1.25);o.position.copy(pos);scene.add(o);
+    hazards.push({type:'disc',o,pos,dir:fwd,speed:Math.max(0,k.speed)+32,groundY:ground,life:1.8,arm:0,owner:k});
+    playerSfx(k,'launch');
+  }
   else if (it === 'plantio') {
     const t = k.v.trailer && k.trAxle ? { origin: k.trAxle.clone(), dir: k.trDir.clone() } : { origin: k.pos.clone().addScaledVector(fwd, -6), dir: fwd.clone() };
     t.origin.addScaledVector(t.dir, -1.6);
     plantRow(k, t.origin, t.dir, [0], 0.9, 2.3);
     playerSfx(k, 'plant');
-  } else if (it === 'barras') { k.spraying = 1.8; k.sprayMode = 'side'; k.clean = 4; playerSfx(k, 'splash'); }
+  } else if (it === 'barras') { k.spraying = 1.8; k.sprayMode = 'side';k.sprayBlocked=new Set(); k.clean = 4; playerSfx(k, 'splash'); }
   else if (it === 'calcario') {
     const pos = k.pos.clone().addScaledVector(fwd, -6);
     pos.y=courseSurface(pos).height;
     hazards.push({ type: 'cloud', pos, r: 5.5, life: 7, owner: k, arm: 1, hit: new Set() });
     for (let n = 0; n < 40; n++) particles.emit(pos.x + rr(-4, 4), rr(0.5, 2.5), pos.z + rr(-4, 4), rr(-1, 1), rr(0.3, 1.2), rr(-1, 1), '#F4F1E6', 1.6, 1.4, 1.2);
-  } else if (it === 'jato') { k.spraying = 1.4; k.sprayMode = 'front'; k.clean = 4; playerSfx(k, 'splash'); }
+  } else if (it === 'jato') { k.spraying = 1.4; k.sprayMode = 'front';k.sprayBlocked=new Set(); k.clean = 4; playerSfx(k, 'splash'); }
   else if (it === 'girassol') plantRow(k, k.pos.clone().addScaledVector(fwd, -7), fwd, [-3.2, 0, 3.2], 1.5, 2.6);
   else if (it === 'sulco') { k.boost = Math.max(k.boost, 1.4); k.plow = 2.4; k.plowT = 0; playerSfx(k, 'boost'); }
   else if (it === 'guia') {
     k.guide = 4; k.spin = 0; k.slow = 0;
     if (k.isPlayer && inRace()) { audio.sfx('ability'); flash('🛰️ Piloto Guia!', 1200); }
   } else if (it === 'trovoada') {
-    const target = karts.filter(o => o !== k && !o.finished).sort((a, b) => a.place - b.place)[0];
+    const target = karts.filter(o => o !== k && !o.finished && o.place<k.place).sort((a, b) => a.place - b.place)[0];
     if (target) { lightning(target.pos); hitKart(target, 'trovoada'); }
     if (inRace()) { audio.sfx('thunder'); state.shake = Math.max(state.shake, 0.4); }
   }
@@ -950,9 +969,19 @@ function lightning(at) {
   scene.add(g); effects.push({ o: g, life: 0.35 });
   for (let n = 0; n < 20; n++) particles.emit(at.x, 1, at.z, rr(-6, 6), rr(2, 8), rr(-6, 6), '#FFF59D', 0.5, 0.5, 0.2, 6);
 }
-const HIT_FX = { flower: { col: '#FFC300', msg: 'Girassol! 🌻' }, trovoada: { col: '#FFF59D', msg: 'Trovoada! ⚡' } };
+function blockAttack(k) {
+  if(k.itemGuard>0)return true;
+  if(k.shield<=0)return false;
+  k.shield=0;k.itemGuard=.7;
+  playerSfx(k,'shieldBreak');
+  if(k.isPlayer)flash('Escudo protegeu!',800);
+  for(let i=0;i<10;i++)particles.emit(k.pos.x,1.5+k.y,k.pos.z,rr(-4,4),rr(1,4),rr(-4,4),'#75C5D4',.3,.4,.1);
+  return true;
+}
+const HIT_FX = { flower: { col: '#FFC300', msg: 'Girassol! 🌻' }, trovoada: { col: '#FFF59D', msg: 'Trovoada! ⚡' },disco:{col:'#E9C46A',msg:'Disco de milho! 🌽'} };
 function hitKart(k, reason) {
   if (k.spin > 0 || k.finished || k.guide > 0) return;
+  if(blockAttack(k))return;
   k.spin = 1.1; k.speed *= 0.3; k.drifting = false; k.boost = 0;
   const fx = HIT_FX[reason] ?? HIT_FX.flower;
   for (let n = 0; n < 18; n++) particles.emit(k.pos.x, 1.5, k.pos.z, rr(-5, 5), rr(2, 6), rr(-5, 5), fx.col, 0.6, 0.8, 0.5, 9);
@@ -960,6 +989,7 @@ function hitKart(k, reason) {
 }
 function sneeze(k) {
   if (k.guide > 0 || k.finished) return;
+  if(blockAttack(k))return;
   k.slow = 1.8;
   if (k.isPlayer && inRace()) { flash('Atchim! 🤧', 900); audio.sfx('sneeze'); }
 }
@@ -967,7 +997,22 @@ function updateHazards(dt) {
   for (let i = hazards.length - 1; i >= 0; i--) {
     const h = hazards[i];
     h.life -= dt; h.arm -= dt;
-    if (h.type === 'cloud') {
+    if(h.type==='disc'){
+      const from=h.pos.clone();h.pos.addScaledVector(h.dir,h.speed*dt);
+      const surface=courseSurface(h.pos);h.groundY=surface.height;h.pos.y=surface.height+1.1;
+      h.o.position.copy(h.pos);h.o.rotation.y+=dt*12;
+      if(Math.abs(surface.lat)>surface.width+2)h.life=0;
+      const dx=h.pos.x-from.x,dz=h.pos.z-from.z,length2=dx*dx+dz*dz;
+      let victim=null,first=Infinity;
+      for(const k of karts){
+        if(h.life<=0)break;
+        if(k===h.owner || k.finished || k.spin>0)continue;
+        const u=clamp(((k.pos.x-from.x)*dx+(k.pos.z-from.z)*dz)/Math.max(.001,length2),0,1);
+        const x=from.x+dx*u,z=from.z+dz*u,y=lerp(from.y,h.pos.y,u);
+        if((k.pos.x-x)**2+(k.pos.z-z)**2<2.1**2 && Math.abs(k.groundY+k.y+1-y)<1.8 && u<first){victim=k;first=u;}
+      }
+      if(victim){hitKart(victim,'disco');h.life=0;}
+    } else if (h.type === 'cloud') {
       if (Math.random() < 0.7) particles.emit(h.pos.x + rr(-4.5, 4.5), rr(0.4, 2.2), h.pos.z + rr(-4.5, 4.5), rr(-0.5, 0.5), rr(0.2, 0.8), rr(-0.5, 0.5), '#F4F1E6', 1.5, 1.2, 1.0);
       for (const k of karts) {
         if ((k === h.owner && h.arm > 0) || h.hit.has(k) || Math.abs(k.groundY+k.y-h.pos.y)>3) continue;
@@ -1006,6 +1051,15 @@ function updateHazards(dt) {
   }
 }
 function updateItemEffects(k, dt, fwd, side) {
+  k.shield=Math.max(0,k.shield-dt);k.magnet=Math.max(0,k.magnet-dt);k.itemGuard=Math.max(0,k.itemGuard-dt);
+  k.powerFxT-=dt;
+  if(k.shield>0 && k.powerFxT<=0){
+    k.powerFxT=.16;
+    for(let i=0;i<6;i++){
+      const a=state.t*2+i*Math.PI/3;
+      particles.emit(k.pos.x+Math.cos(a)*2,1.35+k.y+Math.sin(a*2)*.55,k.pos.z+Math.sin(a)*2,0,.25,0,'#75C5D4',.24,.3,.1);
+    }
+  }
   if (k.slow > 0) { k.slow -= dt; if (Math.random() < 0.3) particles.emit(k.pos.x + rr(-1, 1), 2.5, k.pos.z + rr(-1, 1), rr(-1, 1), 1, rr(-1, 1), '#F4F1E6', 0.6, 0.6, 1); }
   if (k.clean > 0) k.clean -= dt;
   if (k.guide > 0) { k.guide -= dt; for (const sd of [-1, 1]) particles.emit(k.pos.x + side.x * sd * 1.3, 0.3, k.pos.z + side.z * sd * 1.3, 0, 0.5, 0, '#3CF07A', 0.4, 0.4, 0.3); }
@@ -1042,6 +1096,9 @@ function updateItemEffects(k, dt, fwd, side) {
       const rel = o.pos.clone().sub(k.pos), along = rel.dot(fwd), lat = rel.dot(side);
       const inJet = k.sprayMode === 'side' ? Math.abs(along) < 5 && Math.abs(lat) > 1.5 && Math.abs(lat) < 9 : along > 0 && along < 24 && Math.abs(lat) < 3 + along * 0.2;
       if (inJet) {
+        k.sprayBlocked??=new Set();
+        if(k.sprayBlocked.has(o))continue;
+        if(blockAttack(o)){k.sprayBlocked.add(o);continue;}
         o.pos.addScaledVector(side, Math.sign(lat || 1) * 7 * dt); o.speed *= 1 - 1.2 * dt;
         if (o.isPlayer && !o.wetMsg) { flash('Molhado! 💦', 800); o.wetMsg = true; }
       } else if (o.isPlayer) o.wetMsg = false;
@@ -1210,7 +1267,12 @@ function aiInput(k, dt) {
   if (k.item && k.rolling <= 0) {
     ai.itemDelay -= dt;
     if (ai.itemDelay <= 0) {
-      const use = k.item === 'turbo' ? cornerSharp < 0.05 : true;
+      const ahead=karts.some(o=>{
+        if(o===k || o.finished || Math.abs(o.groundY-k.groundY)>2.5)return false;
+        const rel=o.pos.clone().sub(k.pos),distance=rel.length(),along=rel.dot(fwdOf(k));
+        return along>3 && distance<(k.item==='jato'?22:55) && along/distance>.95;
+      });
+      const use = k.item === 'turbo' ? cornerSharp < 0.05 : ['disco','jato'].includes(k.item)?ahead:k.item==='escudo'?k.shield<=0:k.item==='ima'?k.magnet<=0:true;
       if (use || ai.itemDelay < -8) { useItem(k); ai.itemDelay = rr(1, 4); }
     }
   }
@@ -1344,7 +1406,7 @@ function updateKart(k, input, dt, frozen) {
     if (!k.item && k.rolling <= 0) { k.rolling = k.isPlayer ? 1.1 : 0.6; k.pendingItem = rollItem(k.place); addCharge(k, 0.15); playerSfx(k, 'itembox'); }
   }
   if (k.rolling > 0) { k.rolling -= dt; if (k.rolling <= 0) { k.item = k.pendingItem; playerSfx(k, 'itemget'); } }
-  for (const c of coinsOnTrack) if (!k.finished && c.active && Math.abs(k.groundY+k.y-c.p.y)<2.5 && (k.pos.x - c.p.x) ** 2 + (k.pos.z - c.p.z) ** 2 < 3.2) {
+  for (const c of coinsOnTrack) if (!k.finished && c.active && Math.abs(k.groundY+k.y-c.p.y)<2.5 && (k.pos.x - c.p.x) ** 2 + (k.pos.z - c.p.z) ** 2 < (k.magnet>0?64:3.2)) {
     c.active = false; c.timer = 8; c.o.visible = false;
     k.coins = Math.min(10, k.coins + 1);
     for (let n = 0; n < 8; n++) particles.emit(c.p.x, 1.2, c.p.z, rr(-3, 3), rr(2, 5), rr(-3, 3), n % 2 ? '#FFC83D' : '#FFF59D', 0.3, 0.5, 0.2, 6);
@@ -1583,10 +1645,13 @@ function updateHUD() {
   const icons = ['⛽', '🛰️', '⚡'];
   $('item').textContent = p.rolling > 0 ? icons[Math.floor(performance.now() / 80) % icons.length] : p.item ? ITEMS[p.item].icon : '';
   $('item').setAttribute('aria-label', p.rolling > 0 ? 'Sorteando item' : p.item ? ITEMS[p.item].name : 'Sem item');
+  $('item').title=p.item?ITEMS[p.item].description??ITEMS[p.item].name:'Colete uma caixa para ganhar um item.';
   $('itemName').textContent = p.item && p.rolling <= 0 ? `${IS_TOUCH?'ITEM':'E'} · ${ITEMS[p.item].name}` : p.rolling>0?'Sorteando…':p.guide > 0 ? '🛰️ Piloto Guia' : 'Caixas dão itens';
   $('item').classList.toggle('ready',!!p.item && p.rolling<=0);
   $('item').classList.toggle('rolling',p.rolling>0);
   $('tItem').classList.toggle('unavailable',!p.item || p.rolling>0);
+  const itemEffects=[p.shield>0?`🛡️ Escudo · ${Math.ceil(p.shield)}s`:'',p.magnet>0?`🧲 Ímã · ${Math.ceil(p.magnet)}s`:''].filter(Boolean).join('  ');
+  if($('itemEffects').textContent!==itemEffects)$('itemEffects').textContent=itemEffects;
   const ab = ABILITIES[p.ability];
   $('abilIcon').textContent = ab.icon;
   $('abilFill').style.width = `${Math.round(p.charge * 100)}%`;
@@ -1995,7 +2060,7 @@ function update(dt) {
 
 // ================================================================== API for the UI
 const api = {
-  CHARACTERS, IMPLEMENTS, ABILITIES, TRACKS, CUP, CHALLENGES, prepareRace,
+  CHARACTERS, IMPLEMENTS, ABILITIES, TRACKS, CUP, CHALLENGES, BOX_ITEMS, prepareRace,
   captureCreationPreview:()=>new Promise(resolve=>previewRequests.push(resolve)),
   startRace, toMenu, playIntro, openGarage, refreshShowroom, togglePause,
   restart: () => startRace(TRACK.id),

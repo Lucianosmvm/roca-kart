@@ -67,6 +67,20 @@ Celulares carregam modelos `_mobile.glb` com menos geometria, materiais simples,
 As peças e adesivos são cosméticos; os atributos continuam ligados à máquina-base.
 Detalhes técnicos e todos os arquivos reutilizáveis estão em `docs/expansao-corridas.md`.
 
+## Itens das caixas
+
+As caixas sorteiam sete itens, com chances diferentes conforme a posição:
+
+- **Biodiesel:** turbo curto.
+- **Escudo de bolha:** proteção contra um ataque por até 6 segundos.
+- **Disco de milho:** lançamento em linha reta para acertar quem está à frente; pode ser desviado.
+- **Ímã de milho:** coleta milho num raio de 8 metros durante 6 segundos.
+- **Jato d’água:** empurra e desacelera adversários próximos à frente.
+- **Piloto Guia:** ajuda temporária para acompanhar a pista.
+- **Trovoada:** ataque raro a um adversário à frente, disponível para quem está atrás.
+
+Use **E** ou o botão **ITEM**. Escudo e ímã mostram o tempo restante no HUD. As descrições podem ser consultadas em **Opções → Itens das caixas**. O contrarrelógio continua sem itens. Detalhes e limites em [docs/itens-corrida.md](docs/itens-corrida.md); esta etapa não foi testada.
+
 ## HUD da corrida
 
 Organização inspirada na referência visual fornecida pelo usuário, com os elementos próprios do Roça Kart:

@@ -7,7 +7,7 @@ import { TRACKS } from './tracks.js';
 
 const $ = id => document.getElementById(id);
 const SCREENS = ['splash', 'menu', 'tracks', 'garage', 'shop', 'options', 'credits', 'pause', 'results', 'cutscene','guide'];
-const HUD = ['item', 'itemName', 'abil', 'minimap', 'lap', 'time', 'coins', 'pos', 'standings', 'speed', 'msg', 'sub', 'help', 'pauseBtn', 'touch','raceEvent','driftStatus'];
+const HUD = ['item', 'itemName', 'itemEffects', 'abil', 'minimap', 'lap', 'time', 'coins', 'pos', 'standings', 'speed', 'msg', 'sub', 'help', 'pauseBtn', 'touch','raceEvent','driftStatus'];
 const fmt = t => { const m = Math.floor(t / 60), s = t % 60; return `${m}:${s.toFixed(2).padStart(5, '0')}`; };
 const stars = n => '★'.repeat(n) + '☆'.repeat(5 - n);
 let api = null;
@@ -604,6 +604,7 @@ function buildOptions() {
     <div class="keys keysOnly"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> dirigir · 2 toques rápidos no mesmo lado e mantenha o segundo para drift · <kbd>E</kbd> item ·
       <kbd>Q</kbd> habilidade · <kbd>H</kbd> buzina · <kbd>C</kbd> câmera · <kbd>R</kbd> volta pra pista · <kbd>ESC</kbd> pausa</div>
     <p class="gestureHelp">📱 Drift: toque duas vezes rapidamente em ◀ ou ▶ e mantenha o segundo toque. Solte para liberar o turbo. As rampas fazem saltos normais, sem acrobacias. No celular, modelos leves e efeitos reduzidos são usados automaticamente.</p>
+    <details class="itemHelp"><summary>Itens das caixas — como usar</summary><p>Use E no teclado ou ITEM no celular. Guarde para o momento certo. As chances variam conforme sua posição.</p><dl>${api.BOX_ITEMS.map(item=>`<dt>${item.icon} ${item.name}</dt><dd>${item.description}</dd>`).join('')}</dl></details>
     <div id="oSaveStatus" role="status">${storageFeedback()}</div>
     <div class="backRow"><button class="btn small cream" id="oBack">◀ Voltar</button><button class="btn small cream" id="oGuide">Como pilotar</button><button class="btn small" id="oReset" style="background:#C8372D">Apagar progresso</button></div>
   </div>`;

@@ -458,6 +458,16 @@
   @media(max-width:760px){.gMainNav{width:100%;min-width:0;gap:5px;}.gMainNav .tab{font-size:12px;padding:6px 8px;flex:1;}.garagePreviewName{left:10px;top:8px;padding:6px 10px;}.garagePreviewName b{font-size:19px;}.garagePreviewName span{font-size:10px;}.garageSections{margin-bottom:10px;}.garageSections .tab{font-size:12px;min-height:42px;}#garage[data-page='machine'] .it img{height:76px;}}
   @media(max-height:500px) and (max-width:900px) and (orientation:landscape){.gMainNav{width:auto;}.gMainNav .tab{font-size:11px;padding:5px 7px;}.garageSections .tab{min-height:36px;font-size:11px;}.garagePreviewName b{font-size:18px;}}
 </style>
+<style>
+  #itemEffects {left:50%;bottom:65px;transform:translateX(-50%);max-width:calc(100vw - 40px);padding:6px 12px;background:#203B43e6;border:2px solid var(--cream);border-radius:12px;color:var(--cream);font-family:'Nunito';font-size:12px;text-shadow:none;text-align:center;}
+  #itemEffects:empty {display:none;}
+  .itemHelp {margin:14px 0;border-top:2px solid #216C7933;padding-top:12px;font-size:13px;line-height:1.45;}
+  .itemHelp summary {font-weight:900;cursor:pointer;}
+  .itemHelp dt {font-weight:900;color:var(--green);margin-top:10px;}
+  .itemHelp dd {margin:3px 0 8px 25px;}
+  @media(max-width:720px){#itemEffects{bottom:135px;max-width:180px;font-size:10px;padding:5px 8px;}}
+  @media(max-height:500px) and (orientation:landscape){#itemEffects{bottom:79px;font-size:10px;max-width:200px;}}
+</style>
 </head>
 <body>
 <div id="game"></div>
@@ -467,6 +477,7 @@
 <!-- HUD -->
 <div class="hud" id="item"></div>
 <div class="hud" id="itemName"></div>
+<div class="hud" id="itemEffects" role="status" aria-live="polite"></div>
 <div class="hud" id="raceEvent"></div>
 <div class="hud" id="driftStatus" aria-hidden="true"><span id="driftLabel">Carregando drift</span><span id="driftTrack" class="driftTrack" role="meter" aria-label="Carga do drift" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="driftMeter"></i></span></div>
 <div class="hud" id="abil" role="button" tabindex="0" aria-label="Habilidade"><span id="abilIcon"></span><span class="abilityStack"><span id="abilLabel">0%</span><span id="abilMeter" class="bar" role="meter" aria-label="Carga da habilidade" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="abilFill"></i></span></span><kbd>Q</kbd></div>

@@ -211,6 +211,10 @@ export const audio = {
     if (!this.ctx) return;
     if(['charged','driftGood','driftPerfect','finish','hit','go','fanfare'].includes(name)) this.duckMusic(name==='fanfare'?1.1:.45);
     switch (name) {
+      case 'shield':this.sweep(400,1100,.22,.1,'sine');this.tone(1320,.15,'triangle',.08,.12);break;
+      case 'shieldBreak':this.sweep(1200,450,.18,.12,'sine');break;
+      case 'magnet':this.tone(523,.1,'triangle',.1);this.tone(784,.14,'triangle',.1,.1);break;
+      case 'launch':this.sweep(350,950,.16,.1,'triangle');break;
       case 'driftGood': this.tone(784,.09,'sine',.12);this.tone(1046,.14,'triangle',.09,.08);break;
       case 'driftPerfect': [1046,1318,1568].forEach((f,i)=>this.tone(f,.12,'triangle',.11,i*.065));break;
       case 'finish': [784,1046,1568].forEach((f,i)=>this.tone(f,.16,'triangle',.13,i*.12));break;
